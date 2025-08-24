@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honoka的二次元博客 - V1.6</title>
+    <title>Honoka的二次元博客 - V1.7</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
-    <!-- 引入二次元风格字体，例如：Google Fonts 上的 'M PLUS Rounded 1c' -->
+    <!-- 引入二次元风格字体 -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet>
-    <!-- 引入 Font Awesome 图标库，用于返回顶部按钮、QQ、主题切换等 -->
+    <!-- 引入 Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body class="light-theme"> <!-- 默认应用 light-theme -->
@@ -21,9 +21,10 @@
     <!-- 头部导航栏 -->
     <header class="anime-header">
         <div class="container">
-            <h1 class="blog-title">🌸 Honoka 🌸</h1>
+            <h1 class="blog-title"><span>🌸 Honoka 🌸</span></h1> <!-- **更新：添加span用于动画** -->
             <nav class="main-nav>
                 <ul>
+                    <!-- **重要修复：确保nav-item和data-section都在a标签上** -->
                     <li><a href="#home" class="nav-item active" data-section="home">首页</a></li>
                     <li><a href="#blog" class="nav-item" data-section="blog">博客</a></li>
                     <li><a href="#about" class="nav-item" data-section="about">关于我</a></li>
@@ -33,7 +34,7 @@
             <div class="header-right">
                 <div class="theme-switcher">
                     <button id="theme-toggle-btn" class="anime-button" title="切换主题">
-                        <i class="fas fa-moon"></i> <!-- 可选的图标，JS中会动态更新 -->
+                        <i class="fas fa-moon"></i>
                     </button>
                 </div>
                 <div class="mobile-nav-toggle" role="button" aria-label="Toggle navigation">
@@ -41,7 +42,7 @@
                     <span></span>
                     <span></span>
                 </div>
-            </div&gt>
+            </div>
         </div>
     </header>
 
@@ -52,14 +53,14 @@
                 <h2>欢迎来到我的二次元小世界！</h2>
                 <p>这里记录着我的日常，分享我的热爱。</p>
                 <p class="visitor-count">总浏览次数：<span id="view-count">0</span></p>
-                <p id="hitokoto-quote" class="random-quote">加载随机一言中...</p> <!-- 随机一言 -->
+                <p id="hitokoto-quote" class="random-quote">加载随机一言中...</p>
 
-                <!-- 今日运势功能 **新增** -->
+                <!-- 今日运势功能 -->
                 <div class="daily-fortune-widget">
                     <button id="draw-fortune-btn" class="anime-button primary"><i class="fas fa-dice"></i> 今日运势</button>
                     <div id="fortune-result-area" class="fortune-result-area">
                         <p id="fortune-display" class="fortune-text">点击按钮抽取你的今日运势！</p>
-                        <div id="fortune-burst-animation" class="fortune-burst-animation"></div> <!-- 动画元素 -->
+                        <div id="fortune-burst-animation" class="fortune-burst-animation"></div>
                     </div>
                 </div>
 
@@ -76,6 +77,14 @@
         <section id="blog" class="page-section">
             <div class="container">
                 <h2>所有博客文章</h2>
+                <!-- **新增：博客分类筛选器** -->
+                <div class="blog-filter-controls">
+                    <button class="anime-button filter-btn active" data-category="all">全部</button>
+                    <button class="anime-button filter-btn" data-category="日常">日常</button>
+                    <button class="anime-button filter-btn" data-category="技术">技术</button>
+                    <button class="anime-button filter-btn" data-category="游戏">游戏</button>
+                    <!-- 更多分类按钮 -->
+                </div>
                 <div class="posts-grid" id="blog-posts-container">
                     <!-- 文章卡片将由 JavaScript 动态加载 -->
                 </div>
@@ -124,7 +133,7 @@
     <footer class="anime-footer">
         <div class="container">
             <p>© <span id="current-year"></span> Honoka. All rights reserved.</p>
-            <p>网站版本: V1.6 | 上次更新: <span id="current-time"></span></p>
+            <p>网站版本: V1.7 | 上次更新: <span id="current-time"></span></p>
         </div>
     </footer>
 

@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fortuneDisplay = document.getElementById('fortune-display');
     const fortuneResultArea = document.getElementById('fortune-result-area');
     const fortuneBurstAnimation = document.getElementById('fortune-burst-animation');
+    const blogPostsContainer = document.getElementById('blog-posts-container');
+    const latestPostsContainer = document.getElementById('latest-posts-container');
+    const filterButtons = document.querySelectorAll('.blog-filter-controls .filter-btn'); // 新增筛选按钮选择器
 
 
     // 过渡场景动画：页面加载
@@ -82,10 +85,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 博客文章动态加载
     // ----------------------------------------------------
-    const blogPostsContainer = document.getElementById('blog-posts-container');
-    const latestPostsContainer = document.getElementById('latest-posts-container');
-
     console.log('[Main] Fetching anime images for articles...');
+    // 为每篇文章获取封面图片 (并行处理，优化加载速度)
     const articlePromises = blogArticles.map(async (article) => {
         try {
             article.coverImage = await getRandomAnimeImage();
@@ -110,28 +111,40 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
-
-    if (blogPostsContainer) {
-        blogPostsContainer.innerHTML = '';
-        articlesWithCovers.forEach(post => {
+    // 渲染文章列表的函数，支持筛选
+    function renderArticles(container, articlesToRender) {
+        if (!container) return;
+        container.innerHTML = ''; // 清空现有内容
+        articlesToRender.forEach(post => {
             const articleElement = createArticleCardElement(post);
-            blogPostsContainer.appendChild(articleElement);
+            container.appendChild(articleElement);
         });
-        console.log('[Main] Blog posts container populated.', blogPostsContainer);
-    } else {
-        console.log('[Main] blogPostsContainer not found.');
+        console.log(`[Main] Rendered ${articlesToRender.length} articles to ${container.id}.`);
     }
 
-    if (latestPostsContainer) {
-        latestPostsContainer.innerHTML = '';
-        articlesWithCovers.slice(0, 2).forEach(post => {
-            const articleElement = createArticleCardElement(post);
-            latestPostsContainer.appendChild(articleElement);
+    // 初始加载所有文章
+    renderArticles(blogPostsContainer, articlesWithCovers);
+    renderArticles(latestPostsContainer, articlesWithCovers.slice(0, 2));
+
+
+    // **新增：博客分类筛选功能逻辑**
+    filterButtons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            filterButtons.forEach(btn => btn.classList.remove('active')); // 移除所有active
+            e.currentTarget.classList.add('active'); // 添加当前active
+
+            const category = e.currentTarget.getAttribute('data-category');
+            let filteredArticles;
+            if (category === 'all') {
+                filteredArticles = articlesWithCovers;
+            } else {
+                filteredArticles = articlesWithCovers.filter(article => article.category === category);
+            }
+            renderArticles(blogPostsContainer, filteredArticles);
         });
-        console.log('[Main] Latest posts container populated.', latestPostsContainer);
-    } else {
-        console.log('[Main] latestPostsContainer not found.');
-    }
+    });
+    console.log('[Main] Blog category filter listeners bound.');
+
 
     // 随机一言功能
     // ----------------------------------------------------
@@ -150,67 +163,95 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 今日运势功能
     // ----------------------------------------------------
-    const fortuneEmojis = ['🎉', '✨', '💖', '🍀', '🌈', '🌟', '💫', '🌸', '🎐'];
-    const fortuneTexts = ['WOW!', '恭喜!', '超棒!', 'Good!', 'Yeah!', '欧气!'];
+    const FortuneBurstCharacters = {
+        positive: ['🎉', '✨', '💖', '🌟', '🍀', '🌈', '🌸', '🎐'],
+        neutral: ['😊', '⭐'],
+        negative: ['💧', '⚠️', '🌧️', '💔']
+    };
+    const FortuneTextBurst = {
+        positive: ['WOW!', '恭喜!', '超棒!', '好运!', 'Yeah!'],
+        neutral: ['平稳!', '努力!', '加油!'],
+        negative: ['注意!', '小心!', '坚持!', '挺住!']
+    };
 
-    function createBurstElement(content, color) {
+    function createBurstElement(content, color, type = 'emoji') {
         const span = document.createElement('span');
         span.textContent = content;
         span.style.color = color;
         // 随机偏移量
-        span.style.setProperty('--dx', `${Math.random() * 100 - 50}px`);
-        span.style.setProperty('--dy', `${Math.random() * 100 - 50}px`);
+        const dx = Math.random() * 100 - 50; // -50px to 50px
+        const dy = Math.random() * 100 - 50; // -50px to 50px
+        span.style.setProperty('--dx', `${dx}px`);
+        span.style.setProperty('--dy', `${dy}px`);
+        span.style.fontSize = type === 'text' ? '1.2em' : '2em'; // 文本小一点，emoji大一点
         return span;
     }
 
     if (drawFortuneBtn && fortuneDisplay && fortuneResultArea && fortuneBurstAnimation) {
-        // 页面加载时也显示今天的运势（如果已抽取）
         const initialFortune = getDailyFortune();
         fortuneDisplay.textContent = `【${initialFortune.type}】${initialFortune.message}`;
-        fortuneDisplay.classList.add('show'); // 默认显示
+        fortuneDisplay.style.color = initialFortune.color || '#fff'; // 确保颜色
+        fortuneDisplay.classList.add('show');
         console.log('[Main] Initial daily fortune displayed.', initialFortune);
         
         drawFortuneBtn.addEventListener('click', () => {
-            if (drawFortuneBtn.disabled) return; // 防止连点
+            if (drawFortuneBtn.disabled) return;
 
             drawFortuneBtn.disabled = true;
             fortuneDisplay.classList.remove('show'); // 隐藏当前运势
-            fortuneBurstAnimation.innerHTML = ''; // 清除上次动画
-
+            
+            // 为动画做准备
+            fortuneBurstAnimation.innerHTML = ''; // 先清空
+            fortuneBurstAnimation.classList.remove('show');
+            
             console.log('[Main] Drawing new fortune...');
             
-            // 动画1: 运势结果淡出
             setTimeout(() => {
-                const newFortune = getDailyFortune(); // 重新获取运势，可能是今天第一次获取或获取已保存的
+                const newFortune = getDailyFortune();
                 fortuneDisplay.textContent = `【${newFortune.type}】${newFortune.message}`;
-                fortuneDisplay.style.color = newFortune.color; // 设置运势文本颜色
+                fortuneDisplay.style.color = newFortune.color || '#fff'; // 设置运势文本颜色
 
-                // 动画2: 运势文本淡入
                 setTimeout(() => {
                     fortuneDisplay.classList.add('show');
-                    drawFortuneBtn.disabled = false; // 动画结束后启用按钮
+                    drawFortuneBtn.disabled = false;
                     console.log('[Main] New fortune displayed with fade-in.');
 
-                    // 动画3: 爆发效果
-                    fortuneBurstAnimation.classList.add('fade-out'); // 先确保没有旧的动画状态
-                    fortuneBurstAnimation.innerHTML = ''; // 清空之前的内容
+                    // 动画: 爆发效果
+                    fortuneBurstAnimation.classList.add('show'); // 显示容器
+                    
+                    let burstChars = [];
+                    let burstWords = [];
+                    if (['大吉', '超大吉', '恋爱吉', '学业吉'].includes(newFortune.type)) {
+                        burstChars = FortuneBurstCharacters.positive;
+                        burstWords = FortuneTextBurst.positive;
+                    } else if (['中吉', '小吉'].includes(newFortune.type)) {
+                        burstChars = FortuneBurstCharacters.neutral;
+                        burstWords = FortuneTextBurst.neutral;
+                    } else { // 末吉, 凶, 大凶
+                        burstChars = FortuneBurstCharacters.negative;
+                        burstWords = FortuneTextBurst.negative;
+                    }
 
-                    // 随机生成几个爆炸元素
-                    const numBursts = Math.floor(Math.random() * 3) + 3; // 3到5个
-                    for (let i = 0; i < numBursts; i++) {
-                        const burstContent = i % 2 === 0 ? newFortune.emoji : fortuneTexts[Math.floor(Math.random() * fortuneTexts.length)];
-                        const burstElem = createBurstElement(burstContent, newFortune.color);
+                    const numEmojis = Math.floor(Math.random() * 3) + 3; // 3到5个emoji
+                    for (let i = 0; i < numEmojis; i++) {
+                        const char = burstChars[Math.floor(Math.random() * burstChars.length)];
+                        const burstElem = createBurstElement(char, newFortune.color || '#fff', 'emoji');
+                        burstElem.style.animation = `burst-fade-out 0.8s ease-out forwards ${i * 0.05}s`;
                         fortuneBurstAnimation.appendChild(burstElem);
                     }
-                    // 触发动画
-                    fortuneBurstAnimation.classList.remove('fade-out'); // 移除旧的淡出，确保动画可以播放
-                    fortuneBurstAnimation.classList.add('play');
+                    const numWords = Math.floor(Math.random() * 2) + 1; // 1到2个文字
+                     for (let i = 0; i < numWords; i++) {
+                        const word = burstWords[Math.floor(Math.random() * burstWords.length)];
+                        const burstElem = createBurstElement(word, newFortune.color || '#fff', 'text');
+                        burstElem.style.animation = `burst-fade-out 0.8s ease-out forwards ${i * 0.08}s`;
+                        fortuneBurstAnimation.appendChild(burstElem);
+                    }
                     
-                    // 动画结束后移除 burst-animation 类，以便下次重新播放
                     setTimeout(() => {
-                        fortuneBurstAnimation.classList.remove('play');
-                        console.log('[Main] Fortune burst animation finished.');
-                    }, 800); // 配合 CSS 动画时长
+                        fortuneBurstAnimation.innerHTML = ''; // 动画结束后清空
+                        fortuneBurstAnimation.classList.remove('show');
+                        console.log('[Main] Fortune burst animation finished and cleared.');
+                    }, 800 + (numEmojis + numWords)*80); // 确保所有动画都播放完
 
                 }, 300); // 运势文本淡入延迟
             }, 0); // 运势文本立即隐藏
@@ -246,9 +287,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('[Main] Comments container not found, skipping loading comments.');
             return;
         }
-        commentsContainer.innerHTML = ''; // 清空现有留言
+        commentsContainer.innerHTML = '';
         const savedComments = JSON.parse(localStorage.getItem('blog_comments') || '[]');
-        savedComments.sort((a, b) => new Date(b.date) - new Date(a.date)); // 按最新到最旧排序
+        savedComments.sort((a, b) => new Date(b.date) - new Date(a.date));
         savedComments.forEach(commentData => {
             const commentElement = createCommentElement(commentData);
             commentsContainer.appendChild(commentElement);
@@ -256,7 +297,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('[Main] Comments loaded:', savedComments.length, 'comments.');
     }
 
-    loadComments(); // 页面加载时加载留言
+    loadComments();
 
     if (commentForm) {
         commentForm.addEventListener('submit', (e) => {
@@ -278,7 +319,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const commentData = { name, content, date: dateStr };
 
                 const savedComments = JSON.parse(localStorage.getItem('blog_comments') || '[]');
-                savedComments.unshift(commentData); // 新留言放最前面
+                savedComments.unshift(commentData);
                 localStorage.setItem('blog_comments', JSON.stringify(savedComments));
                 console.log('[Main] New comment saved to localStorage.', commentData);
 

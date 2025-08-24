@@ -1,8 +1,8 @@
 // js/article-viewer.js
-// **重要修复：修改导入路径**
+// **重要修复：确认导入路径是正确的 `./components.js`**
 import { blogArticles, getRandomAnimeImage } from './components.js'; // 导入文章数据和图片获取函数
 
-document.addEventListener('DOMContentLoaded', async () => { // 设为 async 函数
+document.addEventListener('DOMContentLoaded', async () => {
     console.log('[ArticleViewer] DOMContentLoaded event fired on article.html, starting article-viewer.js initialization.');
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', async () => { // 设为 async 函�
         
         if (article) {
             console.log('[ArticleViewer] Found article:', article);
-            document.title = `${article.title} - Honoka的二次元博客 V1.6`;
+            document.title = `${article.title} - Honoka的二次元博客 V1.7`;
 
             if (articleTitleElem) articleTitleElem.textContent = article.title;
             if (articleDateElem) articleDateElem.textContent = article.date;
@@ -63,17 +63,28 @@ document.addEventListener('DOMContentLoaded', async () => { // 设为 async 函�
 
         } else {
             console.warn('[ArticleViewer] Article not found for ID:', articleId);
-            document.title = '文章未找到 - Honoka的二次元博客 V1.6';
+            document.title = '文章未找到 - Honoka的二次元博客 V1.7';
             if (articleTitleElem) articleTitleElem.textContent = '404 - 文章未找到';
+            if (articleDateElem) articleDateElem.textContent = '';
+            if (articleCategoryElem) articleCategoryElem.textContent = '';
             if (articleContentElem) articleContentElem.innerHTML = '<p>很抱歉，您要查找的文章不存在。</p><p><a href="index.html#blog" class="anime-button">返回博客列表</a></p>';
-            if (articleCoverElem) articleCoverElem.style.display = 'none';
+            // 添加一个错误状态的封面图，而不是直接隐藏
+            if (articleCoverElem) {
+                articleCoverElem.src = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`; // 随机显示一个备用图
+                articleCoverElem.alt = '文章未找到封面';
+                articleCoverElem.style.display = 'block'; // 确保显示
+            }
         }
     } else {
         console.warn('[ArticleViewer] Article ID is missing in URL.');
-        document.title = '文章ID缺失 - Honoka的二次元博客 V1.6';
+        document.title = '文章ID缺失 - Honoka的二次元博客 V1.7';
         if (articleTitleElem) articleTitleElem.textContent = '文章ID缺失';
         if (articleContentElem) articleContentElem.innerHTML = '<p>请通过正确的链接访问文章。</p><p><a href="index.html#blog" class="anime-button">返回博客列表</a></p>';
-        if (articleCoverElem) articleCoverElem.style.display = 'none';
+        if (articleCoverElem) {
+            articleCoverElem.src = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`; // 随机显示一个备用图
+            articleCoverElem.alt = '文章ID缺失封面';
+            articleCoverElem.style.display = 'block'; // 确保显示
+        }
     }
     console.log('[ArticleViewer] Article page initialization complete.');
 });

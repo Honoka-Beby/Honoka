@@ -108,12 +108,22 @@ a:hover {
     flex-wrap: wrap; /* 手机端换行 */
 }
 
+/* **新增：博客标题 hover 动画** */
 .blog-title {
     margin: 0;
     font-size: 1.8em;
     color: var(--primary-color);
     line-height: 1;
+    cursor: default; /* 鼠标样式 */
 }
+.blog-title span {
+    display: inline-block; /* 允许 transform */
+    transition: transform 0.3s ease-out;
+}
+.blog-title:hover span {
+    transform: scale(1.05) rotate(2deg);
+}
+
 
 .header-right {
     display: flex;
@@ -196,7 +206,7 @@ a:hover {
 
 .page-section {
     padding: 40px 0;
-    display: none; /* 默认隐藏所有section **重要：确保此规则生效** */
+    display: none !important; /* **重要修复**：默认隐藏，使用 !important 确保优先级 */
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
@@ -205,7 +215,7 @@ a:hover {
 }
 
 .page-section.active {
-    display: block; /* 当前活动section显示 */
+    display: block !important; /* **重要修复**：仅活动 section 显示，使用 !important 确保优先级 */
     opacity: 1;
     transform: translateY(0);
 }
@@ -220,9 +230,9 @@ a:hover {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     margin-bottom: 40px;
     transition: background 0.5s ease, box-shadow 0.3s ease;
-    display: flex; /* **新增：让hero-section内部也成为flex容器** */
-    flex-direction: column; /* **新增：子元素垂直排列** */
-    align-items: center; /* **新增：子元素居中** */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
 .hero-section h2 {
@@ -237,13 +247,13 @@ a:hover {
 }
 
 .visitor-count {
-    background-color: var(--white-transparent-20); /* 使用新的CSS变量 */
+    background-color: var(--white-transparent-20);
     display: inline-block;
     padding: 5px 15px;
     border-radius: 20px;
     font-size: 0.9em;
     margin-top: 20px;
-    margin-bottom: 20px; /* 增加底部间距 */
+    margin-bottom: 20px;
 }
 
 /* Random Quote styling */
@@ -251,8 +261,8 @@ a:hover {
     font-style: italic;
     font-size: 1.3em;
     margin-bottom: 25px;
-    color: #fff;
-    text-shadow: 1px 1px 4px rgba(0,0,0,0.7); /* 更明显的阴影 */
+    color: #f8f8f8; /* 调整为更亮的颜色 */
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.8); /* 更明显的阴影 */
     transition: color 0.5s ease;
     min-height: 2em;
     padding: 0 10px;
@@ -272,8 +282,8 @@ a:hover {
     color: #fff;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: background-color 0.3s ease;
-    position: relative; /* 运势动画元素需要 */
-    overflow: hidden; /* 裁剪动画元素 */
+    position: relative;
+    overflow: hidden;
 }
 .daily-fortune-widget .anime-button {
     margin-bottom: 15px;
@@ -281,12 +291,12 @@ a:hover {
     transition: transform 0.2s ease;
 }
 .daily-fortune-widget .anime-button:active {
-    transform: scale(0.95); /* 点击反馈 */
+    transform: scale(0.95);
 }
 
 .fortune-result-area {
     position: relative;
-    min-height: 3.5em; /* 确保有足够空间显示运势和动画 */
+    min-height: 3.5em;
     margin-top: 10px;
     display: flex;
     flex-direction: column;
@@ -298,13 +308,14 @@ a:hover {
     font-size: 1.1em;
     font-weight: bold;
     min-height: 1.5em;
-    opacity: 0; /* 初始隐藏，用动画显示 */
+    opacity: 0;
     transform: scale(0.8);
     transition: opacity 0.5s ease, transform 0.5s ease;
 }
 .fortune-text.show {
     opacity: 1;
     transform: scale(1);
+    color: var(--fortune-text-color, #fff); /* 运势文本颜色可变 */
 }
 
 .fortune-burst-animation {
@@ -312,29 +323,31 @@ a:hover {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 100px;
-    height: 100px;
+    width: 150px; /* 增大区域 */
+    height: 150px;
     display: flex;
     justify-content: center;
     align-items: center;
-    pointer-events: none; /* 不阻止点击事件 */
+    pointer-events: none;
+    opacity: 0; /* 默认隐藏 */
+}
+.fortune-burst-animation.show {
+    opacity: 1; /* 显示动画容器 */
 }
 
 .fortune-burst-animation span {
     position: absolute;
-    font-size: 1.8em;
+    font-size: 2em; /* 增大炸开文字 */
     opacity: 0;
-    transition: all 0.5s ease-out;
+    transition: none; /* 移除默认transition，由keyframes控制 */
     filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
-}
-.fortune-burst-animation.play span {
-    animation: burst-fade 0.8s forwards;
+    animation: none; /* 移除默认animation，由JS动态添加 */
 }
 
-@keyframes burst-fade {
-    0% { transform: translate(0,0) scale(0.5); opacity: 0; }
-    50% { opacity: 1; }
-    100% { transform: translate(var(--dx), var(--dy)) scale(1.5); opacity: 0; }
+/* 运势爆炸效果的关键帧动画 */
+@keyframes burst-fade-out {
+    0% { transform: translate(0,0) scale(0.5); opacity: 1; filter: blur(0); }
+    100% { transform: translate(var(--dx), var(--dy)) scale(2); opacity: 0; filter: blur(2px); }
 }
 
 
@@ -342,13 +355,18 @@ a:hover {
 .anime-card {
     background-color: var(--card-bg);
     border-radius: 10px;
-    box-shadow: 0 4px 10px var(--box-shadow-light); /* 柔和阴影 */
+    box-shadow: 0 4px 10px var(--box-shadow-light);
     padding: 0;
     margin-bottom: 25px;
     transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    cursor: pointer; /* **新增：卡片可点击指示** */
+}
+.anime-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
 }
 
 /* 为卡片内容的区域设置内边距 */
@@ -358,15 +376,10 @@ a:hover {
 }
 .anime-card h3 { padding-top: 25px; }
 .anime-card .read-more { 
-    margin-top: auto; /* **修复**：自动向上推，将其余内容推到顶部，自身保持在底部*/
-    padding-bottom: 25px; /* 按钮底部间距 */
+    margin-top: auto;
+    padding-bottom: 25px;
 }
 
-
-.anime-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 6px 15px rgba(0,0,0,0.12);
-}
 
 .card-cover {
     width: 100%;
@@ -374,7 +387,7 @@ a:hover {
     object-fit: cover;
     filter: brightness(0.95);
     transition: filter 0.3s ease;
-    margin-bottom: 15px; /* 封面与下方内容的间距 */
+    margin-bottom: 15px;
 }
 
 .anime-card:hover .card-cover {
@@ -446,6 +459,38 @@ a:hover {
     gap: 25px;
     margin-top: 30px;
 }
+
+/* **新增：博客分类筛选按钮样式** */
+.blog-filter-controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 30px;
+    justify-content: center;
+    padding: 0 20px;
+}
+.blog-filter-controls .filter-btn {
+    background-color: var(--card-bg);
+    color: var(--text-color);
+    border: 1px solid var(--border-color);
+    box-shadow: none;
+    padding: 8px 18px;
+}
+.blog-filter-controls .filter-btn:hover {
+    background-color: var(--hover-bg);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+.blog-filter-controls .filter-btn.active {
+    background-color: var(--primary-color);
+    color: var(--button-text);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3); /* 使用RGB值以方便阴影 */
+}
+.blog-filter-controls .filter-btn.active:hover {
+    background-color: var(--button-hover-bg);
+}
+
 
 .post-meta {
     font-size: 0.9em;
@@ -574,7 +619,7 @@ a:hover {
     visibility: hidden;
     transform: translateY(20px);
     transition: opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
-    border-radius: 50%; /* 圆形按钮 */
+    border-radius: 50%;
     width: 45px;
     height: 45px;
     display: flex;
@@ -625,7 +670,9 @@ a:hover {
 }
 
 .page-section.dynamic-bg-elements::before,
-.page-section.dynamic-bg-elements::after {
+.page-section.dynamic-bg-elements::after,
+.page-section.dynamic-bg-elements .bg-shape-3,
+.page-section.dynamic-bg-elements .bg-shape-4 { /* **新增更多背景元素选择器** */
     content: '';
     position: absolute;
     background-color: var(--secondary-color);
@@ -656,6 +703,31 @@ a:hover {
     background-color: var(--primary-color);
 }
 
+/* **新增更多背景元素动画及样式** */
+.page-section.dynamic-bg-elements .bg-shape-3 {
+    width: 80px;
+    height: 80px;
+    top: 50%;
+    left: 20%;
+    clip-path: polygon(0% 15%, 15% 0%, 85% 0%, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0% 85%); /* 八边形 */
+    background-color: var(--primary-color);
+    animation: float-and-morph 18s infinite ease-in-out alternate-reverse; /* 反向动画 */
+    animation-delay: 4s;
+    transform: translate(-50%, -50%);
+}
+.page-section.dynamic-bg-elements .bg-shape-4 {
+    width: 90px;
+    height: 90px;
+    top: 30%;
+    right: 15%;
+    clip-path: rect(0%, 100%, 100%, 0%); /* 矩形 */
+    background-color: var(--secondary-color);
+    animation: float-and-morph 25s infinite ease-in-out alternate;
+    animation-delay: 6s;
+    transform: translate(-50%, -50%);
+}
+
+
 @keyframes float-and-morph {
     0% {
         transform: translate(0, 0) rotate(0deg);
@@ -663,22 +735,22 @@ a:hover {
         clip-path: circle(50%);
     }
     25% {
-        transform: translate(30px, 20px) rotate(45deg);
+        transform: translate(30px, 20px) rotate(45deg) scale(1.1);
         opacity: 0.15;
         clip-path: ellipse(40% 50% at 50% 50%);
     }
     50% {
-        transform: translate(-20px, 40px) rotate(90deg);
+        transform: translate(-20px, 40px) rotate(90deg) scale(0.9);
         opacity: 0.1;
         clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
     }
     75% {
-        transform: translate(10px, 10px) rotate(135deg);
+        transform: translate(10px, 10px) rotate(135deg) scale(1.05);
         opacity: 0.15;
         clip-path: ellipse(50% 40% at 50% 50%);
     }
     100% {
-        transform: translate(0, 0) rotate(180deg);
+        transform: translate(0, 0) rotate(180deg) scale(1);
         opacity: 0.1;
         clip-path: circle(50%);
     }
@@ -699,6 +771,9 @@ a:hover {
 
     .blog-title {
         font-size: 1.5em;
+    }
+    .blog-title:hover span {
+        transform: none; /* 移动端不进行标题动画 */
     }
 
     .main-nav {
@@ -812,7 +887,17 @@ a:hover {
     }
     /* 移动端隐藏背景元素，避免干扰 */
     .page-section.dynamic-bg-elements::before,
-    .page-section.dynamic-bg-elements::after {
+    .page-section.dynamic-bg-elements::after,
+    .page-section.dynamic-bg-elements .bg-shape-3,
+    .page-section.dynamic-bg-elements .bg-shape-4 {
         display: none; 
+    }
+
+    .blog-filter-controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    .blog-filter-controls .filter-btn {
+        width: 80%; /* 按钮宽度占满 */
     }
 }
