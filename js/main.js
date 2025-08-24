@@ -1,7 +1,9 @@
 // js/main.js
-import { createCommentElement, createArticleCardElement, SectionController, getRandomAnimeImage, getHitokotoQuote, blogArticles } from './components.js';
+import { createCommentElement, createArticleCardElement, SectionController, getRandomAnimeImage, getHitokotoQuote, getDailyFortune, blogArticles } from './components.js'; // **新增 getDailyFortune**
 
 document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 async 函数
+    console.log('DOMContentLoaded event fired on index.html, starting main.js initialization.');
+
     const body = document.body;
     const loadingScreen = document.getElementById('loading-screen');
     const themeToggleButton = document.getElementById('theme-toggle-btn');
@@ -12,6 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
     const viewCountSpan = document.getElementById('view-count');
     const scrollToTopBtn = document.getElementById('scroll-to-top');
     const hitokotoQuoteElem = document.getElementById('hitokoto-quote'); // 随机一言DOM元素
+    const drawFortuneBtn = document.getElementById('draw-fortune-btn'); // 今日运势按钮 **新增**
+    const fortuneDisplay = document.getElementById('fortune-display'); // 今日运势显示区域 **新增**
 
 
     // 过渡场景动画：页面加载
@@ -21,6 +25,7 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
         loadingScreen.addEventListener('transitionend', () => {
             loadingScreen.style.display = 'none';
             body.classList.add('loaded'); // 页面内容淡入
+            console.log('Loading screen hidden, body loaded.');
         }, { once: true });
     }, 800);
 
@@ -30,12 +35,14 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
     body.classList.remove('light-theme', 'dark-theme', 'pastel-theme');
     body.classList.add(savedTheme);
     // 更新主题切换按钮的图标
-    if (savedTheme === 'dark-theme') {
-        themeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
-    } else if (savedTheme === 'pastel-theme') {
-        themeToggleButton.innerHTML = '<i class="fas fa-paint-brush"></i>';
-    } else { // light-theme
-        themeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+    if (themeToggleButton) {
+        if (savedTheme === 'dark-theme') {
+            themeToggleButton.innerHTML = '<i class="fas fa-sun"></i>';
+        } else if (savedTheme === 'pastel-theme') {
+            themeToggleButton.innerHTML = '<i class="fas fa-paint-brush"></i>';
+        } else { // light-theme
+            themeToggleButton.innerHTML = '<i class="fas fa-moon"></i>';
+        }
     }
 
 
@@ -63,18 +70,40 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
         '.mobile-nav-toggle',        // 手机导航切换按钮的选择器
         '.main-nav'                  // 主导航容器的选择器
     );
+     console.log('SectionController initialized.');
+
 
     // 博客文章动态加载
     // ----------------------------------------------------
     const blogPostsContainer = document.getElementById('blog-posts-container');
     const latestPostsContainer = document.getElementById('latest-posts-container');
 
+    console.log('Fetching anime images for articles...');
     // 为每篇文章获取封面图片 (并行处理，优化加载速度)
     const articlePromises = blogArticles.map(async (article) => {
-        article.coverImage = await getRandomAnimeImage();
+        try {
+            article.coverImage = await getRandomAnimeImage();
+        } catch (e) {
+            console.error('Error getting random image for article, using fallback:', e);
+            article.coverImage = fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+        }
         return article;
     });
-    const articlesWithCovers = await Promise.all(articlePromises); // 等待所有图片加载完毕
+    let articlesWithCovers = [];
+    try {
+        articlesWithCovers = await Promise.all(articlePromises); // 等待所有图片加载完毕
+        console.log('All article covers fetched.', articlesWithCovers);
+    } catch (e) {
+        console.error('Error in Promise.all for article covers:', e);
+        // Fallback: Use articles without dynamically fetched covers
+        articlesWithCovers = blogArticles.map(article => {
+            if (!article.coverImage) {
+                 article.coverImage = fallbackImages[Math.floor(Math.random() * fallbackImages.length)];
+            }
+            return article;
+        });
+    }
+
 
     // 加载所有文章到博客页面
     if (blogPostsContainer) {
@@ -83,6 +112,9 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
             const articleElement = createArticleCardElement(post);
             blogPostsContainer.appendChild(articleElement);
         });
+        console.log('Blog posts container populated.', blogPostsContainer);
+    } else {
+        console.log('blogPostsContainer not found.');
     }
 
     // 加载最新文章到首页 (这里简单取前2篇，如果需要更复杂的“最新”逻辑，请自行实现)
@@ -92,15 +124,44 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
             const articleElement = createArticleCardElement(post);
             latestPostsContainer.appendChild(articleElement);
         });
+        console.log('Latest posts container populated.', latestPostsContainer);
+    } else {
+        console.log('latestPostsContainer not found.');
     }
 
     // 随机一言功能
     // ----------------------------------------------------
     if (hitokotoQuoteElem) {
-        const quote = await getHitokotoQuote();
-        hitokotoQuoteElem.textContent = quote;
+        try {
+            const quote = await getHitokotoQuote();
+            hitokotoQuoteElem.textContent = quote;
+            console.log('Hitokoto quote loaded.', quote);
+        } catch (e) {
+            console.error('Failed to load Hitokoto quote:', e);
+            hitokotoQuoteElem.textContent = '加载一言失败，请刷新重试。';
+        }
+    } else {
+        console.log('hitokotoQuoteElem not found.');
     }
 
+    // 今日运势功能 **新增**
+    // ----------------------------------------------------
+    if (drawFortuneBtn && fortuneDisplay) {
+        drawFortuneBtn.addEventListener('click', () => {
+            const fortune = getDailyFortune();
+            fortuneDisplay.textContent = fortune;
+            console.log('Daily fortune drawn:', fortune);
+        });
+        // 页面加载时也显示今天的运势（如果已抽取）
+        const today = new Date().toDateString();
+        const savedFortune = localStorage.getItem('daily_fortune_' + today);
+        if (savedFortune) {
+            fortuneDisplay.textContent = savedFortune;
+        }
+        
+    } else {
+        console.log('Daily fortune elements not found.');
+    }
 
     // 浏览次数 (前端模拟存储，不依赖后端)
     // ----------------------------------------------------
@@ -111,13 +172,23 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
         views = 1;
     }
     localStorage.setItem('blog_views', views);
-    viewCountSpan.textContent = views;
+    if (viewCountSpan) {
+        viewCountSpan.textContent = views;
+        console.log('Visitor count updated:', views);
+    } else {
+        console.log('viewCountSpan not found.');
+    }
+    
 
     // 留言板 (前端模拟存储到 localStorage)
     // ----------------------------------------------------
 
     // 加载现有留言
     function loadComments() {
+        if (!commentsContainer) {
+            console.log('Comments container not found, skipping loading comments.');
+            return;
+        }
         commentsContainer.innerHTML = ''; // 清空现有留言
         const savedComments = JSON.parse(localStorage.getItem('blog_comments') || '[]');
         // 按最新到最旧排序
@@ -126,48 +197,56 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
             const commentElement = createCommentElement(commentData);
             commentsContainer.appendChild(commentElement);
         });
+        console.log('Comments loaded:', savedComments.length, 'comments.');
     }
 
     loadComments(); // 页面加载时加载留言
 
-    commentForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const nameInput = document.getElementById('comment-name');
-        const contentInput = document.getElementById('comment-content');
-        const name = nameInput.value.trim();
-        const content = contentInput.value.trim();
+    if (commentForm) {
+        commentForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const nameInput = document.getElementById('comment-name');
+            const contentInput = document.getElementById('comment-content');
+            const name = nameInput.value.trim();
+            const content = contentInput.value.trim();
 
-        if (name && content) {
-            const now = new Date();
-            const dateStr = now.getFullYear() + '-' +
-                            String(now.getMonth() + 1).padStart(2, '0') + '-' +
-                            String(now.getDate()).padStart(2, '0') + ' ' +
-                            String(now.getHours()).padStart(2, '0') + ':' +
-                            String(now.getMinutes()).padStart(2, '0') + ':' +
-                            String(now.getSeconds()).padStart(2, '0');
+            if (name && content) {
+                const now = new Date();
+                const dateStr = now.getFullYear() + '-' +
+                                String(now.getMonth() + 1).padStart(2, '0') + '-' +
+                                String(now.getDate()).padStart(2, '0') + ' ' +
+                                String(now.getHours()).padStart(2, '0') + ':' +
+                                String(now.getMinutes()).padStart(2, '0') + ':' +
+                                String(now.getSeconds()).padStart(2, '0');
 
-            const commentData = { name, content, date: dateStr };
+                const commentData = { name, content, date: dateStr };
 
-            // 保存到 localStorage
-            const savedComments = JSON.parse(localStorage.getItem('blog_comments') || '[]');
-            savedComments.unshift(commentData); // 新留言放最前面
-            localStorage.setItem('blog_comments', JSON.stringify(savedComments));
+                // 保存到 localStorage
+                const savedComments = JSON.parse(localStorage.getItem('blog_comments') || '[]');
+                savedComments.unshift(commentData); // 新留言放最前面
+                localStorage.setItem('blog_comments', JSON.stringify(savedComments));
+                console.log('New comment saved to localStorage.', commentData);
 
-            // 更新 DOM
-            const newCommentElement = createCommentElement(commentData);
-            commentsContainer.prepend(newCommentElement); // 最新留言放最上面
-            // 确保显示最新留言时滚动到顶部
-            if (commentsContainer.firstElementChild) {
-                commentsContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // 更新 DOM
+                const newCommentElement = createCommentElement(commentData);
+                commentsContainer.prepend(newCommentElement); // 最新留言放最上面
+                
+                // 确保显示最新留言时滚动到顶部
+                if (commentsContainer.firstElementChild) {
+                    commentsContainer.firstElementChild.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+
+                // 清空表单
+                commentForm.reset();
+                alert('留言已提交！');
+            } else {
+                alert('请填写昵称和留言内容！');
             }
+        });
+    } else {
+        console.log('commentForm not found.');
+    }
 
-            // 清空表单
-            commentForm.reset();
-            alert('留言已提交！');
-        } else {
-            alert('请填写昵称和留言内容！');
-        }
-    });
 
     // 更新当前时间和年份
     // ----------------------------------------------------
@@ -178,8 +257,8 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
             hour: '2-digit', minute: '2-digit', second: '2-digit',
             hour12: false
         };
-        currentTimeSpan.textContent = now.toLocaleString('zh-CN', options);
-        currentYearSpan.textContent = now.getFullYear();
+        if (currentTimeSpan) currentTimeSpan.textContent = now.toLocaleString('zh-CN', options);
+        if (currentYearSpan) currentYearSpan.textContent = now.getFullYear();
     }
 
     updateDateTime();
@@ -188,18 +267,22 @@ document.addEventListener('DOMContentLoaded', async () => { // 注意这里是 a
 
     // 返回顶部按钮功能
     // ----------------------------------------------------
-    window.addEventListener('scroll', () => {
-        if (window.scrollY > 300) { // 滚动超过300px显示按钮
-            scrollToTopBtn.classList.add('show');
-        } else {
-            scrollToTopBtn.classList.remove('show');
-        }
-    });
-
-    scrollToTopBtn.addEventListener('click', () => {
-        window.scrollTo({
-            top: 0,
-            behavior: 'smooth'
+    if (scrollToTopBtn) {
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) { // 滚动超过300px显示按钮
+                scrollToTopBtn.classList.add('show');
+            } else {
+                scrollToTopBtn.classList.remove('show');
+            }
         });
-    });
+
+        scrollToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+    } else {
+        console.log('Scroll to top button not found.');
+    }
 });

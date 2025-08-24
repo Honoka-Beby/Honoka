@@ -220,6 +220,9 @@ a:hover {
     box-shadow: 0 5px 15px rgba(0,0,0,0.1);
     margin-bottom: 40px;
     transition: background 0.5s ease, box-shadow 0.3s ease;
+    display: flex; /* **新增：让hero-section内部也成为flex容器** */
+    flex-direction: column; /* **新增：子元素垂直排列** */
+    align-items: center; /* **新增：子元素居中** */
 }
 
 .hero-section h2 {
@@ -240,6 +243,7 @@ a:hover {
     border-radius: 20px;
     font-size: 0.9em;
     margin-top: 20px;
+    margin-bottom: 20px; /* 增加底部间距 */
 }
 
 /* Random Quote styling **重要调整** */
@@ -248,11 +252,37 @@ a:hover {
     font-size: 1.3em; /* 增大字体 */
     margin-bottom: 25px;
     color: #fff; /* 改为白色以便在渐变背景上更明显 */
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.4); /* 更明显的阴影 */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.6); /* 更明显的阴影 */
     transition: color 0.5s ease;
     min-height: 2em; /* 防止加载时布局跳动 */
     padding: 0 10px; /* 增加左右内边距 */
+    max-width: 80%; /* 限制宽度 */
 }
+
+/* Daily Fortune Widget **新增样式** */
+.daily-fortune-widget {
+    background-color: rgba(255, 255, 255, 0.25);
+    border-radius: 10px;
+    padding: 15px 20px;
+    margin-top: 20px;
+    margin-bottom: 30px;
+    text-align: center;
+    width: fit-content;
+    max-width: 80%;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+}
+.daily-fortune-widget .anime-button {
+    margin-bottom: 15px;
+}
+.fortune-text {
+    font-size: 1.1em;
+    font-weight: bold;
+    min-height: 1.5em; /* 防止内容加载时跳动 */
+}
+
+
 
 /* Anime Card Component */
 .anime-card {
@@ -264,7 +294,7 @@ a:hover {
     transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* **重要修复**：裁剪超出圆角的部分 */
+    overflow: hidden; /* **修复**：裁剪超出圆角的部分 */
 }
 
 /* 为卡片内容的区域设置内边距 */
@@ -273,7 +303,7 @@ a:hover {
     padding-right: 25px;
 }
 .anime-card h3 { padding-top: 25px; } /* 标题顶部间距 */
-/* **新增样式**：确保阅读更多按钮始终在底部 */
+/* **修复**：确保阅读更多按钮始终在底部 */
 .anime-card .read-more { 
     margin-top: auto; /* 自动向上推，将其余内容推到顶部，自身保持在底部*/
     padding-bottom: 25px; /* 按钮底部间距 */
@@ -286,9 +316,9 @@ a:hover {
 }
 
 .card-cover {
-    width: 100%; /* **重要修复**：图片完全展开在卡片内 */
+    width: 100%; /* **修复**：图片完全展开在卡片内 */
     height: 180px;
-    object-fit: cover; /* **重要修复**：保持图片覆盖区域，裁剪多余部分以适应比例 */
+    object-fit: cover; /* **修复**：保持图片覆盖区域，裁剪多余部分以适应比例 */
     /* 移除 border-radius, 让父级 .anime-card 的 overflow: hidden 处理圆角 */
     filter: brightness(0.95); /* 略微变暗 */
     transition: filter 0.3s ease;
@@ -357,16 +387,13 @@ a:hover {
     resize: vertical;
 }
 
-/* Posts Grid */
+/* Blog Posts Grid */
 .posts-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
     gap: 25px;
     margin-top: 30px;
 }
-
-/* Post List (previously blog-posts-container class) - no longer needed as we use posts-grid for blog section */
-
 
 .post-meta {
     font-size: 0.9em;
@@ -411,7 +438,7 @@ a:hover {
     margin: 0 auto; /* Gives that scrolling effect as the typing happens */
     letter-spacing: 0.05em; /* Adjust as needed */
     animation:
-      typing 2s steps(40, end),
+      typing 2s steps(40, end) forwards, /* forwards 保持动画结束状态 */
       blink-caret .75s step-end infinite;
     width: fit-content; /* Make sure the element width adapts to its content */
     border-right: .15em solid var(--primary-color); /* The typewriter cursor */
@@ -513,10 +540,9 @@ a:hover {
 
 /* Article Detail Page Specific Styles */
 .article-detail-cover {
-    width: 100%; /* **重要修复**：图片完全展开在卡片内 */
+    width: 100%; /* **修复**：图片完全展开在卡片内 */
     height: 250px;
-    object-fit: cover; /* **重要修复**：保持图片覆盖区域 */
-    /* 移除边框圆角 */
+    object-fit: cover; /* **修复**：保持图片覆盖区域 */
     margin: 0 0 25px 0; /* 封面与下方内容的间距 */
     filter: brightness(0.95);
     transition: filter 0.3s ease;
@@ -540,61 +566,70 @@ a:hover {
 }
 
 /* **新功能：关于我/留言板页面的动态背景元素** */
-/* 基础：设置相对定位，允许伪元素在其内部定位 */
 .page-section.dynamic-bg-elements {
     position: relative;
-    overflow: hidden; /* 确保背景元素不溢出其容器 */
-    background-color: var(--background-color); /* 确保背景是主题色 */
+    overflow: hidden;
+    background-color: var(--background-color);
 }
 
 .page-section.dynamic-bg-elements::before,
 .page-section.dynamic-bg-elements::after {
     content: '';
     position: absolute;
-    border-radius: 50%; /* 圆形 */
-    background-color: var(--secondary-color); /* 使用主题的次要颜色 */
-    opacity: 0.1; /* 半透明效果 */
-    z-index: -1; /* 放置在内容下方 */
-    animation: float-elements 15s infinite ease-in-out alternate; /* 浮动动画 */
+    background-color: var(--secondary-color);
+    opacity: 0.1;
+    z-index: -1;
+    transition: background-color 0.5s ease, clip-path 0.8s ease;
+    animation: float-and-morph 20s infinite ease-in-out alternate; /* **更新动画** */
 }
 
 .page-section.dynamic-bg-elements::before {
-    width: 150px;
-    height: 150px;
-    top: 10%;
-    left: -5%;
-    transform: rotate(20deg);
-    animation-duration: 18s;
+    width: 180px; /* 增大尺寸 */
+    height: 180px;
+    top: 15%;
+    left: -8%;
+    clip-path: circle(50%); /* 初始圆形 */
+    animation-duration: 22s;
     animation-delay: 0s;
 }
 
 .page-section.dynamic-bg-elements::after {
-    width: 100px;
-    height: 100px;
-    bottom: 5%;
-    right: -5%;
-    transform: rotate(-30deg);
-    animation-duration: 12s;
+    width: 120px;
+    height: 120px;
+    bottom: 10%;
+    right: -8%;
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* 初始菱形 */
+    animation-duration: 16s;
     animation-delay: 2s;
-    background-color: var(--primary-color); /* 可以用主要颜色或次要颜色 */
+    background-color: var(--primary-color);
 }
 
-@keyframes float-elements {
+/* **新增动画** */
+@keyframes float-and-morph {
     0% {
         transform: translate(0, 0) rotate(0deg);
         opacity: 0.1;
+        clip-path: circle(50%);
     }
-    30% {
-        transform: translate(20px, 10px) rotate(10deg);
+    25% {
+        transform: translate(30px, 20px) rotate(45deg);
         opacity: 0.15;
+        clip-path: ellipse(40% 50% at 50% 50%);
     }
-    60% {
-        transform: translate(-10px, 30px) rotate(-5deg);
+    50% {
+        transform: translate(-20px, 40px) rotate(90deg);
         opacity: 0.1;
+        clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+    }
+    75% {
+        transform: translate(10px, 10px) rotate(135deg);
+        opacity: 0.15;
+        clip-path: ellipse(50% 40% at 50% 50%);
     }
     100% {
-        transform: translate(0, 0) rotate(0deg);
+        transform: translate(0, 0) rotate(180deg);
         opacity: 0.1;
+        clip-path: circle(50%);
     }
 }
 
@@ -724,8 +759,9 @@ a:hover {
         padding-right: 15px;
         padding-bottom: 15px;
     }
+    /* 移动端隐藏背景元素，避免干扰 */
     .page-section.dynamic-bg-elements::before,
     .page-section.dynamic-bg-elements::after {
-        display: none; /* 移动端隐藏背景元素，避免干扰 */
+        display: none; 
     }
 }

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honoka的二次元博客 - V1.4</title>
+    <title>Honoka的二次元博客 - V1.5</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <!-- 引入二次元风格字体，例如：Google Fonts 上的 'M PLUS Rounded 1c' -->
@@ -53,6 +53,12 @@
                 <p>这里记录着我的日常，分享我的热爱。</p>
                 <p class="visitor-count">总浏览次数：<span id="view-count">0</span></p>
                 <p id="hitokoto-quote" class="random-quote">加载随机一言中...</p> <!-- 随机一言 -->
+
+                <!-- 今日运势功能 **新增** -->
+                <div class="daily-fortune-widget">
+                    <button id="draw-fortune-btn" class="anime-button primary"><i class="fas fa-dice"></i> 今日运势</button>
+                    <p id="fortune-display" class="fortune-text">点击按钮抽取你的今日运势！</p>
+                </div>
                 <a href="#blog" class="anime-button primary">查看最新文章</a>
             </div>
             <div class="latest-posts container">
@@ -66,13 +72,13 @@
         <section id="blog" class="page-section">
             <div class="container">
                 <h2>所有博客文章</h2>
-                <div class="posts-grid" id="blog-posts-container"> <!-- **更新：改为网格布局** -->
+                <div class="posts-grid" id="blog-posts-container">
                     <!-- 文章卡片将由 JavaScript 动态加载 -->
                 </div>
             </div>
         </section>
 
-        <section id="about" class="page-section dynamic-bg-elements"> <!-- **新增 dynamic-bg-elements 类** -->
+        <section id="about" class="page-section dynamic-bg-elements">
             <div class="container about-me-section anime-card">
                 <h2>关于我</h2>
                 <div class="profile-info">
@@ -80,16 +86,16 @@
                     <p class="animated-typing">你好，我是 Honoka，一个热爱二次元世界的普通开发者。</p>
                     <p>喜欢动漫、游戏、编程，也喜欢用代码创造有趣的东西，希望通过这个博客分享我的点滴。</p>
                     <a href="tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=3203418940&param=EA-AA" target="_blank" rel="noopener noreferrer" class="anime-button social-button qq" title="点击添加QQ好友">
-                        <i class="fab fa-qq"></i> 添加QQ好友
+                        <i class="fab fa-qq></i> 添加QQ好友
                     </a>
                 </div>
             </div>
         </section>
 
-        <section id="message-board" class="page-section dynamic-bg-elements"> <!-- **新增 dynamic-bg-elements 类** -->
+        <section id="message-board" class="page-section dynamic-bg-elements">
             <div class="container anime-card">
                 <h2>留言板</h2>
-                <div class="comment-form">
+                <div class="comment-form>
                     <p>在这里留下你的足迹吧！</p>
                     <form id="comment-form>
                         <input type="text" id="comment-name" placeholder="你的昵称" required class="anime-input" maxlength="20">
@@ -114,7 +120,7 @@
     <footer class="anime-footer">
         <div class="container">
             <p>© <span id="current-year"></span> Honoka. All rights reserved.</p>
-            <p>网站版本: V1.4 | 上次更新: <span id="current-time"></span></p>
+            <p>网站版本: V1.5 | 上次更新: <span id="current-time"></span></p>
         </div>
     </footer>
 

@@ -78,6 +78,7 @@ export async function getRandomAnimeImage() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log('Fetched anime image:', data.url); // Debug log
         return data.url;
     } catch (error) {
         console.error('Failed to fetch anime image from API, using fallback:', error);
@@ -93,8 +94,7 @@ export async function getRandomAnimeImage() {
  * @returns {Promise<string>} 返回一言内容及来源
  */
 export async function getHitokotoQuote() {
-    // 尽可能获取多个类型的一言，不包括文学（b，哲学（e，评论（f）为了更轻快
-    const apiUrl = 'https://v1.hitokoto.cn/?c=a&c=c&c=d&c=g&c=h&c=i&c=j&c=k&c=l';
+    const apiUrl = 'https://v1.hitokoto.cn/?c=a&c=c&c=d&c=g&c=h&c=i&c=j&c=k&c=l'; // 尽可能获取多个类型
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
@@ -107,6 +107,37 @@ export async function getHitokotoQuote() {
     } catch (error) {
         console.error('Failed to fetch Hitokoto quote, using fallback:', error);
         return '愿你被这世界温柔以待。'; // 备用一言
+    }
+}
+
+// **新增：今日运势数据**
+export const dailyFortunes = [
+    { type: '大吉', message: '今日运势大吉，心想事成，万事顺利！桃花运旺，学业事业双丰收！' },
+    { type: '中吉', message: '运势中吉，偶有小挑战，但转危为安。财运平稳，小心花销。' },
+    { type: '小吉', message: '运势小吉，平淡是福。适合学习和沉淀，积累力量。' },
+    { type: '末吉', message: '运势平平，小有烦恼。保持平常心，注意身体健康。' },
+    { type: '凶', message: '今日运势稍有不顺，行事需谨慎。宜静不宜动，三思而后行。' },
+    { type: '大凶', message: '运势不佳，可能会遇到较大阻碍。保持积极心态，寻求帮助可得贵人相助。' },
+    { type: '超大吉', message: '逆天运势！所有不幸都会转化为幸福，意想不到的好运即将降临！' },
+    { type: '恋爱吉', message: '今日恋爱运势极佳，勇敢表白，会有意想不到的惊喜！' },
+    { type: '学业吉', message: '学业运势鼎盛，灵感如泉涌。是攻克难题，提升成绩的好时机！' },
+];
+
+/**
+ * 获取今日运势
+ * @returns {string} 运势信息
+ */
+export function getDailyFortune() {
+    const today = new Date().toDateString();
+    let fortune = localStorage.getItem('daily_fortune_' + today);
+
+    if (fortune) {
+        return fortune;
+    } else {
+        const randomIndex = Math.floor(Math.random() * dailyFortunes.length);
+        fortune = `【${dailyFortunes[randomIndex].type}】${dailyFortunes[randomIndex].message}`;
+        localStorage.setItem('daily_fortune_' + today, fortune); // 每天只抽取一次
+        return fortune;
     }
 }
 
@@ -191,12 +222,12 @@ export class SectionController {
             } else {
                 this.setActive('home'); // 如果哈希无效，则回到首页
             }
-            document.title = `Honoka的二次元博客 - V1.4 - ${this.getSectionTitle(hash)}`; // 更新标题
+            document.title = `Honoka的二次元博客 - V1.5 - ${this.getSectionTitle(hash)}`; // 更新标题
         });
 
         // 初始化显示默认 section
         this.setActive(this.currentActiveSectionId);
-        document.title = `Honoka的二次元博客 - V1.4 - ${this.getSectionTitle(this.currentActiveSectionId)}`; // 初始化标题
+        document.title = `Honoka的二次元博客 - V1.5 - ${this.getSectionTitle(this.currentActiveSectionId)}`; // 初始化标题
     }
 
     /**
@@ -229,6 +260,7 @@ export class SectionController {
      */
     setActive(targetSectionId) {
         this.currentActiveSectionId = targetSectionId;
+        console.log(`Setting active section to: ${targetSectionId}`); // Debug log
 
         this.pageSections.forEach(section => {
             if (section.id === targetSectionId) {
