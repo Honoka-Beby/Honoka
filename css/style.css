@@ -196,7 +196,7 @@ a:hover {
 
 .page-section {
     padding: 40px 0;
-    display: none; /* 默认隐藏所有section */
+    display: none; /* 默认隐藏所有section **重要：确保此规则生效** */
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
@@ -246,20 +246,20 @@ a:hover {
     margin-bottom: 20px; /* 增加底部间距 */
 }
 
-/* Random Quote styling **重要调整** */
+/* Random Quote styling */
 .random-quote {
     font-style: italic;
-    font-size: 1.3em; /* 增大字体 */
+    font-size: 1.3em;
     margin-bottom: 25px;
-    color: #fff; /* 改为白色以便在渐变背景上更明显 */
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.6); /* 更明显的阴影 */
+    color: #fff;
+    text-shadow: 1px 1px 4px rgba(0,0,0,0.7); /* 更明显的阴影 */
     transition: color 0.5s ease;
-    min-height: 2em; /* 防止加载时布局跳动 */
-    padding: 0 10px; /* 增加左右内边距 */
-    max-width: 80%; /* 限制宽度 */
+    min-height: 2em;
+    padding: 0 10px;
+    max-width: 80%;
 }
 
-/* Daily Fortune Widget **新增样式** */
+/* Daily Fortune Widget */
 .daily-fortune-widget {
     background-color: rgba(255, 255, 255, 0.25);
     border-radius: 10px;
@@ -272,16 +272,70 @@ a:hover {
     color: #fff;
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: background-color 0.3s ease;
+    position: relative; /* 运势动画元素需要 */
+    overflow: hidden; /* 裁剪动画元素 */
 }
 .daily-fortune-widget .anime-button {
     margin-bottom: 15px;
+    transform: scale(1);
+    transition: transform 0.2s ease;
 }
+.daily-fortune-widget .anime-button:active {
+    transform: scale(0.95); /* 点击反馈 */
+}
+
+.fortune-result-area {
+    position: relative;
+    min-height: 3.5em; /* 确保有足够空间显示运势和动画 */
+    margin-top: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
 .fortune-text {
     font-size: 1.1em;
     font-weight: bold;
-    min-height: 1.5em; /* 防止内容加载时跳动 */
+    min-height: 1.5em;
+    opacity: 0; /* 初始隐藏，用动画显示 */
+    transform: scale(0.8);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+}
+.fortune-text.show {
+    opacity: 1;
+    transform: scale(1);
 }
 
+.fortune-burst-animation {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    pointer-events: none; /* 不阻止点击事件 */
+}
+
+.fortune-burst-animation span {
+    position: absolute;
+    font-size: 1.8em;
+    opacity: 0;
+    transition: all 0.5s ease-out;
+    filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
+}
+.fortune-burst-animation.play span {
+    animation: burst-fade 0.8s forwards;
+}
+
+@keyframes burst-fade {
+    0% { transform: translate(0,0) scale(0.5); opacity: 0; }
+    50% { opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(1.5); opacity: 0; }
+}
 
 
 /* Anime Card Component */
@@ -289,12 +343,12 @@ a:hover {
     background-color: var(--card-bg);
     border-radius: 10px;
     box-shadow: 0 4px 10px var(--box-shadow-light); /* 柔和阴影 */
-    padding: 0; /* 修正：移除卡片自身的padding，内部内容有自己的padding */
+    padding: 0;
     margin-bottom: 25px;
     transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* **修复**：裁剪超出圆角的部分 */
+    overflow: hidden;
 }
 
 /* 为卡片内容的区域设置内边距 */
@@ -302,10 +356,9 @@ a:hover {
     padding-left: 25px;
     padding-right: 25px;
 }
-.anime-card h3 { padding-top: 25px; } /* 标题顶部间距 */
-/* **修复**：确保阅读更多按钮始终在底部 */
+.anime-card h3 { padding-top: 25px; }
 .anime-card .read-more { 
-    margin-top: auto; /* 自动向上推，将其余内容推到顶部，自身保持在底部*/
+    margin-top: auto; /* **修复**：自动向上推，将其余内容推到顶部，自身保持在底部*/
     padding-bottom: 25px; /* 按钮底部间距 */
 }
 
@@ -316,17 +369,16 @@ a:hover {
 }
 
 .card-cover {
-    width: 100%; /* **修复**：图片完全展开在卡片内 */
+    width: 100%;
     height: 180px;
-    object-fit: cover; /* **修复**：保持图片覆盖区域，裁剪多余部分以适应比例 */
-    /* 移除 border-radius, 让父级 .anime-card 的 overflow: hidden 处理圆角 */
-    filter: brightness(0.95); /* 略微变暗 */
+    object-fit: cover;
+    filter: brightness(0.95);
     transition: filter 0.3s ease;
     margin-bottom: 15px; /* 封面与下方内容的间距 */
 }
 
 .anime-card:hover .card-cover {
-    filter: brightness(1); /* 恢复亮度 */
+    filter: brightness(1);
 }
 
 /* Anime Button Component */
@@ -341,7 +393,7 @@ a:hover {
     font-family: 'M PLUS Rounded 1c', sans-serif;
     transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
     text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
-    display: inline-flex; /* 允许图标和文字对齐 */
+    display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px; /* 图标和文字间距 */
@@ -370,9 +422,9 @@ a:hover {
     border-radius: 8px;
     font-family: 'M PLUS Rounded 1c', sans-serif;
     font-size: 1em;
-    color: var(--text-color); /* 确保输入框文字颜色适应主题 */
-    background-color: var(--card-bg); /* 确保输入框背景颜色适应主题 */
-    box-sizing: border-box; /* Ensures padding doesn't push width over */
+    color: var(--text-color);
+    background-color: var(--card-bg);
+    box-sizing: border-box;
     transition: border-color 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, color 0.5s ease;
 }
 
@@ -413,7 +465,7 @@ a:hover {
     border-radius: 50%;
     object-fit: cover;
     border: 3px solid var(--primary-color);
-    box-shadow: 0 0 0 5px rgba(255,153,170,0.3); /* 固定为粉色光环，也可改为 var(--primary-color) */
+    box-shadow: 0 0 0 5px rgba(255,153,170,0.3);
     margin-bottom: 20px;
     transition: transform 0.3s ease, border-color 0.5s ease, box-shadow 0.5s ease;
 }
@@ -433,15 +485,15 @@ a:hover {
 
 /* 模拟打字动画 */
 .animated-typing {
-    overflow: hidden; /* Ensures the content is not revealed until the animation */
-    white-space: nowrap; /* Keeps the content on a single line */
-    margin: 0 auto; /* Gives that scrolling effect as the typing happens */
-    letter-spacing: 0.05em; /* Adjust as needed */
+    overflow: hidden;
+    white-space: nowrap;
+    margin: 0 auto;
+    letter-spacing: 0.05em;
     animation:
-      typing 2s steps(40, end) forwards, /* forwards 保持动画结束状态 */
+      typing 2s steps(40, end) forwards,
       blink-caret .75s step-end infinite;
-    width: fit-content; /* Make sure the element width adapts to its content */
-    border-right: .15em solid var(--primary-color); /* The typewriter cursor */
+    width: fit-content;
+    border-right: .15em solid var(--primary-color);
 }
 
 /* The typing animation effect */
@@ -470,7 +522,7 @@ a:hover {
 }
 
 .comment-item {
-    background-color: var(--background-color); /* 留言背景色与主背景一致 */
+    background-color: var(--background-color);
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
@@ -540,10 +592,10 @@ a:hover {
 
 /* Article Detail Page Specific Styles */
 .article-detail-cover {
-    width: 100%; /* **修复**：图片完全展开在卡片内 */
+    width: 100%;
     height: 250px;
-    object-fit: cover; /* **修复**：保持图片覆盖区域 */
-    margin: 0 0 25px 0; /* 封面与下方内容的间距 */
+    object-fit: cover;
+    margin: 0 0 25px 0;
     filter: brightness(0.95);
     transition: filter 0.3s ease;
 }
@@ -556,16 +608,16 @@ a:hover {
     margin-top: 20px;
     padding-top: 20px;
     border-top: 1px solid var(--border-color);
-    padding-left: 25px; /* 确保内容也有内边距 */
+    padding-left: 25px;
     padding-right: 25px;
-    padding-bottom: 25px; /* 底部也给点边距 */
+    padding-bottom: 25px;
 }
 
 .article-content p {
     margin-bottom: 1em;
 }
 
-/* **新功能：关于我/留言板页面的动态背景元素** */
+/* 关于我/留言板页面的动态背景元素 */
 .page-section.dynamic-bg-elements {
     position: relative;
     overflow: hidden;
@@ -580,15 +632,15 @@ a:hover {
     opacity: 0.1;
     z-index: -1;
     transition: background-color 0.5s ease, clip-path 0.8s ease;
-    animation: float-and-morph 20s infinite ease-in-out alternate; /* **更新动画** */
+    animation: float-and-morph 20s infinite ease-in-out alternate;
 }
 
 .page-section.dynamic-bg-elements::before {
-    width: 180px; /* 增大尺寸 */
+    width: 180px;
     height: 180px;
     top: 15%;
     left: -8%;
-    clip-path: circle(50%); /* 初始圆形 */
+    clip-path: circle(50%);
     animation-duration: 22s;
     animation-delay: 0s;
 }
@@ -598,13 +650,12 @@ a:hover {
     height: 120px;
     bottom: 10%;
     right: -8%;
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* 初始菱形 */
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
     animation-duration: 16s;
     animation-delay: 2s;
     background-color: var(--primary-color);
 }
 
-/* **新增动画** */
 @keyframes float-and-morph {
     0% {
         transform: translate(0, 0) rotate(0deg);

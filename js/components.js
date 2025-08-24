@@ -78,10 +78,10 @@ export async function getRandomAnimeImage() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log('Fetched anime image:', data.url); // Debug log
+        console.log('[Components] Fetched anime image:', data.url); // Debug log
         return data.url;
     } catch (error) {
-        console.error('Failed to fetch anime image from API, using fallback:', error);
+        console.error('[Components] Failed to fetch anime image from API, using fallback:', error);
         // 使用本地备用图片并循环
         const imageUrl = fallbackImages[fallbackImageIndex];
         fallbackImageIndex = (fallbackImageIndex + 1) % fallbackImages.length;
@@ -94,50 +94,55 @@ export async function getRandomAnimeImage() {
  * @returns {Promise<string>} 返回一言内容及来源
  */
 export async function getHitokotoQuote() {
-    const apiUrl = 'https://v1.hitokoto.cn/?c=a&c=c&c=d&c=g&c=h&c=i&c=j&c=k&c=l'; // 尽可能获取多个类型
+    // 尽可能获取多个类型的一言，不包括文学（b，哲学（e，评论（f）为了更轻快
+    const apiUrl = 'https://v1.hitokoto.cn/?c=a&c=c&c=d&c=g&c=h&c=i&c=j&c=k&c=l';
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log('[Components] Fetched Hitokoto quote:', data.hitokoto); // Debug log
         const from = data.from ? `——《${data.from}》` : '';
         const creator = data.creator ? ` · ${data.creator}` : '';
         return `${data.hitokoto}${from}${creator}`;
     } catch (error) {
-        console.error('Failed to fetch Hitokoto quote, using fallback:', error);
+        console.error('[Components] Failed to fetch Hitokoto quote, using fallback:', error);
         return '愿你被这世界温柔以待。'; // 备用一言
     }
 }
 
-// **新增：今日运势数据**
+// 今日运势数据
 export const dailyFortunes = [
-    { type: '大吉', message: '今日运势大吉，心想事成，万事顺利！桃花运旺，学业事业双丰收！' },
-    { type: '中吉', message: '运势中吉，偶有小挑战，但转危为安。财运平稳，小心花销。' },
-    { type: '小吉', message: '运势小吉，平淡是福。适合学习和沉淀，积累力量。' },
-    { type: '末吉', message: '运势平平，小有烦恼。保持平常心，注意身体健康。' },
-    { type: '凶', message: '今日运势稍有不顺，行事需谨慎。宜静不宜动，三思而后行。' },
-    { type: '大凶', message: '运势不佳，可能会遇到较大阻碍。保持积极心态，寻求帮助可得贵人相助。' },
-    { type: '超大吉', message: '逆天运势！所有不幸都会转化为幸福，意想不到的好运即将降临！' },
-    { type: '恋爱吉', message: '今日恋爱运势极佳，勇敢表白，会有意想不到的惊喜！' },
-    { type: '学业吉', message: '学业运势鼎盛，灵感如泉涌。是攻克难题，提升成绩的好时机！' },
+    { type: '大吉', message: '今日运势大吉，心想事成，万事顺利！桃花运旺，学业事业双丰收！ (^_^)b', emoji: '✨', color: 'lightgreen' },
+    { type: '中吉', message: '运势中吉，偶有小挑战，但转危为安。财运平稳，小心花销。 (๑•̀ㅂ•́)و✧', emoji: '🌟', color: 'paleturquoise' },
+    { type: '小吉', message: '运势小吉，平淡是福。适合学习和沉淀，积累力量。 (´▽｀)', emoji: '🍀', color: 'lightyellow' },
+    { type: '末吉', message: '运势平平，小有烦恼。保持平常心，注意身体健康。 (ง •̀_•́)ง', emoji: '💧', color: 'lightcoral' },
+    { type: '凶', message: '今日运势稍有不顺，行事需谨慎。宜静不宜动，三思而后行。 (╯﹏╰)', emoji: '⚠️', color: 'salmon' },
+    { type: '大凶', message: '运势不佳，可能会遇到较大阻碍。保持积极心态，寻求帮助可得贵人相助。 (ಥ﹏ಥ)', emoji: '⛈️', color: 'darkred' },
+    { type: '超大吉', message: '逆天运势！所有不幸都会转化为幸福，意想不到的好运即将降临！ (☆▽☆)！', emoji: '💖', color: 'gold' },
+    { type: '恋爱吉', message: '今日恋爱运势极佳，勇敢表白，会有意想不到的惊喜！ (❤ ω ❤)', emoji: '❤️', color: 'pink' },
+    { type: '学业吉', message: '学业运势鼎盛，灵感如泉涌。是攻克难题，提升成绩的好时机！ (ง •_•)ง', emoji: '📚', color: 'lightblue' },
 ];
 
 /**
  * 获取今日运势
- * @returns {string} 运势信息
+ * @returns {Object} 包含运势类型和消息的对象
  */
 export function getDailyFortune() {
     const today = new Date().toDateString();
-    let fortune = localStorage.getItem('daily_fortune_' + today);
+    let fortuneData = localStorage.getItem('daily_fortune_' + today);
 
-    if (fortune) {
-        return fortune;
+    if (fortuneData) {
+        console.log('[Components] Loaded daily fortune from localStorage.', JSON.parse(fortuneData));
+        return JSON.parse(fortuneData);
     } else {
         const randomIndex = Math.floor(Math.random() * dailyFortunes.length);
-        fortune = `【${dailyFortunes[randomIndex].type}】${dailyFortunes[randomIndex].message}`;
-        localStorage.setItem('daily_fortune_' + today, fortune); // 每天只抽取一次
-        return fortune;
+        const selectedFortune = dailyFortunes[randomIndex];
+        // 保存完整对象，包括 emoji 和 color
+        localStorage.setItem('daily_fortune_' + today, JSON.stringify(selectedFortune));
+        console.log('[Components] New daily fortune generated.', selectedFortune);
+        return selectedFortune;
     }
 }
 
@@ -200,6 +205,7 @@ export class SectionController {
         this.mainNavContainer = document.querySelector(mainNavContainerSelector);
         this.currentActiveSectionId = window.location.hash.substring(1) || 'home'; // 默认激活首页
 
+        console.log('[SectionController] Initializing. Nav items:', this.navItems.length, 'Sections:', this.pageSections.length); // Debug log
         this.init();
     }
 
@@ -208,26 +214,30 @@ export class SectionController {
         this.navItems.forEach(item => {
             item.addEventListener('click', this.handleNavClick.bind(this));
         });
+        console.log('[SectionController] Nav item click handlers bound.');
 
         // 绑定手机端导航切换事件
         if (this.mobileNavToggle) {
             this.mobileNavToggle.addEventListener('click', this.toggleMobileNav.bind(this));
+            console.log('[SectionController] Mobile nav toggle handler bound.');
         }
 
         // 监听 URL 哈希变化，支持浏览器前进/后退
         window.addEventListener('hashchange', () => {
             const hash = window.location.hash.substring(1);
+            console.log('[SectionController] Hash changed to:', hash);
             if (hash && this.getSectionById(hash)) { // 确保哈希对应一个存在的 section
                 this.setActive(hash);
             } else {
                 this.setActive('home'); // 如果哈希无效，则回到首页
             }
-            document.title = `Honoka的二次元博客 - V1.5 - ${this.getSectionTitle(hash)}`; // 更新标题
+            document.title = `Honoka的二次元博客 - V1.6 - ${this.getSectionTitle(hash)}`; // 更新标题
         });
+        console.log('[SectionController] Hashchange listener bound.');
 
         // 初始化显示默认 section
         this.setActive(this.currentActiveSectionId);
-        document.title = `Honoka的二次元博客 - V1.5 - ${this.getSectionTitle(this.currentActiveSectionId)}`; // 初始化标题
+        document.title = `Honoka的二次元博客 - V1.6 - ${this.getSectionTitle(this.currentActiveSectionId)}`; // 初始化标题
     }
 
     /**
@@ -259,27 +269,45 @@ export class SectionController {
      * @param {string} targetSectionId - 目标 section 的 ID (不带 #)
      */
     setActive(targetSectionId) {
+        console.log(`[SectionController] Setting active section to: ${targetSectionId}`);
+
         this.currentActiveSectionId = targetSectionId;
-        console.log(`Setting active section to: ${targetSectionId}`); // Debug log
 
         this.pageSections.forEach(section => {
             if (section.id === targetSectionId) {
-                section.classList.add('active');
+                if (!section.classList.contains('active')) {
+                    section.classList.add('active');
+                    console.log(`[SectionController] Added active to #${section.id}`);
+                }
             } else {
-                section.classList.remove('active');
+                if (section.classList.contains('active')) {
+                    section.classList.remove('active');
+                    console.log(`[SectionController] Removed active from #${section.id}`);
+                }
             }
         });
 
         this.navItems.forEach(item => {
-            if (item.getAttribute('data-section') === targetSectionId) {
-                item.classList.add('active');
-            } else {
-                item.classList.remove('active');
+            // 找到包含 data-section 属性的链接元素或其祖先
+            const navLink = item.closest('a[data-section]');
+            if (navLink) {
+                if (navLink.getAttribute('data-section') === targetSectionId) {
+                    if (!navLink.classList.contains('active')) {
+                        navLink.classList.add('active');
+                        console.log(`[SectionController] Added active to nav item for ${targetSectionId}`);
+                    }
+                } else {
+                    if (navLink.classList.contains('active')) {
+                        navLink.classList.remove('active');
+                        console.log(`[SectionController] Removed active from nav item for ${navLink.getAttribute('data-section')}`);
+                    }
+                }
             }
         });
 
         if (window.location.hash.substring(1) !== targetSectionId) {
             window.location.hash = targetSectionId;
+            console.log(`[SectionController] Updated window hash to #${targetSectionId}`);
         }
     }
 
@@ -289,12 +317,18 @@ export class SectionController {
      */
     handleNavClick(e) {
         e.preventDefault();
-        const targetSectionId = e.target.closest('.nav-item').getAttribute('data-section');
-        this.setActive(targetSectionId);
+        const navLink = e.target.closest('a[data-section]');
+        if (navLink) {
+            const targetSectionId = navLink.getAttribute('data-section');
+            this.setActive(targetSectionId);
 
-        // 如果是手机端导航，点击后关闭菜单
-        if (this.mainNavContainer && this.mainNavContainer.classList.contains('active')) {
-            this.toggleMobileNav();
+            // 如果是手机端导航，点击后关闭菜单
+            if (this.mainNavContainer && this.mainNavContainer.classList.contains('active')) {
+                this.toggleMobileNav();
+                console.log('[SectionController] Mobile nav closed after click.');
+            }
+        } else {
+            console.warn('[SectionController] Clicked nav item without data-section or closest a tag.', e.target);
         }
     }
 
@@ -304,9 +338,11 @@ export class SectionController {
     toggleMobileNav() {
         if (this.mainNavContainer) {
             this.mainNavContainer.classList.toggle('active');
+            console.log('[SectionController] Toggled mainNavContainer active class.', this.mainNavContainer.classList.contains('active'));
         }
         if (this.mobileNavToggle) {
             this.mobileNavToggle.classList.toggle('open');
+            console.log('[SectionController] Toggled mobileNavToggle open class.', this.mobileNavToggle.classList.contains('open'));
         }
     }
 }

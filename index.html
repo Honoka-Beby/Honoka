@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honoka的二次元博客 - V1.5</title>
+    <title>Honoka的二次元博客 - V1.6</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <!-- 引入二次元风格字体，例如：Google Fonts 上的 'M PLUS Rounded 1c' -->
@@ -57,8 +57,12 @@
                 <!-- 今日运势功能 **新增** -->
                 <div class="daily-fortune-widget">
                     <button id="draw-fortune-btn" class="anime-button primary"><i class="fas fa-dice"></i> 今日运势</button>
-                    <p id="fortune-display" class="fortune-text">点击按钮抽取你的今日运势！</p>
+                    <div id="fortune-result-area" class="fortune-result-area">
+                        <p id="fortune-display" class="fortune-text">点击按钮抽取你的今日运势！</p>
+                        <div id="fortune-burst-animation" class="fortune-burst-animation"></div> <!-- 动画元素 -->
+                    </div>
                 </div>
+
                 <a href="#blog" class="anime-button primary">查看最新文章</a>
             </div>
             <div class="latest-posts container">
@@ -120,7 +124,7 @@
     <footer class="anime-footer">
         <div class="container">
             <p>© <span id="current-year"></span> Honoka. All rights reserved.</p>
-            <p>网站版本: V1.5 | 上次更新: <span id="current-time"></span></p>
+            <p>网站版本: V1.6 | 上次更新: <span id="current-time"></span></p>
         </div>
     </footer>
 
