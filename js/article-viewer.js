@@ -15,6 +15,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const articleContentElem = document.getElementById('article-content');
     const articleCoverElem = document.getElementById('article-cover');
     const currentYearArticleSpan = document.getElementById('current-year-article');
+    const readingProgressBar = document.getElementById('reading-progress-bar'); // 阅读进度条
+
 
     // 从 localStorage 加载主题并应用
     const savedTheme = localStorage.getItem('theme') || 'light-theme';
@@ -33,14 +35,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         
         if (article) {
             console.log('[ArticleViewer] Found article:', article);
-            document.title = `${article.title} - Honoka的二次元博客 V1.7`;
+            document.title = `${article.title} - Honoka的二次元博客 V1.0`;
 
             if (articleTitleElem) articleTitleElem.textContent = article.title;
             if (articleDateElem) articleDateElem.textContent = article.date;
             if (articleCategoryElem) articleCategoryElem.textContent = article.category;
             if (articleContentElem) articleContentElem.innerHTML = article.content;
             
-            // **重要修复：确保封面图片加载**
+            // **确保封面图片加载**
             if (articleCoverElem) {
                 if (article.coverImage) {
                     articleCoverElem.src = article.coverImage; // 如果主页已经加载并保存了，直接用
@@ -61,29 +63,39 @@ document.addEventListener('DOMContentLoaded', async () => {
                 console.warn('[ArticleViewer] Article cover element not found.');
             }
 
+            // **新增：阅读进度条功能**
+            if (readingProgressBar && articleContentElem) {
+                window.addEventListener('scroll', () => {
+                    const scrollHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
+                    const scrolled = (window.scrollY / scrollHeight) * 100;
+                    readingProgressBar.style.width = scrolled > 100 ? '100%' : `${scrolled}%`;
+                });
+                console.log('[ArticleViewer] Reading progress bar enabled.');
+            }
+
+
         } else {
             console.warn('[ArticleViewer] Article not found for ID:', articleId);
-            document.title = '文章未找到 - Honoka的二次元博客 V1.7';
+            document.title = '文章未找到 - Honoka的二次元博客 V1.0';
             if (articleTitleElem) articleTitleElem.textContent = '404 - 文章未找到';
             if (articleDateElem) articleDateElem.textContent = '';
             if (articleCategoryElem) articleCategoryElem.textContent = '';
             if (articleContentElem) articleContentElem.innerHTML = '<p>很抱歉，您要查找的文章不存在。</p><p><a href="index.html#blog" class="anime-button">返回博客列表</a></p>';
-            // 添加一个错误状态的封面图，而不是直接隐藏
             if (articleCoverElem) {
-                articleCoverElem.src = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`; // 随机显示一个备用图
+                articleCoverElem.src = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`;
                 articleCoverElem.alt = '文章未找到封面';
-                articleCoverElem.style.display = 'block'; // 确保显示
+                articleCoverElem.style.display = 'block';
             }
         }
     } else {
         console.warn('[ArticleViewer] Article ID is missing in URL.');
-        document.title = '文章ID缺失 - Honoka的二次元博客 V1.7';
+        document.title = '文章ID缺失 - Honoka的二次元博客 V1.0';
         if (articleTitleElem) articleTitleElem.textContent = '文章ID缺失';
         if (articleContentElem) articleContentElem.innerHTML = '<p>请通过正确的链接访问文章。</p><p><a href="index.html#blog" class="anime-button">返回博客列表</a></p>';
         if (articleCoverElem) {
-            articleCoverElem.src = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`; // 随机显示一个备用图
+            articleCoverElem.src = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`;
             articleCoverElem.alt = '文章ID缺失封面';
-            articleCoverElem.style.display = 'block'; // 确保显示
+            articleCoverElem.style.display = 'block';
         }
     }
     console.log('[ArticleViewer] Article page initialization complete.');

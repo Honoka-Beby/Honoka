@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文章详情 - Honoka的二次元博客 V1.7</title> <!-- 更新版本号 -->
+    <title>文章详情 - Honoka的二次元博客 V1.0</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body class="light-theme">
-    <!-- 头部导航栏，可以简化，或者动态加载主页导航 -->
+    <!-- 头部导航栏 -->
     <header class="anime-header">
         <div class="container">
             <h1 class="blog-title"><span>🌸 Honoka 🌸</span></h1>
@@ -20,7 +20,7 @@
         </div>
     </header>
 
-    <main class="page-content>
+    <main class="page-content reading-page"> <!-- **新增 reading-page 类** -->
         <section id="article-detail" class="page-section active">
             <div class="container anime-card">
                 <img id="article-cover" src="assets/images/fallback-cover-1.png" alt="文章封面" class="article-detail-cover" onerror="this.onerror=null;this.src='assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png';">
@@ -33,17 +33,19 @@
         </section>
     </main>
 
+    <!-- 阅读进度条 -->
+    <div id="reading-progress-bar" class="reading-progress-bar"></div>
+
     <!-- 页脚 -->
     <footer class="anime-footer">
         <div class="container">
             <p>© <span id="current-year-article"></span> Honoka. All rights reserved.</p>
-            <p>网站版本: V1.7</p> <!-- 更新版本号 -->
+            <p>网站版本: V1.0</p>
         </div>
     </footer>
 
     <script type="module" src="js/article-viewer.js"></script>
     <script>
-        // 确保页脚年份正确显示
         document.getElementById('current-year-article').textContent = new Date().getFullYear();
     </script>
 </body>

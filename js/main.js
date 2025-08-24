@@ -1,5 +1,5 @@
 // js/main.js
-import { createCommentElement, createArticleCardElement, SectionController, getRandomAnimeImage, getHitokotoQuote, getDailyFortune, blogArticles } from './components.js';
+import { createCommentElement, createArticleCardElement, SectionController, getRandomAnimeImage, getHitokotoQuote, getDailyFortune, blogArticles, dailyFortunes } from './components.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     console.log('[Main] DOMContentLoaded event fired on index.html, starting main.js initialization.');
@@ -20,7 +20,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const fortuneBurstAnimation = document.getElementById('fortune-burst-animation');
     const blogPostsContainer = document.getElementById('blog-posts-container');
     const latestPostsContainer = document.getElementById('latest-posts-container');
-    const filterButtons = document.querySelectorAll('.blog-filter-controls .filter-btn'); // 新增筛选按钮选择器
+    const blogFilterControls = document.querySelector('.blog-filter-controls'); // 获取筛选器容器
+    const copyQqBtn = document.getElementById('copy-qq-btn'); // 复制QQ按钮
 
 
     // 过渡场景动画：页面加载
@@ -30,11 +31,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             loadingScreen.classList.add('hidden');
             loadingScreen.addEventListener('transitionend', () => {
                 if (loadingScreen) loadingScreen.style.display = 'none';
-                body.classList.add('loaded'); // 页面内容淡入
+                body.classList.add('loaded');
                 console.log('[Main] Loading screen hidden, body loaded.');
             }, { once: true });
         } else {
-            body.classList.add('loaded'); // 如果没有加载屏，直接显示
+            body.classList.add('loaded');
         }
     }, 800);
 
@@ -75,10 +76,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 页面导航及过渡动画 (使用 SectionController 组件)
     // ----------------------------------------------------
     const sectionController = new SectionController(
-        '.main-nav .nav-item',       // 导航项的选择器
-        '.page-section',             // 页面 section 的选择器
-        '.mobile-nav-toggle',        // 手机导航切换按钮的选择器
-        '.main-nav'                  // 主导航容器的选择器
+        '.main-nav .nav-item',
+        '.page-section',
+        '.mobile-nav-toggle',
+        '.main-nav'
     );
     console.log('[Main] SectionController initialized.');
 
@@ -86,13 +87,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 博客文章动态加载
     // ----------------------------------------------------
     console.log('[Main] Fetching anime images for articles...');
-    // 为每篇文章获取封面图片 (并行处理，优化加载速度)
     const articlePromises = blogArticles.map(async (article) => {
         try {
             article.coverImage = await getRandomAnimeImage();
         } catch (e) {
             console.error('[Main] Error getting random image for article ', article.id, ', using fallback:', e);
-            article.coverImage = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`; // 确保使用模板字符串
+            article.coverImage = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`;
         }
         return article;
     });
@@ -102,7 +102,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log('[Main] All article covers fetched.', articlesWithCovers);
     } catch (e) {
         console.error('[Main] Error in Promise.all for article covers:', e);
-        // Fallback: Use articles with potentially empty or existing covers, ensure local fallback loop
         articlesWithCovers = blogArticles.map(article => {
             if (!article.coverImage) {
                  article.coverImage = `assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png`;
@@ -114,7 +113,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 渲染文章列表的函数，支持筛选
     function renderArticles(container, articlesToRender) {
         if (!container) return;
-        container.innerHTML = ''; // 清空现有内容
+        container.innerHTML = '';
         articlesToRender.forEach(post => {
             const articleElement = createArticleCardElement(post);
             container.appendChild(articleElement);
@@ -128,22 +127,37 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 
     // **新增：博客分类筛选功能逻辑**
-    filterButtons.forEach(button => {
-        button.addEventListener('click', (e) => {
-            filterButtons.forEach(btn => btn.classList.remove('active')); // 移除所有active
-            e.currentTarget.classList.add('active'); // 添加当前active
-
-            const category = e.currentTarget.getAttribute('data-category');
-            let filteredArticles;
-            if (category === 'all') {
-                filteredArticles = articlesWithCovers;
-            } else {
-                filteredArticles = articlesWithCovers.filter(article => article.category === category);
-            }
-            renderArticles(blogPostsContainer, filteredArticles);
+    if (blogFilterControls) {
+        // 动态生成分类按钮
+        const categories = [...new Set(blogArticles.map(article => article.category))];
+        categories.forEach(category => {
+            const button = document.createElement('button');
+            button.classList.add('anime-button', 'filter-btn');
+            button.setAttribute('data-category', category);
+            button.textContent = category;
+            blogFilterControls.appendChild(button);
         });
-    });
-    console.log('[Main] Blog category filter listeners bound.');
+        
+        const filterButtons = document.querySelectorAll('.blog-filter-controls .filter-btn'); // 重新选择所有按钮
+        filterButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                filterButtons.forEach(btn => btn.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+
+                const category = e.currentTarget.getAttribute('data-category');
+                let filteredArticles;
+                if (category === 'all') {
+                    filteredArticles = articlesWithCovers;
+                } else {
+                    filteredArticles = articlesWithCovers.filter(article => article.category === category);
+                }
+                renderArticles(blogPostsContainer, filteredArticles);
+            });
+        });
+        console.log('[Main] Blog category filter listeners and dynamic buttons bound.');
+    } else {
+        console.log('[Main] blogFilterControls not found.');
+    }
 
 
     // 随机一言功能
@@ -163,45 +177,32 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 今日运势功能
     // ----------------------------------------------------
-    const FortuneBurstCharacters = {
-        positive: ['🎉', '✨', '💖', '🌟', '🍀', '🌈', '🌸', '🎐'],
-        neutral: ['😊', '⭐'],
-        negative: ['💧', '⚠️', '🌧️', '💔']
-    };
-    const FortuneTextBurst = {
-        positive: ['WOW!', '恭喜!', '超棒!', '好运!', 'Yeah!'],
-        neutral: ['平稳!', '努力!', '加油!'],
-        negative: ['注意!', '小心!', '坚持!', '挺住!']
-    };
-
     function createBurstElement(content, color, type = 'emoji') {
         const span = document.createElement('span');
         span.textContent = content;
         span.style.color = color;
-        // 随机偏移量
-        const dx = Math.random() * 100 - 50; // -50px to 50px
-        const dy = Math.random() * 100 - 50; // -50px to 50px
+        const dx = Math.random() * 100 - 50;
+        const dy = Math.random() * 100 - 50;
         span.style.setProperty('--dx', `${dx}px`);
         span.style.setProperty('--dy', `${dy}px`);
-        span.style.fontSize = type === 'text' ? '1.2em' : '2em'; // 文本小一点，emoji大一点
+        span.style.fontSize = type === 'text' ? '1.2em' : '2em';
         return span;
     }
 
     if (drawFortuneBtn && fortuneDisplay && fortuneResultArea && fortuneBurstAnimation) {
         const initialFortune = getDailyFortune();
         fortuneDisplay.textContent = `【${initialFortune.type}】${initialFortune.message}`;
-        fortuneDisplay.style.color = initialFortune.color || '#fff'; // 确保颜色
-        fortuneDisplay.classList.add('show');
+        fortuneDisplay.style.color = initialFortune.color || '#fff';
+        fortuneDisplay.classList.add('show'); // 默认显示
         console.log('[Main] Initial daily fortune displayed.', initialFortune);
         
         drawFortuneBtn.addEventListener('click', () => {
             if (drawFortuneBtn.disabled) return;
 
             drawFortuneBtn.disabled = true;
-            fortuneDisplay.classList.remove('show'); // 隐藏当前运势
+            fortuneDisplay.classList.remove('show');
             
-            // 为动画做准备
-            fortuneBurstAnimation.innerHTML = ''; // 先清空
+            fortuneBurstAnimation.innerHTML = '';
             fortuneBurstAnimation.classList.remove('show');
             
             console.log('[Main] Drawing new fortune...');
@@ -209,55 +210,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             setTimeout(() => {
                 const newFortune = getDailyFortune();
                 fortuneDisplay.textContent = `【${newFortune.type}】${newFortune.message}`;
-                fortuneDisplay.style.color = newFortune.color || '#fff'; // 设置运势文本颜色
+                fortuneDisplay.style.color = newFortune.color || '#fff';
 
                 setTimeout(() => {
                     fortuneDisplay.classList.add('show');
                     drawFortuneBtn.disabled = false;
                     console.log('[Main] New fortune displayed with fade-in.');
 
-                    // 动画: 爆发效果
-                    fortuneBurstAnimation.classList.add('show'); // 显示容器
+                    fortuneBurstAnimation.classList.add('show');
                     
-                    let burstChars = [];
-                    let burstWords = [];
-                    if (['大吉', '超大吉', '恋爱吉', '学业吉'].includes(newFortune.type)) {
-                        burstChars = FortuneBurstCharacters.positive;
-                        burstWords = FortuneTextBurst.positive;
-                    } else if (['中吉', '小吉'].includes(newFortune.type)) {
-                        burstChars = FortuneBurstCharacters.neutral;
-                        burstWords = FortuneTextBurst.neutral;
-                    } else { // 末吉, 凶, 大凶
-                        burstChars = FortuneBurstCharacters.negative;
-                        burstWords = FortuneTextBurst.negative;
-                    }
-
-                    const numEmojis = Math.floor(Math.random() * 3) + 3; // 3到5个emoji
-                    for (let i = 0; i < numEmojis; i++) {
-                        const char = burstChars[Math.floor(Math.random() * burstChars.length)];
+                    // 随机生成几个爆炸元素
+                    const numEmojis = Math.floor(Math.random() * 3) + 3;
+                    newFortune.emojis.forEach((char, i) => {
                         const burstElem = createBurstElement(char, newFortune.color || '#fff', 'emoji');
                         burstElem.style.animation = `burst-fade-out 0.8s ease-out forwards ${i * 0.05}s`;
                         fortuneBurstAnimation.appendChild(burstElem);
-                    }
-                    const numWords = Math.floor(Math.random() * 2) + 1; // 1到2个文字
-                     for (let i = 0; i < numWords; i++) {
-                        const word = burstWords[Math.floor(Math.random() * burstWords.length)];
-                        const burstElem = createBurstElement(word, newFortune.color || '#fff', 'text');
-                        burstElem.style.animation = `burst-fade-out 0.8s ease-out forwards ${i * 0.08}s`;
-                        fortuneBurstAnimation.appendChild(burstElem);
-                    }
+                    });
+                    const numWords = Math.floor(Math.random() * 2) + 1;
+                    newFortune.textBurst.forEach((word, i) => {
+                         const burstElem = createBurstElement(word, newFortune.color || '#fff', 'text');
+                         burstElem.style.animation = `burst-fade-out 0.8s ease-out forwards ${i * 0.08 + numEmojis * 0.05}s`; // 延迟一点
+                         fortuneBurstAnimation.appendChild(burstElem);
+                    });
                     
                     setTimeout(() => {
-                        fortuneBurstAnimation.innerHTML = ''; // 动画结束后清空
+                        fortuneBurstAnimation.innerHTML = '';
                         fortuneBurstAnimation.classList.remove('show');
                         console.log('[Main] Fortune burst animation finished and cleared.');
-                    }, 800 + (numEmojis + numWords)*80); // 确保所有动画都播放完
+                    }, 800 + (numEmojis + numWords) * 100);
 
-                }, 300); // 运势文本淡入延迟
-            }, 0); // 运势文本立即隐藏
+                }, 300);
+            }, 0);
         });
     } else {
-        console.log('[Main] Daily fortune elements not found.');
+        console.log('[Main] Daily fortune elements not found. Skipping fortune game.');
     }
     
     // 浏览次数 (前端模拟存储，不依赖后端)
@@ -280,8 +266,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // 留言板 (前端模拟存储到 localStorage)
     // ----------------------------------------------------
-
-    // 加载现有留言
     function loadComments() {
         if (!commentsContainer) {
             console.log('[Main] Comments container not found, skipping loading comments.');
@@ -337,7 +321,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         });
     } else {
-        console.log('[Main] commentForm not found.');
+        console.log('[Main] commentForm not found. Skipping comment submission setup.');
     }
 
 
@@ -376,6 +360,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
     } else {
-        console.log('[Main] Scroll to top button not found.');
+        console.log('[Main] Scroll to top button not found. Skipping scroll-to-top setup.');
     }
+
+    // **新增：复制QQ号功能**
+    if (copyQqBtn) {
+        copyQqBtn.addEventListener('click', async () => {
+            const qqNumber = copyQqBtn.getAttribute('data-qq');
+            try {
+                await navigator.clipboard.writeText(qqNumber);
+                alert(`QQ号 ${qqNumber} 已复制到剪贴板！`);
+                console.log('[Main] QQ number copied to clipboard.', qqNumber);
+            } catch (err) {
+                console.error('[Main] Failed to copy QQ number:', err);
+                alert(`复制失败，请手动添加：${qqNumber}`);
+            }
+        });
+        console.log('[Main] Copy QQ button listener bound.');
+    } else {
+        console.log('[Main] Copy QQ button not found.');
+    }
+
 });

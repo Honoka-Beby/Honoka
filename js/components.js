@@ -12,13 +12,12 @@ export const blogArticles = [
         content: `
             <h3>最近的番剧推荐</h3>
             <p>最近沉迷于一部名为《星空下的约定》的动漫，画风唯美，剧情感人至深。主角的成长线和细腻的情感描写都让我深陷其中。每一次追番都仿佛经历了一场心灵的洗礼。我也尝试为这部番剧写了一些同人小故事，发现创作过程本身就充满了乐趣。剧中角色对梦想的执着，也激励着我在现实生活中不断努力。</p>
-            <h3>我的二次元日常</h3>
             <p>除了追番，我还喜欢用二次元风格的壁纸和主题装点我的电脑和手机。看着屏幕上可爱的角色，工作和学习的疲惫感也似乎减轻了不少。有人说这是“逃避现实”，但我更觉得这是在为生活注入一份小小的美好和动力。这种对生活的热爱，源于对心中美好事物的憧憬。我会定期更换桌面壁纸，让屏幕上的角色们陪伴着我度过每一个挑战。</p>
             <h3>小确幸时刻</h3>
             <p>在闲暇时，我会尝试画一些简单的二次元 Q 版人物。虽然画技还有待提高，但每次完成一幅作品，都会有满满的成就感。这是一个自我放松、表达创造力的方式，也是与自己内心对话的过程。我发现，即便是不完美的线条，也能勾勒出心中最真实的感受。我还喜欢收集一些动漫周边，比如手办、徽章和画册，它们都是我珍贵的回忆。</p>
             <p>二次元不仅仅是一种娱乐，更是一种生活态度，一种对美好和梦想的追求。它教会我们勇敢、善良，并始终心怀希望。希望我的分享也能点燃你心中的那份热爱！如果你也有精彩的二次元故事，欢迎在留言板分享哦。我很期待与大家交流彼此的二次元世界。</p>
         `,
-        coverImage: '' // 将由 getRandomAnimeImage 填充
+        coverImage: ''
     },
     {
         id: '2',
@@ -34,7 +33,8 @@ export const blogArticles = [
             <p>最近我深入研究了 CSS3 的动画和过渡效果，发现仅仅通过一些简单的属性组合，就能让页面元素以平滑、优雅的方式呈现。例如，使用 <code>transform</code> 和 <code>transition</code> 属性可以实现元素的位移、旋转、缩放，再结合 <code>@keyframes</code> 规则，就能创造出复杂的序列动画。通过这些“魔法”，网页不再是冰冷的静态页面，而是充满生命力的互动空间。我常常为了一个像素的对齐或一个过渡的时长而反复调试，只为追求那份极致的美感。</p>
             <h3>JavaScript 与交互</h3>
             <p>如果说 CSS 是静态的魔法，那么 JavaScript 就是动态的咒语。通过 JavaScript，我们可以监听用户的操作（点击、滑动、滚动），然后根据这些操作实时地修改 DOM 结构和样式，从而实现高度交互的动态页面。比如，本博客的页面切换动画和主题切换功能，都离不开 JavaScript 的助力。它让用户体验变得更加流畅和个性化。我喜欢用 JavaScript 编写一些小工具，让网站变得更加智能和便捷。</p>
-            <p>未来的目标是尝试使用一些更高级的动画库，比如 GSAP (GreenSock Animation Platform) 或 Anime.js，它们能更方便地控制时间线、缓动函数，实现电影级别的网页动画效果。想象一下，一个充满魔法元素的二次元网站，所有的按钮、图片、文字都能随着用户的交互而生动起来，那将是一件多么酷的事情！我希望能将更多二次元的奇思妙想融入到前端技术中。代码不仅仅是逻辑和功能，它也可以是艺术和创意。在前端的世界里，我感受到了无限的可能性，期待未来能创造更多“魔法”。编程的乐趣，也正是在于不断学习和探索未知。</p>
+            <p>未来的目标是尝试使用一些更高级的动画库，比如 GSAP (GreenSock Animation Platform) 或 Anime.js，它们能更方便地控制时间线、缓动函数，实现电影级别的网页动画效果。想象一下，一个充满魔法元素的二次元网站，所有的按钮、图片、文字都能随着用户的交互而生动起来，那将是一件多么酷的事情！我希望能将更多二次元的奇思妙想融入到前端技术中。</p>
+            <p>代码不仅仅是逻辑和功能，它也可以是艺术和创意。在前端的世界里，我感受到了无限的可能性，期待未来能创造更多“魔法”。编程的乐趣，也正是在于不断学习和探索未知。</p>
         `,
         coverImage: ''
     },
@@ -52,7 +52,7 @@ export const blogArticles = [
             <p>最近沉迷的是某款开放世界冒险游戏，精美的画风、引人入胜的剧情和丰富的角色设定都让我欲罢不能。为了探索每一个角落，收集隐藏的宝藏，我常常废寝忘食。那种探索未知、挑战极限的快感，是任何其他形式的娱乐都无法比拟的。每次发现一个隐藏任务或彩蛋，都像是和开发者进行了一次秘密的对话。我特别喜欢在游戏中漫无目的地探索，发现那些不为人知的风景和故事。</p>
             <h3>手游与社交</h3>
             <p>除了主机游戏，二次元手游也是我日常消遣的重要部分。它们通常拥有精美的立绘、全语音的角色，以及方便的社交系统。和朋友们一起组队挑战副本、分享抽卡成果，也成为了我生活中的乐趣之一。虽然有时会被“歪”卡池气到，但更多时候还是会因为抽到心仪的角色而感到无比的幸福。手游的便捷性让我在碎片时间也能沉浸在二次元的乐趣中。我尤其喜欢那些有深度剧情和丰富角色设定的二次元手游。</p>
-            <p>游戏对我来说，不仅仅是放松和娱乐，更是一种体验故事、结识朋友、甚至磨练意志的方式。在虚拟的世界里，我能暂时放下现实的烦恼，与心爱的角色们一同经历冒险。游戏中的每一次成功，都让我学会了坚持和策略。它也让我结识了许多志同道合的朋友。</p>
+            <p>游戏对我来说，不仅仅是放松和娱乐，更是一种体验故事、结识朋友、甚至磨练意志的方式。在虚拟的世界里，我能暂时放下现实的烦恼，与心爱的角色们一同经历冒险。游戏中的每一次成功，都让我学会了坚持和策略。</p>
             <p>你有什么推荐的二次元游戏吗？欢迎在留言板分享哦！我总是乐于尝试新的游戏，发现新的乐趣。</p>
         `,
         coverImage: ''
@@ -110,21 +110,21 @@ export async function getHitokotoQuote() {
         return `${data.hitokoto}${from}${creator}`;
     } catch (error) {
         console.error('[Components-Hitokoto] Failed to fetch Hitokoto quote, using fallback:', error);
-        return '愿你被这世界温柔以待。';
+        return '愿你被这世界温柔以待。'; // 备用一言
     }
 }
 
 // 今日运势数据 (含更多颜文字和颜色)
 export const dailyFortunes = [
-    { type: '大吉', message: '今日运势大吉，心想事成，万事顺利！桃花运旺，学业事业双丰收！', emojis: ['✨', '🌸'], color: '#8BC34A', textBurst: ['超棒!', '好运!'] },
+    { type: '大吉', message: '今日运势大吉，心想事成，万事顺利！桃花运旺，学业事业双丰收！', emojis: ['✨', '🌸', '💖'], color: '#8BC34A', textBurst: ['超棒!', '好运!', 'Yes!'] },
     { type: '中吉', message: '运势中吉，偶有小挑战，但转危为安。财运平稳，小心花销。', emojis: ['🌟', '🍀'], color: '#FFC107', textBurst: ['加油!', '不错!'] },
     { type: '小吉', message: '运势小吉，平淡是福。适合学习和沉淀，积累力量。', emojis: ['😊', '⭐'], color: '#03A9F4', textBurst: ['平稳!', '努力!'] },
     { type: '末吉', message: '运势平平，小有烦恼。保持平常心，注意身体健康。', emojis: ['💧', '💡'], color: '#9E9E9E', textBurst: ['谨慎!', '冷静!'] },
-    { type: '凶', message: '今日运势稍有不顺，行事需谨慎。宜静不宜动，三思而后行。', emojis: ['⚠️', '🌧️'], color: '#FF5722', textBurst: ['注意!', '小心!'] },
-    { type: '大凶', message: '运势不佳，可能会遇到较大阻碍。保持积极心态，寻求帮助可得贵人相助。', emojis: ['⛈️', '💔'], color: '#E91E63', textBurst: ['坚持!', '挺住!'] },
-    { type: '超大吉', message: '逆天运势！所有不幸都会转化为幸福，意想不到的好运即将降临！', emojis: ['🎉', '💖', '🌟'], color: '#FFEB3B', textBurst: ['WOW!', '恭喜!', '爆发!'] },
-    { type: '恋爱吉', message: '今日恋爱运势极佳，勇敢表白，会有意想不到的惊喜！', emojis: ['❤️', '💞'], color: '#F06292', textBurst: ['脱单!', '表白!'] },
-    { type: '学业吉', message: '学业运势鼎盛，灵感如泉涌。是攻克难题，提升成绩的好时机！', emojis: ['📚', '💡'], color: '#64B5F6', textBurst: ['学霸!', '进步!'] },
+    { type: '凶', message: '今日运势稍有不顺，行事需谨慎。宜静不宜动，三思而后行。', emojis: ['⚠️', '🌧️', '😟'], color: '#FF5722', textBurst: ['注意!', '小心!'] },
+    { type: '大凶', message: '运势不佳，可能会遇到较大阻碍。保持积极心态，寻求帮助可得贵人相助。', emojis: ['⛈️', '💔', '😭'], color: '#E91E63', textBurst: ['坚持!', '挺住!'] },
+    { type: '超大吉', message: '逆天运势！所有不幸都会转化为幸福，意想不到的好运即将降临！', emojis: ['🎉', '💖', '🌟', '💎'], color: '#FFEB3B', textBurst: ['WOW!', '恭喜!', '爆发!', 'Amazing!'] },
+    { type: '恋爱吉', message: '今日恋爱运势极佳，勇敢表白，会有意想不到的惊喜！', emojis: ['❤️', '💞', '🥰'], color: '#F06292', textBurst: ['脱单!', '表白!', '心动!'] },
+    { type: '学业吉', message: '学业运势鼎盛，灵感如泉涌。是攻克难题，提升成绩的好时机！', emojis: ['📚', '💡', '🎓'], color: '#64B5F6', textBurst: ['学霸!', '进步!', '高分!'] },
 ];
 
 /**
@@ -141,6 +141,7 @@ export function getDailyFortune() {
     } else {
         const randomIndex = Math.floor(Math.random() * dailyFortunes.length);
         const selectedFortune = dailyFortunes[randomIndex];
+        // 保存完整对象，包括 emoji 和 color
         localStorage.setItem('daily_fortune_' + today, JSON.stringify(selectedFortune)); // 每天只抽取一次
         console.log('[Components-Fortune] New daily fortune generated.', selectedFortune);
         return selectedFortune;
@@ -161,6 +162,7 @@ export function getDailyFortune() {
 export function createArticleCardElement(articleData) {
     const article = document.createElement('article');
     article.classList.add('anime-card');
+    article.setAttribute('data-category', articleData.category); // 用于筛选
     article.innerHTML = `
         <img src="${articleData.coverImage}" alt="${articleData.title}封面" class="card-cover" loading="lazy" onerror="this.onerror=null;this.src='assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png';">
         <h3>${articleData.title}</h3>
@@ -194,11 +196,11 @@ export function createCommentElement(commentData) {
  */
 export class SectionController {
     constructor(navItemSelector, pageSectionSelector, mobileNavToggleSelector, mainNavContainerSelector) {
-        this.navItems = document.querySelectorAll(navItemSelector);
+        this.navItems = document.querySelectorAll(navItemSelector); // 选择所有 .nav-item 链接
         this.pageSections = document.querySelectorAll(pageSectionSelector);
         this.mobileNavToggle = document.querySelector(mobileNavToggleSelector);
         this.mainNavContainer = document.querySelector(mainNavContainerSelector);
-        this.currentActiveSectionId = window.location.hash.substring(1) || 'home'; // 默认激活首页
+        this.currentActiveSectionId = window.location.hash.substring(1) || 'home';
 
         console.log('[SectionController] Initializing. Nav items count:', this.navItems.length, 'Sections count:', this.pageSections.length);
         this.init();
@@ -223,12 +225,12 @@ export class SectionController {
             } else {
                 this.setActive('home');
             }
-            document.title = `Honoka的二次元博客 - V1.7 - ${this.getSectionTitle(hash)}`;
+            document.title = `Honoka的二次元博客 - V1.0 - ${this.getSectionTitle(hash)}`;
         });
         console.log('[SectionController] Hashchange listener bound.');
 
         this.setActive(this.currentActiveSectionId);
-        document.title = `Honoka的二次元博客 - V1.7 - ${this.getSectionTitle(this.currentActiveSectionId)}`;
+        document.title = `Honoka的二次元博客 - V1.0 - ${this.getSectionTitle(this.currentActiveSectionId)}`;
     }
 
     getSectionById(id) {
@@ -264,7 +266,7 @@ export class SectionController {
             }
         });
 
-        this.navItems.forEach(navLink => { // navLink已经是a标签
+        this.navItems.forEach(navLink => {
             if (navLink.getAttribute('data-section') === targetSectionId) {
                 if (!navLink.classList.contains('active')) {
                     navLink.classList.add('active');
@@ -286,8 +288,7 @@ export class SectionController {
 
     handleNavClick(e) {
         e.preventDefault();
-        // 确保点击的是A标签本身或者其内部元素
-        const navLink = e.target.closest('.nav-item[data-section]');
+        const navLink = e.target.closest('.nav-item[data-section]'); // 确保点击的是带有data-section的a标签
         if (navLink) {
             const targetSectionId = navLink.getAttribute('data-section');
             this.setActive(targetSectionId);
@@ -297,7 +298,7 @@ export class SectionController {
                 console.log('[SectionController] Mobile nav closed after click.');
             }
         } else {
-            console.warn('[SectionController] Clicked nav item without valid data-section or closest a tag.', e.target);
+            console.warn('[SectionController] Clicked nav item without valid data-section link.', e.target);
         }
     }
 

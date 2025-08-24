@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honoka的二次元博客 - V1.7</title>
+    <title>Honoka的二次元博客 - V1.0</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
-    <!-- 引入二次元风格字体 -->
+    <!-- 引入二次元风格字体：M PLUS Rounded 1c -->
     <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet>
     <!-- 引入 Font Awesome 图标库 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -21,10 +21,9 @@
     <!-- 头部导航栏 -->
     <header class="anime-header">
         <div class="container">
-            <h1 class="blog-title"><span>🌸 Honoka 🌸</span></h1> <!-- **更新：添加span用于动画** -->
+            <h1 class="blog-title"><span>🌸 Honoka 🌸</span></h1>
             <nav class="main-nav>
                 <ul>
-                    <!-- **重要修复：确保nav-item和data-section都在a标签上** -->
                     <li><a href="#home" class="nav-item active" data-section="home">首页</a></li>
                     <li><a href="#blog" class="nav-item" data-section="blog">博客</a></li>
                     <li><a href="#about" class="nav-item" data-section="about">关于我</a></li>
@@ -34,7 +33,7 @@
             <div class="header-right">
                 <div class="theme-switcher">
                     <button id="theme-toggle-btn" class="anime-button" title="切换主题">
-                        <i class="fas fa-moon"></i>
+                        <i class="fas fa-moon></i>
                     </button>
                 </div>
                 <div class="mobile-nav-toggle" role="button" aria-label="Toggle navigation">
@@ -77,13 +76,10 @@
         <section id="blog" class="page-section">
             <div class="container">
                 <h2>所有博客文章</h2>
-                <!-- **新增：博客分类筛选器** -->
+                <!-- 博客分类筛选器 -->
                 <div class="blog-filter-controls">
                     <button class="anime-button filter-btn active" data-category="all">全部</button>
-                    <button class="anime-button filter-btn" data-category="日常">日常</button>
-                    <button class="anime-button filter-btn" data-category="技术">技术</button>
-                    <button class="anime-button filter-btn" data-category="游戏">游戏</button>
-                    <!-- 更多分类按钮 -->
+                    <!-- 更多分类按钮将由 JS 动态添加 -->
                 </div>
                 <div class="posts-grid" id="blog-posts-container">
                     <!-- 文章卡片将由 JavaScript 动态加载 -->
@@ -101,6 +97,9 @@
                     <a href="tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=3203418940&param=EA-AA" target="_blank" rel="noopener noreferrer" class="anime-button social-button qq" title="点击添加QQ好友">
                         <i class="fab fa-qq></i> 添加QQ好友
                     </a>
+                    <button id="copy-qq-btn" class="anime-button social-button" title="点击复制QQ号" data-qq="3203418940">
+                        <i class="fas fa-copy></i> 复制QQ号
+                    </button>
                 </div>
             </div>
         </section>
@@ -133,7 +132,7 @@
     <footer class="anime-footer">
         <div class="container">
             <p>© <span id="current-year"></span> Honoka. All rights reserved.</p>
-            <p>网站版本: V1.7 | 上次更新: <span id="current-time"></span></p>
+            <p>网站版本: V1.0 | 上次更新: <span id="current-time"></span></p>
         </div>
     </footer>
 

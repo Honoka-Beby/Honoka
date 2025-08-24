@@ -13,6 +13,8 @@
     --button-hover-bg: #ff7799;
     --box-shadow-light: rgba(0, 0, 0, 0.1);
     --white-transparent-20: rgba(255, 255, 255, 0.2);
+    /* 用于JS动态设置的运势文本颜色，默认白色 */
+    --fortune-text-color: #fff;
 }
 
 /* Base Styles */
@@ -43,6 +45,8 @@ h1, h2, h3, h4, h5, h6 {
     margin-bottom: 15px;
     transition: color 0.5s ease-in-out;
 }
+
+p { margin-bottom: 1em; }
 
 a {
     color: var(--primary-color);
@@ -108,16 +112,16 @@ a:hover {
     flex-wrap: wrap; /* 手机端换行 */
 }
 
-/* **新增：博客标题 hover 动画** */
+/* 博客标题 hover 动画 */
 .blog-title {
     margin: 0;
     font-size: 1.8em;
     color: var(--primary-color);
     line-height: 1;
-    cursor: default; /* 鼠标样式 */
+    cursor: default;
 }
 .blog-title span {
-    display: inline-block; /* 允许 transform */
+    display: inline-block;
     transition: transform 0.3s ease-out;
 }
 .blog-title:hover span {
@@ -128,7 +132,7 @@ a:hover {
 .header-right {
     display: flex;
     align-items: center;
-    gap: 10px; /* 间距 */
+    gap: 10px;
 }
 
 .main-nav ul {
@@ -204,9 +208,10 @@ a:hover {
     overflow: hidden; /* 防止过渡动画溢出 */
 }
 
+/* **重要修复**：确保只有 active section 被显示 */
 .page-section {
     padding: 40px 0;
-    display: none !important; /* **重要修复**：默认隐藏，使用 !important 确保优先级 */
+    display: none; 
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
@@ -215,7 +220,7 @@ a:hover {
 }
 
 .page-section.active {
-    display: block !important; /* **重要修复**：仅活动 section 显示，使用 !important 确保优先级 */
+    display: block; 
     opacity: 1;
     transform: translateY(0);
 }
@@ -261,8 +266,8 @@ a:hover {
     font-style: italic;
     font-size: 1.3em;
     margin-bottom: 25px;
-    color: #f8f8f8; /* 调整为更亮的颜色 */
-    text-shadow: 1px 1px 5px rgba(0,0,0,0.8); /* 更明显的阴影 */
+    color: #f8f8f8;
+    text-shadow: 1px 1px 5px rgba(0,0,0,0.8);
     transition: color 0.5s ease;
     min-height: 2em;
     padding: 0 10px;
@@ -283,7 +288,7 @@ a:hover {
     box-shadow: 0 2px 10px rgba(0,0,0,0.2);
     transition: background-color 0.3s ease;
     position: relative;
-    overflow: hidden;
+    overflow: visible; /* 允许动画元素超出 */
 }
 .daily-fortune-widget .anime-button {
     margin-bottom: 15px;
@@ -310,12 +315,12 @@ a:hover {
     min-height: 1.5em;
     opacity: 0;
     transform: scale(0.8);
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition: opacity 0.5s ease, transform 0.5s ease, color 0.5s ease; /* 新增颜色过渡 */
 }
 .fortune-text.show {
     opacity: 1;
     transform: scale(1);
-    color: var(--fortune-text-color, #fff); /* 运势文本颜色可变 */
+    /* 运势文本颜色由JS动态设置，通过CSS变量--fortune-text-color控制 */
 }
 
 .fortune-burst-animation {
@@ -323,31 +328,29 @@ a:hover {
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    width: 150px; /* 增大区域 */
-    height: 150px;
+    width: 200px; /* 增大动画区域 */
+    height: 200px;
     display: flex;
     justify-content: center;
     align-items: center;
     pointer-events: none;
-    opacity: 0; /* 默认隐藏 */
+    opacity: 0;
+    transition: opacity 0.3s ease; /* 动画容器的淡入淡出 */
 }
 .fortune-burst-animation.show {
-    opacity: 1; /* 显示动画容器 */
+    opacity: 1;
 }
 
 .fortune-burst-animation span {
     position: absolute;
-    font-size: 2em; /* 增大炸开文字 */
+    font-size: 2em;
     opacity: 0;
-    transition: none; /* 移除默认transition，由keyframes控制 */
     filter: drop-shadow(0 0 3px rgba(0,0,0,0.5));
-    animation: none; /* 移除默认animation，由JS动态添加 */
 }
 
-/* 运势爆炸效果的关键帧动画 */
 @keyframes burst-fade-out {
     0% { transform: translate(0,0) scale(0.5); opacity: 1; filter: blur(0); }
-    100% { transform: translate(var(--dx), var(--dy)) scale(2); opacity: 0; filter: blur(2px); }
+    100% { transform: translate(var(--dx), var(--dy)) scale(2.5); opacity: 0; filter: blur(2px); } /* 增加缩放 */
 }
 
 
@@ -362,7 +365,7 @@ a:hover {
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    cursor: pointer; /* **新增：卡片可点击指示** */
+    cursor: pointer;
 }
 .anime-card:hover {
     transform: translateY(-5px);
@@ -375,9 +378,19 @@ a:hover {
     padding-right: 25px;
 }
 .anime-card h3 { padding-top: 25px; }
+.anime-card .post-meta {
+    padding-left: 25px;
+    padding-right: 25px;
+}
+.anime-card p {
+    padding-left: 25px;
+    padding-right: 25px;
+}
 .anime-card .read-more { 
-    margin-top: auto;
-    padding-bottom: 25px;
+    margin-top: auto; /* 自动向上推，将其余内容推到顶部，自身保持在底部*/
+    padding-bottom: 25px; /* 按钮底部间距 */
+    align-self: flex-start; /* 按钮靠左对齐 */
+    margin-left: 25px; /* 按钮左边距 */
 }
 
 
@@ -460,7 +473,7 @@ a:hover {
     margin-top: 30px;
 }
 
-/* **新增：博客分类筛选按钮样式** */
+/* 博客分类筛选按钮样式 */
 .blog-filter-controls {
     display: flex;
     flex-wrap: wrap;
@@ -485,7 +498,7 @@ a:hover {
     background-color: var(--primary-color);
     color: var(--button-text);
     border-color: var(--primary-color);
-    box-shadow: 0 2px 8px rgba(var(--primary-color-rgb), 0.3); /* 使用RGB值以方便阴影 */
+    box-shadow: 0 2px 8px rgba(255,153,170,0.3); /* 使用硬编码的RGB值或JS动态获取以确保主题色变量的RGB可用 */
 }
 .blog-filter-controls .filter-btn.active:hover {
     background-color: var(--button-hover-bg);
@@ -503,6 +516,8 @@ a:hover {
 .about-me-section {
     text-align: center;
 }
+
+.profile-info p { margin-bottom: 15px; } /* 调整间距 */
 
 .profile-avatar {
     width: 120px;
@@ -646,7 +661,7 @@ a:hover {
 }
 
 .article-detail-cover:hover {
-    filter: brightness(1.05); /* 恢复亮度 */
+    filter: brightness(1.05);
 }
 
 .article-content {
@@ -670,9 +685,7 @@ a:hover {
 }
 
 .page-section.dynamic-bg-elements::before,
-.page-section.dynamic-bg-elements::after,
-.page-section.dynamic-bg-elements .bg-shape-3,
-.page-section.dynamic-bg-elements .bg-shape-4 { /* **新增更多背景元素选择器** */
+.page-section.dynamic-bg-elements::after {
     content: '';
     position: absolute;
     background-color: var(--secondary-color);
@@ -681,7 +694,7 @@ a:hover {
     transition: background-color 0.5s ease, clip-path 0.8s ease;
     animation: float-and-morph 20s infinite ease-in-out alternate;
 }
-
+/* **新增两个伪元素** */
 .page-section.dynamic-bg-elements::before {
     width: 180px;
     height: 180px;
@@ -697,34 +710,28 @@ a:hover {
     height: 120px;
     bottom: 10%;
     right: -8%;
-    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); /* 菱形 */
     animation-duration: 16s;
     animation-delay: 2s;
     background-color: var(--primary-color);
 }
 
-/* **新增更多背景元素动画及样式** */
-.page-section.dynamic-bg-elements .bg-shape-3 {
-    width: 80px;
-    height: 80px;
-    top: 50%;
-    left: 20%;
-    clip-path: polygon(0% 15%, 15% 0%, 85% 0%, 100% 15%, 100% 85%, 85% 100%, 15% 100%, 0% 85%); /* 八边形 */
-    background-color: var(--primary-color);
-    animation: float-and-morph 18s infinite ease-in-out alternate-reverse; /* 反向动画 */
-    animation-delay: 4s;
-    transform: translate(-50%, -50%);
+/* **阅读进度条样式** */
+.reading-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: 5px;
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    z-index: 1001; /* 确保在最顶层 */
+    transition: width 0.1s linear; /* 平滑过渡 */
 }
-.page-section.dynamic-bg-elements .bg-shape-4 {
-    width: 90px;
-    height: 90px;
-    top: 30%;
-    right: 15%;
-    clip-path: rect(0%, 100%, 100%, 0%); /* 矩形 */
-    background-color: var(--secondary-color);
-    animation: float-and-morph 25s infinite ease-in-out alternate;
-    animation-delay: 6s;
-    transform: translate(-50%, -50%);
+body.dark-theme .reading-progress-bar {
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+}
+body.pastel-theme .reading-progress-bar {
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
 }
 
 
@@ -742,7 +749,7 @@ a:hover {
     50% {
         transform: translate(-20px, 40px) rotate(90deg) scale(0.9);
         opacity: 0.1;
-        clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%);
+        clip-path: polygon(25% 0%, 100% 0%, 75% 100%, 0% 100%); /* 梯形或平行四边形 */
     }
     75% {
         transform: translate(10px, 10px) rotate(135deg) scale(1.05);
@@ -878,7 +885,10 @@ a:hover {
         padding: 0 15px; /* 移动端内容内边距 */
     }
     .anime-card h3 { padding-top: 15px; }
-    .anime-card .read-more { padding-bottom: 15px; }
+    .anime-card .read-more { 
+        padding-bottom: 15px;
+        margin-left: 15px;
+    }
 
     .article-content {
         padding-left: 15px;
@@ -887,17 +897,14 @@ a:hover {
     }
     /* 移动端隐藏背景元素，避免干扰 */
     .page-section.dynamic-bg-elements::before,
-    .page-section.dynamic-bg-elements::after,
-    .page-section.dynamic-bg-elements .bg-shape-3,
-    .page-section.dynamic-bg-elements .bg-shape-4 {
+    .page-section.dynamic-bg-elements::after {
         display: none; 
     }
-
     .blog-filter-controls {
         flex-direction: column;
         align-items: center;
     }
     .blog-filter-controls .filter-btn {
-        width: 80%; /* 按钮宽度占满 */
+        width: 80%;
     }
 }
