@@ -1,0 +1,44 @@
+/* Light Theme (Default) */
+/*
+   These variables are already defined in style.css :root for default.
+   They serve as the base for the light theme.
+*/
+
+/* Dark Theme */
+body.dark-theme {
+    --primary-color: #bb86fc; /* 醒目的紫色 */
+    --secondary-color: #03dac6; /* 青绿色 */
+    --background-color: #121212; /* 深色背景 */
+    --text-color: #e0e0e0;
+    --heading-color: #f0f0f0;
+    --card-bg: #1e1e1e;
+    --border-color: #333;
+    --hover-bg: #2a2a2a;
+    --button-bg: var(--primary-color);
+    --button-text: #fff;
+    --button-hover-bg: #9955dd;
+    --box-shadow-light: rgba(255, 255, 255, 0.08); /* 适应深色背景的淡阴影 */
+    --white-transparent-20: rgba(255, 255, 255, 0.2);
+}
+
+/* Pastel Theme */
+body.pastel-theme {
+    --primary-color: #FFC0CB; /* 粉色 */
+    --secondary-color: #ADD8E6; /* 浅蓝 */
+    --background-color: #FFFACD; /* 浅柠檬色 */
+    --text-color: #6A5ACD; /* 石板蓝 */
+    --heading-color: #4682B4; /* 钢蓝 */
+    --card-bg: #F0F8FF; /* 爱丽丝蓝 */
+    --border-color: #DDA0DD; /* 梅花色 */
+    --hover-bg: #E6E6FA; /* 薰衣草色 */
+    --button-bg: #BA55D3; /* 适中的兰花紫 */
+    --button-text: #fff;
+    --button-hover-bg: #DA70D6; /* 兰花紫 */
+    --box-shadow-light: rgba(0, 0, 0, 0.05);
+    --white-transparent-20: rgba(106, 90, 205, 0.2); /* 适应文本颜色的透明色 */
+}
+
+/* Ensure icons also transition colors with theme */
+.anime-button i {
+    transition: color 0.3s ease;
+}

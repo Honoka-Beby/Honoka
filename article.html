@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章详情 - Honoka的二次元博客 V1.3</title> <!-- 更新版本号 -->
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="light-theme">
+    <!-- 头部导航栏，可以简化，或者动态加载主页导航 -->
+    <header class="anime-header">
+        <div class="container">
+            <h1 class="blog-title">🌸 Honoka 🌸</h1> <!-- 已更新 -->
+            <nav>
+                <a href="index.html#blog" class="anime-button"><i class="fas fa-angle-left"></i> 返回博客列表</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="page-content">
+        <section id="article-detail" class="page-section active">
+            <div class="container anime-card">
+                <img id="article-cover" src="assets/images/fallback-cover-1.png" alt="文章封面" class="article-detail-cover">
+                <h2 id="article-title">加载中...</h2>
+                <p class="post-meta">发布于：<span id="article-date">...</span> | 分类：<span id="article-category">...</span></p>
+                <div id="article-content" class="article-content">
+                    <p>文章内容正在加载中，请稍候...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="anime-footer">
+        <div class="container">
+            <p>© <span id="current-year-article"></span> Honoka. All rights reserved.</p> <!-- 已更新 -->
+            <p>网站版本: V1.3</p> <!-- 更新版本号 -->
+        </div>
+    </footer>
+
+    <script type="module" src="js/article-viewer.js"></script>
+    <script>
+        // 确保页脚年份正确显示
+        document.getElementById('current-year-article').textContent = new Date().getFullYear();
+    </script>
+</body>
+</html>
