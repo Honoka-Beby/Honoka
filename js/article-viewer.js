@@ -1,7 +1,8 @@
 // js/article-viewer.js
-import { blogArticles } from './components.js'; // 导入文章数据
+// **重要修复：修改导入路径**
+import { blogArticles, getRandomAnimeImage } from '../components.js'; // 导入文章数据和图片获取函数
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => { // 设为 async 函数
     const urlParams = new URLSearchParams(window.location.search);
     const articleId = urlParams.get('id');
 
@@ -25,15 +26,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const article = blogArticles.find(a => a.id === articleId);
 
         if (article) {
-            document.title = `${article.title} - Honoka的二次元博客 V1.3`; // 更新标题
+            document.title = `${article.title} - Honoka的二次元博客 V1.4`; // 更新标题
             articleTitleElem.textContent = article.title;
             articleDateElem.textContent = article.date;
             articleCategoryElem.textContent = article.category;
             articleContentElem.innerHTML = article.content;
-            articleCoverElem.src = article.coverImage;
+
+            // **重要修复：确保封面图片加载**
+            if (article.coverImage) {
+                articleCoverElem.src = article.coverImage; // 如果主页已经加载并保存了，直接用
+            } else {
+                // 否则，动态获取一张封面图
+                articleCoverElem.src = await getRandomAnimeImage();
+            }
             articleCoverElem.alt = `${article.title}封面`;
+
         } else {
-            document.title = '文章未找到 - Honoka的二次元博客 V1.3'; // 更新标题
+            document.title = '文章未找到 - Honoka的二次元博客 V1.4'; // 更新标题
             articleTitleElem.textContent = '404 - 文章未找到';
             articleDateElem.textContent = '';
             articleCategoryElem.textContent = '';
@@ -41,7 +50,7 @@ document.addEventListener('DOMContentLoaded', () => {
             articleCoverElem.style.display = 'none'; // 隐藏封面
         }
     } else {
-        document.title = '文章ID缺失 - Honoka的二次元博客 V1.3'; // 更新标题
+        document.title = '文章ID缺失 - Honoka的二次元博客 V1.4'; // 更新标题
         articleTitleElem.textContent = '文章ID缺失';
         articleDateElem.textContent = '';
         articleCategoryElem.textContent = '';

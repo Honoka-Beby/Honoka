@@ -25,7 +25,7 @@ export const blogArticles = [
         meta: '2025-08-20 | 分类：技术',
         date: '2025-08-20',
         category: '技术',
-        excerpt: '探索前端技术如何实现酷炫的视觉效果，就像施展魔法一样，让网页活起来！这不仅仅是技术，更是一种艺术创造的过程。',
+        excerpt: '探索前端技术如何实现酷炫的视觉效果，就像施展魔法一样，让网页活起来！这不仅仅是技术，更是一种艺术创造的过程，通过代码我们能构造出无限可能的虚拟世界。',
         content: `
             <p>作为一名编程爱好者，尤其是前端开发者，我总是着迷于如何用代码创造出令人惊叹的视觉交互效果。这就像是魔法师在吟唱咒语，而屏幕上的元素则随之起舞。每一次成功实现一个复杂的动画，都让我感到无比的兴奋和满足。</p>
             <p>最近我深入研究了 CSS3 的动画和过渡效果，发现仅仅通过一些简单的属性组合，就能让页面元素以平滑、优雅的方式呈现。例如，使用 <code>transform</code> 和 <code>transition</code> 属性可以实现元素的位移、旋转、缩放，再结合 <code>@keyframes</code> 规则，就能创造出复杂的序列动画。通过这些“魔法”，网页不再是冰冷的静态页面，而是充满生命力的互动空间。</p>
@@ -42,7 +42,7 @@ export const blogArticles = [
         meta: '2025-08-15 | 分类：游戏',
         date: '2025-08-15',
         category: '游戏',
-        excerpt: '回顾那些让我沉迷的二次元手游和主机游戏，分享我的游戏心得。每一个游戏都有它独特的地方，等待我们去发现和热爱。',
+        excerpt: '回顾那些让我沉迷的二次元手游和主机游戏，分享我的游戏心得。每一个游戏都有它独特的地方，等待我们去发现和热爱，体验不一样的冒险。',
         content: `
             <p>作为一名深度二次元玩家，我的游戏世界从来都不缺乏精彩。从充满策略性的回合制RPG到紧张刺激的动作冒险，每一款游戏都像一部可以互动的番剧，带我进入不同的奇幻世界。游戏，对我来说，不只是一种娱乐，更是另一种形式的艺术体验。</p>
             <p>最近沉迷的是某款开放世界冒险游戏，精美的画风、引人入胜的剧情和丰富的角色设定都让我欲罢不能。为了探索每一个角落，收集隐藏的宝藏，我常常废寝忘食。那种探索未知、挑战极限的快感，是任何其他形式的娱乐都无法比拟的。每次发现一个隐藏任务或彩蛋，都像是和开发者进行了一次秘密的对话。</p>
@@ -191,12 +191,12 @@ export class SectionController {
             } else {
                 this.setActive('home'); // 如果哈希无效，则回到首页
             }
-            document.title = `Honoka的二次元博客 - V1.3 - ${this.getSectionTitle(hash)}`; // 更新标题
+            document.title = `Honoka的二次元博客 - V1.4 - ${this.getSectionTitle(hash)}`; // 更新标题
         });
 
         // 初始化显示默认 section
         this.setActive(this.currentActiveSectionId);
-        document.title = `Honoka的二次元博客 - V1.3 - ${this.getSectionTitle(this.currentActiveSectionId)}`; // 初始化标题
+        document.title = `Honoka的二次元博客 - V1.4 - ${this.getSectionTitle(this.currentActiveSectionId)}`; // 初始化标题
     }
 
     /**

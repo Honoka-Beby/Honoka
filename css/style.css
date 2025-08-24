@@ -200,6 +200,8 @@ a:hover {
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    position: relative; /* 用于背景元素定位 */
+    overflow: hidden; /* 裁剪超出背景元素的 */
 }
 
 .page-section.active {
@@ -240,15 +242,16 @@ a:hover {
     margin-top: 20px;
 }
 
-/* Random Quote styling */
+/* Random Quote styling **重要调整** */
 .random-quote {
     font-style: italic;
-    font-size: 1.1em;
+    font-size: 1.3em; /* 增大字体 */
     margin-bottom: 25px;
-    color: var(--white-transparent-20); /* 颜色调整，使其不那么突出但可见 */
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+    color: #fff; /* 改为白色以便在渐变背景上更明显 */
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.4); /* 更明显的阴影 */
     transition: color 0.5s ease;
     min-height: 2em; /* 防止加载时布局跳动 */
+    padding: 0 10px; /* 增加左右内边距 */
 }
 
 /* Anime Card Component */
@@ -270,7 +273,11 @@ a:hover {
     padding-right: 25px;
 }
 .anime-card h3 { padding-top: 25px; } /* 标题顶部间距 */
-.anime-card .read-more { padding-bottom: 25px; } /* 按钮底部间距 */
+/* **新增样式**：确保阅读更多按钮始终在底部 */
+.anime-card .read-more { 
+    margin-top: auto; /* 自动向上推，将其余内容推到顶部，自身保持在底部*/
+    padding-bottom: 25px; /* 按钮底部间距 */
+}
 
 
 .anime-card:hover {
@@ -358,10 +365,8 @@ a:hover {
     margin-top: 30px;
 }
 
-/* Post List */
-.posts-list .anime-card {
-    margin-bottom: 20px;
-}
+/* Post List (previously blog-posts-container class) - no longer needed as we use posts-grid for blog section */
+
 
 .post-meta {
     font-size: 0.9em;
@@ -534,6 +539,66 @@ a:hover {
     margin-bottom: 1em;
 }
 
+/* **新功能：关于我/留言板页面的动态背景元素** */
+/* 基础：设置相对定位，允许伪元素在其内部定位 */
+.page-section.dynamic-bg-elements {
+    position: relative;
+    overflow: hidden; /* 确保背景元素不溢出其容器 */
+    background-color: var(--background-color); /* 确保背景是主题色 */
+}
+
+.page-section.dynamic-bg-elements::before,
+.page-section.dynamic-bg-elements::after {
+    content: '';
+    position: absolute;
+    border-radius: 50%; /* 圆形 */
+    background-color: var(--secondary-color); /* 使用主题的次要颜色 */
+    opacity: 0.1; /* 半透明效果 */
+    z-index: -1; /* 放置在内容下方 */
+    animation: float-elements 15s infinite ease-in-out alternate; /* 浮动动画 */
+}
+
+.page-section.dynamic-bg-elements::before {
+    width: 150px;
+    height: 150px;
+    top: 10%;
+    left: -5%;
+    transform: rotate(20deg);
+    animation-duration: 18s;
+    animation-delay: 0s;
+}
+
+.page-section.dynamic-bg-elements::after {
+    width: 100px;
+    height: 100px;
+    bottom: 5%;
+    right: -5%;
+    transform: rotate(-30deg);
+    animation-duration: 12s;
+    animation-delay: 2s;
+    background-color: var(--primary-color); /* 可以用主要颜色或次要颜色 */
+}
+
+@keyframes float-elements {
+    0% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.1;
+    }
+    30% {
+        transform: translate(20px, 10px) rotate(10deg);
+        opacity: 0.15;
+    }
+    60% {
+        transform: translate(-10px, 30px) rotate(-5deg);
+        opacity: 0.1;
+    }
+    100% {
+        transform: translate(0, 0) rotate(0deg);
+        opacity: 0.1;
+    }
+}
+
+
 /* ======== Media Queries for Responsive Design ======== */
 @media (max-width: 768px) {
     .container {
@@ -659,54 +724,8 @@ a:hover {
         padding-right: 15px;
         padding-bottom: 15px;
     }
-}```
-
----
-
-### **4. `css/themes.css` (主题颜色功能 - 无变化)**
-
-```css
-/* Light Theme (Default) */
-/*
-   These variables are already defined in style.css :root for default.
-   They serve as the base for the light theme.
-*/
-
-/* Dark Theme */
-body.dark-theme {
-    --primary-color: #bb86fc; /* 醒目的紫色 */
-    --secondary-color: #03dac6; /* 青绿色 */
-    --background-color: #121212; /* 深色背景 */
-    --text-color: #e0e0e0;
-    --heading-color: #f0f0f0;
-    --card-bg: #1e1e1e;
-    --border-color: #333;
-    --hover-bg: #2a2a2a;
-    --button-bg: var(--primary-color);
-    --button-text: #fff;
-    --button-hover-bg: #9955dd;
-    --box-shadow-light: rgba(255, 255, 255, 0.08); /* 适应深色背景的淡阴影 */
-    --white-transparent-20: rgba(255, 255, 255, 0.2);
-}
-
-/* Pastel Theme */
-body.pastel-theme {
-    --primary-color: #FFC0CB; /* 粉色 */
-    --secondary-color: #ADD8E6; /* 浅蓝 */
-    --background-color: #FFFACD; /* 浅柠檬色 */
-    --text-color: #6A5ACD; /* 石板蓝 */
-    --heading-color: #4682B4; /* 钢蓝 */
-    --card-bg: #F0F8FF; /* 爱丽丝蓝 */
-    --border-color: #DDA0DD; /* 梅花色 */
-    --hover-bg: #E6E6FA; /* 薰衣草色 */
-    --button-bg: #BA55D3; /* 适中的兰花紫 */
-    --button-text: #fff;
-    --button-hover-bg: #DA70D6; /* 兰花紫 */
-    --box-shadow-light: rgba(0, 0, 0, 0.05);
-    --white-transparent-20: rgba(106, 90, 205, 0.2); /* 适应文本颜色的透明色 */
-}
-
-/* Ensure icons also transition colors with theme */
-.anime-button i {
-    transition: color 0.3s ease;
+    .page-section.dynamic-bg-elements::before,
+    .page-section.dynamic-bg-elements::after {
+        display: none; /* 移动端隐藏背景元素，避免干扰 */
+    }
 }

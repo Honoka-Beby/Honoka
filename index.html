@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Honoka的二次元博客 - V1.3</title>
+    <title>Honoka的二次元博客 - V1.4</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <!-- 引入二次元风格字体，例如：Google Fonts 上的 'M PLUS Rounded 1c' -->
@@ -21,8 +21,8 @@
     <!-- 头部导航栏 -->
     <header class="anime-header">
         <div class="container">
-            <h1 class="blog-title">🌸 Honoka 🌸</h1> <!-- 已更新: 移除 's World -->
-            <nav class="main-nav">
+            <h1 class="blog-title">🌸 Honoka 🌸</h1>
+            <nav class="main-nav>
                 <ul>
                     <li><a href="#home" class="nav-item active" data-section="home">首页</a></li>
                     <li><a href="#blog" class="nav-item" data-section="blog">博客</a></li>
@@ -41,7 +41,7 @@
                     <span></span>
                     <span></span>
                 </div>
-            </div>
+            </div&gt>
         </div>
     </header>
 
@@ -66,13 +66,13 @@
         <section id="blog" class="page-section">
             <div class="container">
                 <h2>所有博客文章</h2>
-                <div class="posts-list" id="blog-posts-container">
+                <div class="posts-grid" id="blog-posts-container"> <!-- **更新：改为网格布局** -->
                     <!-- 文章卡片将由 JavaScript 动态加载 -->
                 </div>
             </div>
         </section>
 
-        <section id="about" class="page-section">
+        <section id="about" class="page-section dynamic-bg-elements"> <!-- **新增 dynamic-bg-elements 类** -->
             <div class="container about-me-section anime-card">
                 <h2>关于我</h2>
                 <div class="profile-info">
@@ -81,12 +81,12 @@
                     <p>喜欢动漫、游戏、编程，也喜欢用代码创造有趣的东西，希望通过这个博客分享我的点滴。</p>
                     <a href="tencent://AddContact/?fromId=45&fromSubId=1&subcmd=all&uin=3203418940&param=EA-AA" target="_blank" rel="noopener noreferrer" class="anime-button social-button qq" title="点击添加QQ好友">
                         <i class="fab fa-qq"></i> 添加QQ好友
-                    </a> <!-- 已更新: 移除 GitHub，新增 QQ 图标按钮 -->
+                    </a>
                 </div>
             </div>
         </section>
 
-        <section id="message-board" class="page-section">
+        <section id="message-board" class="page-section dynamic-bg-elements"> <!-- **新增 dynamic-bg-elements 类** -->
             <div class="container anime-card">
                 <h2>留言板</h2>
                 <div class="comment-form">
@@ -99,7 +99,7 @@
                 </div>
                 <div class="comments-list" id="comments-container">
                     <h3>所有留言</h3>
-                    <!-- 留言将由 JavaScript 动态加载 (已移除重要提示) -->
+                    <!-- 留言将由 JavaScript 动态加载 -->
                 </div>
             </div>
         </section>
@@ -113,8 +113,8 @@
     <!-- 页脚 -->
     <footer class="anime-footer">
         <div class="container">
-            <p>© <span id="current-year"></span> Honoka. All rights reserved.</p> <!-- 已更新: 移除 's World -->
-            <p>网站版本: V1.3 | 上次更新: <span id="current-time"></span></p>
+            <p>© <span id="current-year"></span> Honoka. All rights reserved.</p>
+            <p>网站版本: V1.4 | 上次更新: <span id="current-time"></span></p>
         </div>
     </footer>
 
