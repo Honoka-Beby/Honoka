@@ -248,31 +248,24 @@ a:hover {
     color: var(--white-transparent-20); /* 颜色调整，使其不那么突出但可见 */
     text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
     transition: color 0.5s ease;
+    min-height: 2em; /* 防止加载时布局跳动 */
 }
-
 
 /* Anime Card Component */
 .anime-card {
     background-color: var(--card-bg);
     border-radius: 10px;
     box-shadow: 0 4px 10px var(--box-shadow-light); /* 柔和阴影 */
-    /* 修正图片溢出问题，将 padding 移到内部元素，或仅保留少量 */
-    padding: 0; /* 移除卡片自身的padding，让内部元素控制 */
+    padding: 0; /* 修正：移除卡片自身的padding，内部内容有自己的padding */
     margin-bottom: 25px;
     transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.5s ease, border-color 0.5s ease;
     display: flex;
     flex-direction: column;
-    overflow: hidden; /* 新增：裁剪超出圆角的部分 */
+    overflow: hidden; /* **重要修复**：裁剪超出圆角的部分 */
 }
 
-/* 让内容区有自己的内边距 */
+/* 为卡片内容的区域设置内边距 */
 .anime-card > *:not(.card-cover) {
-    padding: 0 25px;
-}
-.anime-card h3,
-.anime-card .post-meta,
-.anime-card p,
-.anime-card .read-more {
     padding-left: 25px;
     padding-right: 25px;
 }
@@ -286,12 +279,12 @@ a:hover {
 }
 
 .card-cover {
-    width: 100%; /* 修正：图片完全展开在卡片内，而不是溢出 */
+    width: 100%; /* **重要修复**：图片完全展开在卡片内 */
     height: 180px;
-    object-fit: cover; /* 保持图片覆盖区域 */
+    object-fit: cover; /* **重要修复**：保持图片覆盖区域，裁剪多余部分以适应比例 */
+    /* 移除 border-radius, 让父级 .anime-card 的 overflow: hidden 处理圆角 */
     filter: brightness(0.95); /* 略微变暗 */
     transition: filter 0.3s ease;
-    /* 移除 border-radius, 让父级 .anime-card 的 overflow: hidden 处理 */
     margin-bottom: 15px; /* 封面与下方内容的间距 */
 }
 
@@ -515,9 +508,9 @@ a:hover {
 
 /* Article Detail Page Specific Styles */
 .article-detail-cover {
-    width: 100%; /* 修正：图片完全展开在卡片内 */
+    width: 100%; /* **重要修复**：图片完全展开在卡片内 */
     height: 250px;
-    object-fit: cover;
+    object-fit: cover; /* **重要修复**：保持图片覆盖区域 */
     /* 移除边框圆角 */
     margin: 0 0 25px 0; /* 封面与下方内容的间距 */
     filter: brightness(0.95);
@@ -666,4 +659,54 @@ a:hover {
         padding-right: 15px;
         padding-bottom: 15px;
     }
+}```
+
+---
+
+### **4. `css/themes.css` (主题颜色功能 - 无变化)**
+
+```css
+/* Light Theme (Default) */
+/*
+   These variables are already defined in style.css :root for default.
+   They serve as the base for the light theme.
+*/
+
+/* Dark Theme */
+body.dark-theme {
+    --primary-color: #bb86fc; /* 醒目的紫色 */
+    --secondary-color: #03dac6; /* 青绿色 */
+    --background-color: #121212; /* 深色背景 */
+    --text-color: #e0e0e0;
+    --heading-color: #f0f0f0;
+    --card-bg: #1e1e1e;
+    --border-color: #333;
+    --hover-bg: #2a2a2a;
+    --button-bg: var(--primary-color);
+    --button-text: #fff;
+    --button-hover-bg: #9955dd;
+    --box-shadow-light: rgba(255, 255, 255, 0.08); /* 适应深色背景的淡阴影 */
+    --white-transparent-20: rgba(255, 255, 255, 0.2);
+}
+
+/* Pastel Theme */
+body.pastel-theme {
+    --primary-color: #FFC0CB; /* 粉色 */
+    --secondary-color: #ADD8E6; /* 浅蓝 */
+    --background-color: #FFFACD; /* 浅柠檬色 */
+    --text-color: #6A5ACD; /* 石板蓝 */
+    --heading-color: #4682B4; /* 钢蓝 */
+    --card-bg: #F0F8FF; /* 爱丽丝蓝 */
+    --border-color: #DDA0DD; /* 梅花色 */
+    --hover-bg: #E6E6FA; /* 薰衣草色 */
+    --button-bg: #BA55D3; /* 适中的兰花紫 */
+    --button-text: #fff;
+    --button-hover-bg: #DA70D6; /* 兰花紫 */
+    --box-shadow-light: rgba(0, 0, 0, 0.05);
+    --white-transparent-20: rgba(106, 90, 205, 0.2); /* 适应文本颜色的透明色 */
+}
+
+/* Ensure icons also transition colors with theme */
+.anime-button i {
+    transition: color 0.3s ease;
 }

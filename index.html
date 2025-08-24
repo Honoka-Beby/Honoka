@@ -33,7 +33,7 @@
             <div class="header-right">
                 <div class="theme-switcher">
                     <button id="theme-toggle-btn" class="anime-button" title="切换主题">
-                        <i class="fas fa-moon"></i> <!-- 可选的图标 -->
+                        <i class="fas fa-moon"></i> <!-- 可选的图标，JS中会动态更新 -->
                     </button>
                 </div>
                 <div class="mobile-nav-toggle" role="button" aria-label="Toggle navigation">
@@ -91,7 +91,7 @@
                 <h2>留言板</h2>
                 <div class="comment-form">
                     <p>在这里留下你的足迹吧！</p>
-                    <form id="comment-form">
+                    <form id="comment-form>
                         <input type="text" id="comment-name" placeholder="你的昵称" required class="anime-input" maxlength="20">
                         <textarea id="comment-content" placeholder="我想说..." required class="anime-textarea" maxlength="200"></textarea>
                         <button type="submit" class="anime-button primary"><i class="fas fa-paper-plane"></i> 发表留言</button>
