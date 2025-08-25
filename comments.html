@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言板 - 星光茶话会</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/animations.css">
+</head>
+<body class="theme-default">
+    <header class="main-header animate__fade-in">
+        <div class="container">
+            <h1 class="blog-title"><a href="index.html">星光茶话会</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="comments.html">留言板</a></li>
+                     <li><a href="#" id="theme-toggler">主题 ▼</a>
+                        <ul class="theme-dropdown menu-hidden">
+                            <li data-theme-name="default">默认主题</li>
+                            <li data-theme-name="sakura">樱花之语</li>
+                            <li data-theme-name="night-sky">夜空星辰</li>
+                        </ul>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container content-page">
+        <section class="comment-section animate__fade-in">
+            <h2 class="page-title animate__fade-up">说点什么吧！给我留言</h2>
+
+            <div class="comment-form-container animate__pop-in">
+                <h3>留下你的足迹~</h3>
+                <form id="comment-form">
+                    <div class="form-group">
+                        <label for="comment-author">你的名字:</label>
+                        <input type="text" id="comment-author" required placeholder="例如：次元游客">
+                    </div>
+                    <div class="form-group">
+                        <label for="comment-text">留言内容:</label>
+                        <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！"></textarea>
+                    </div>
+                    <button type="submit" class="button animate__pop-in-hover">提交留言</button>
+                    <p class="form-hint">你的留言将保存在当前浏览器中，换个浏览器或设备可能就看不到了哦</p>
+                </form>
+            </div>
+
+            <div class="comments-list-container animate__fade-in" data-delay="300">
+                <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
+                <div id="comments-list" class="posts-grid">
+                    <!-- 留言将通过JS在此处显示 -->
+                    <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer animate__fade-in">
+        <div class="container">
+            <p>&copy; 2024 星光茶话会 - 二次元观测者. All rights reserved.</p>
+            <p>QQ: 3203418940</p>
+            <div class="social-links">
+                <a href="#" target="_blank">AniList</a>
+                <a href="#" target="_blank">Bilibili</a>
+            </div>
+        </div>
+    </footer>
+
+    <script src="js/script.js"></script>
+    <script src="js/comments.js"></script>
+</body>
+</html>

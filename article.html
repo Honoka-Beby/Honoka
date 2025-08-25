@@ -3,50 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>文章详情 - Honoka的二次元博客 V1.0</title>
+    <title>关于我 - 星光茶话会</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
-    <link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;700&display=swap" rel="stylesheet>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="css/animations.css">
 </head>
-<body class="light-theme">
-    <!-- 头部导航栏 -->
-    <header class="anime-header">
+<body class="theme-default">
+    <header class="main-header animate__fade-in">
         <div class="container">
-            <h1 class="blog-title"><span>🌸 Honoka 🌸</span></h1>
-            <nav>
-                <a href="index.html#blog" class="anime-button"><i class="fas fa-angle-left"></i> 返回博客列表</a>
+            <h1 class="blog-title"><a href="index.html">星光茶话会</a></h1>
+            <nav class="main-nav">
+                <ul>
+                    <li><a href="index.html">首页</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="comments.html">留言板</a></li>
+                     <li><a href="#" id="theme-toggler">主题 ▼</a>
+                        <ul class="theme-dropdown menu-hidden">
+                            <li data-theme-name="default">默认主题</li>
+                            <li data-theme-name="sakura">樱花之语</li>
+                            <li data-theme-name="night-sky">夜空星辰</li>
+                        </ul>
+                    </li>
+                </ul>
             </nav>
         </div>
     </header>
 
-    <main class="page-content reading-page"> <!-- **新增 reading-page 类** -->
-        <section id="article-detail" class="page-section active">
-            <div class="container anime-card">
-                <img id="article-cover" src="assets/images/fallback-cover-1.png" alt="文章封面" class="article-detail-cover" onerror="this.onerror=null;this.src='assets/images/fallback-cover-${Math.floor(Math.random()*3)+1}.png';">
-                <h2 id="article-title">加载中...</h2>
-                <p class="post-meta">发布于：<span id="article-date">...</span> | 分类：<span id="article-category">...</span></p>
-                <div id="article-content" class="article-content">
-                    <p>文章内容正在加载中，请稍候...</p>
-                </div>
+    <main class="container content-page">
+        <section class="about-me-section animate__fade-in">
+            <img src="img/avatar.png" alt="我的二次元头像" class="my-avatar animate__pop-in">
+            <h2 class="page-title animate__fade-up">你好，我是二次元观测者！🌌</h2>
+            <p class="animate__fade-up" data-delay="100">
+                欢迎来到“星光茶话会”，一个专属二次元爱好者的温馨角落。我是这里的主人，你可以叫我“次元君”或任何你喜欢的昵称！从小浸泡在动画、漫画和轻小说的世界里，二次元对我来说，不仅仅是兴趣，更是一种生活态度和发现美的视角。
+            </p>
+            <p class="animate__fade-up" data-delay="200">
+                我热爱探讨每一季的新番，对经典老番如数家珍；喜欢分享那些触动心弦的漫画故事，以及在虚拟游戏中感受到的每一次心跳。在这里，我会与你分享我的最新观影感受、对某个角色的独到见解、偶尔也会晒晒我的手办收藏，或者是一些关于二次元文化的小思考。
+            </p>
+            <p class="animate__fade-up" data-delay="300">
+                如果你也和我有相同的爱好，喜欢探讨动漫世界的无限可能，或者只是想找个地方放松心情，听听关于二次元的“八卦”，那就加入进来吧！我非常期待与你交流。
+            </p>
+            <div class="contact-info animate__fade-up" data-delay="400">
+                <h3>联系我:</h3>
+                <ul>
+                    <li><strong>QQ:</strong> 3203418940</li>
+                    <li><strong>Email:</strong> your.email@example.com (建议填写真实邮箱或留空)</li>
+                    <li><strong>Bilibili:</strong> <a href="#" target="_blank">你的B站主页</a></li>
+                </ul>
             </div>
+            <p class="animate__fade-up" data-delay="500">期待与你在二次元的星光下相遇！✨</p>
         </section>
     </main>
 
-    <!-- 阅读进度条 -->
-    <div id="reading-progress-bar" class="reading-progress-bar"></div>
-
-    <!-- 页脚 -->
-    <footer class="anime-footer">
+    <footer class="main-footer animate__fade-in">
         <div class="container">
-            <p>© <span id="current-year-article"></span> Honoka. All rights reserved.</p>
-            <p>网站版本: V1.0</p>
+            <p>&copy; 2024 星光茶话会 - 二次元观测者. All rights reserved.</p>
+            <p>QQ: 3203418940</p>
+            <div class="social-links">
+                <a href="#" target="_blank">AniList</a>
+                <a href="#" target="_blank">Bilibili</a>
+            </div>
         </div>
     </footer>
 
-    <script type="module" src="js/article-viewer.js"></script>
-    <script>
-        document.getElementById('current-year-article').textContent = new Date().getFullYear();
-    </script>
+    <script src="js/script.js"></script>
 </body>
 </html>
