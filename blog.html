@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文章列表 - Honoka的小屋</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body class="theme-cosmic-dream">
-
+    <!-- 全局页面过渡遮罩 -->
+    <div id="global-page-transition-overlay"></div>
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
@@ -31,39 +33,45 @@
 
     <main class="container">
         <section class="recent-posts" id="posts-section">
-            <h2 class="section-title">我的随笔</h2>
+            <h2 class="section-title animate__slide-up">我的随笔</h2>
             <div class="posts-grid">
-                <!-- 文章卡片现在会有从下到上滑入的动画 -->
+                <!-- 第一篇文章卡片 -->
                 <div class="post-card animate__slide-up">
                     <a href="posts/first-post.html">
                         <img src="img/post-thumbnail-1.png" alt="「你的名字」影评" class="post-thumbnail">
                         <div class="post-info">
                             <h3>我与《你的名字》的初次邂逅：情感的交织与时间的奇迹</h3>
-                            <p class="post-excerpt">还记得第一次走进电影院观看《你的名字》时的震撼吗？... </p>
+                            <p class="post-excerpt">还记得第一次走进电影院观看《你的名字》时的震撼吗？那不仅仅是一个关于“交换身体”的奇幻故事...</p>
                             <time datetime="2024-04-23">2024年4月23日</time>
+                            <div class="post-tags"><span class="tag">影评</span><span class="tag">治愈</span></div>
                         </div>
                     </a>
                 </div>
+                <!-- 第二篇文章卡片 -->
                 <div class="post-card animate__slide-up" data-delay="100">
                     <a href="posts/second-post.html">
                         <img src="img/post-thumbnail-2.png" alt="手办收藏" class="post-thumbnail">
                         <div class="post-info">
                             <h3>手办坑里的那些趣事和我最爱的waifu：我的次元收藏之旅</h3>
-                            <p class="post-excerpt">从一无所知的小白到拥有几十个手办的“资深”玩家...</p>
+                            <p class="post-excerpt">从一无所知的小白到拥有几十个手办的“资深”玩家，这些年我在手办坑里掉过多少把眼泪？...</p>
                             <time datetime="2024-04-18">2024年4月18日</time>
+                            <div class="post-tags"><span class="tag">手办</span><span class="tag">分享</span></div>
                         </div>
                     </a>
                 </div>
+                <!-- 范例文章卡片，你可以替换为自己的新文章 -->
                 <div class="post-card animate__slide-up" data-delay="200">
-                    <a href="#">
+                    <a href="posts/article-template.html"> 
                         <img src="img/post-thumbnail-3.png" alt="番剧推荐" class="post-thumbnail">
                         <div class="post-info">
                             <h3>四月新番速览：不容错过的几部神作预定！</h3>
-                            <p class="post-excerpt">又到了充满希望的四月，今年的新番竞争依然激烈...</p>
+                            <p class="post-excerpt">又到了充满希望的四月，今年的新番竞争依然激烈，我已经帮大家筛选出了最值得关注的几部番剧。</p>
                             <time datetime="2024-04-10">2024年4月10日</time>
+                            <div class="post-tags"><span class="tag">新番</span><span class="tag">推荐</span></div>
                         </div>
                     </a>
                 </div>
+                <!-- 更多文章可以像这样添加 -->
             </div>
         </section>
     </main>
@@ -76,13 +84,19 @@
     </footer>
 
     <!-- 看板娘 Live2D -->
-    <div id="live2d-widget" class="live2d-widget-container"></div>
+    <div id="live2d-widget" class="live2d-widget-container animate__fade-in"></div>
     <button id="back-to-top" title="返回顶部">↑</button>
 
     <script src="js/script.js"></script>
+    <!-- Live2D 初始化，模型路径在index.html中已修改 -->
     <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
     <script>
-        L2Dwidget.init({ /* ... 和 index.html 中一样的配置 ... */ });
+        L2Dwidget.init({
+            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-wanko@1.0.5/assets/wanko.model.json", "scale": 1 },
+            "display": { "position": "right", "width": 150, "height": 300, "hOffset": 10, "vOffset": -20 },
+            "mobile": { "show": true, "scale": 0.5 },
+            "react": { "opacityDefault": 0.8, "opacityOnHover": 1 }
+        });
     </script>
 </body>
 </html>

@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body class="theme-cosmic-dream">
-
+    <!-- 全局页面过渡遮罩 -->
+    <div id="global-page-transition-overlay"></div>
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
@@ -30,8 +31,8 @@
         </div>
     </header>
 
-    <main class="container content-page">
-        <section class="about-me-section animate__fade-in">
+    <main class="container content-page animate__fade-in">
+        <section class="about-me-section">
             <img src="img/avatar.png" alt="我的二次元头像" class="my-avatar animate__slide-up">
             <h2 class="page-title animate__slide-up" data-delay="100">你好，我是Honoka！🌌</h2>
             <p class="animate__slide-up" data-delay="200">
@@ -63,14 +64,15 @@
     </footer>
 
     <!-- 看板娘 Live2D -->
-    <div id="live2d-widget" class="live2d-widget-container"></div>
+    <div id="live2d-widget" class="live2d-widget-container animate__fade-in"></div>
     <button id="back-to-top" title="返回顶部">↑</button>
 
     <script src="js/script.js"></script>
+    <!-- Live2D 初始化，模型路径在index.html中已修改 -->
     <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
     <script>
         L2Dwidget.init({
-            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json", "scale": 1 },
+            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-wanko@1.0.5/assets/wanko.model.json", "scale": 1 },
             "display": { "position": "right", "width": 150, "height": 300, "hOffset": 10, "vOffset": -20 },
             "mobile": { "show": true, "scale": 0.5 },
             "react": { "opacityDefault": 0.8, "opacityOnHover": 1 }

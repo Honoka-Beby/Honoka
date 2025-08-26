@@ -1,32 +1,42 @@
-/* --- Title Shine Animation --- */
-@keyframes shine-effect {
-    0% { transform: translateX(-150%) skewX(-30deg); }
-    40% { transform: translateX(150%) skewX(-30deg); }
-    100% { transform: translateX(150%) skewX(-30deg); }
-}
-
-/* --- Base animation classes (for Intersection Observer) --- */
-.animate__fade-in, .animate__slide-up {
+/* --- Global Initial State for Animated Elements --- */
+/* Elements with `animate__` class will start invisible and transform, controlled by JS `is-visible` */
+[class*="animate__"] {
     opacity: 0;
+    transform: translateY(20px); /* Default slide up from a bit below */
     transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-    will-change: opacity, transform;
+    will-change: opacity, transform; /* Optimize for animation performance */
 }
 
+/* This class will be added by JS to trigger animation for elements in viewport */
 [class*="animate__"].is-visible {
     opacity: 1;
     transform: translateY(0);
 }
 
+/* Specific Animation Overrides */
+
+/* Fade In (no initial transform) */
 .animate__fade-in {
-    transform: none;
+    transform: none; /* Only change opacity */
 }
 
-/* --- New Post Card Animation --- */
+/* Pop In (scale effect) */
+.animate__pop-in {
+    transform: scale(0.8);
+}
+.animate__pop-in.is-visible {
+    transform: scale(1);
+}
+
+/* Slide Up (default animation, defined in `[class*="animate__"]`) */
 .animate__slide-up {
-    transform: translateY(50px);
+    /* Inherits transform: translateY(20px) from generic rule */
 }
 
-/* Delay for staggering animations */
+/* --- Delay for staggering Animations --- */
 [data-delay="100"] { transition-delay: 0.1s; }
 [data-delay="200"] { transition-delay: 0.2s; }
 [data-delay="300"] { transition-delay: 0.3s; }
+[data-delay="400"] { transition-delay: 0.4s; }
+[data-delay="500"] { transition-delay: 0.5s; }
+[data-delay="600"] { transition-delay: 0.6s; }

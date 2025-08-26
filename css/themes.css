@@ -4,46 +4,38 @@
     --border-radius-lg: 12px;
 
     /* Base Colors - 深邃的星空紫 */
-    --bg-color: #1a1625;
-    --bg-secondary-color: #2a2438;
-    --card-bg-color: rgba(26, 22, 37, 0.8);
-    --border-color: rgba(255, 121, 198, 0.2);
-    --shadow-rgb: 0, 0, 0;
+    --bg-color: #1a1625; /* 深紫色背景 */
+    --bg-secondary-color: #2a2438; /* 稍微浅一点的紫色，用于一些区块 */
+    --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
+
+    --card-bg-color: rgba(26, 22, 37, 0.85); /* 卡片半透明背景，带一点点模糊效果 */
+    --card-page-bg: #2a2438; /* 独立内容页面背景，不透明 */
+    
+    --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
+    --shadow-rgb: 0, 0, 0; /* 用于阴影 */
 
     /* Text Colors - 温和的星光白 */
-    --text-color: #dcd7e6;
-    --heading-color: #ffffff;
-    --meta-text-color: #9e9aac;
+    --text-color: #dcd7e6; /* 主体文本颜色 */
+    --heading-color: #ffffff; /* 标题颜色 */
+    --meta-text-color: #9e9aac; /* 元信息/辅助文本颜色 */
 
     /* Accent & Primary Colors - 亮眼的少女粉 */
-    --primary-color: #ff79c6;
-    --primary-color-rgb: 255, 121, 198;
-    --primary-hover-color: #ff92d0;
-    --secondary-color: #bd93f9; /* 辅助紫色 */
+    --primary-color: #ff79c6; /* 主色调，亮粉色 */
+    --primary-color-rgb: 255, 121, 198; /* 用于RGBA计算 */
+    --secondary-color-rgb: 189, 147, 249; /* 用于RGBA计算 */
+    --primary-hover-color: #ff92d0; /* 主色调悬停，稍亮 */
+    --secondary-color: #bd93f9; /* 辅助色，神秘紫 */
 
-    /* Links */
-    --link-color: var(--primary-color);
-    --link-hover-color: var(--primary-hover-color);
-    
     /* Header/Footer/Forms */
-    --header-bg-color: rgba(26, 22, 37, 0.7);
-    --footer-bg-color: #110e1a;
-    --input-bg-color: var(--bg-secondary-color);
+    --header-bg-color: rgba(26, 22, 37, 0.9); /* Header半透明背景 */
+    --footer-bg-color: #110e1a; /* Footer深色背景 */
+    --input-bg-color: var(--bg-secondary-color); /* 输入框背景 */
     
-    /* Font family - 留言板标题也改用这个更柔和的字体 */
-    --font-primary: 'Noto Sans SC', sans-serif;
-    --font-display: 'LXGW WenKai Screen', 'Noto Sans SC', sans-serif; /* 一个更柔和的展示字体 */
-}
-
-/* 引入字体 */
-@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
-@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
-
-
-body {
-    -webkit-font-smoothing: antialiased;
-    font-family: var(--font-primary);
-    background-color: var(--bg-color);
-    color: var(--text-color);
-    cursor: none; /* 隐藏默认鼠标指针 */
+    /* Links */
+    --link-color: var(--primary-color); /* 链接颜色 */
+    --link-hover-color: var(--primary-hover-color); /* 链接悬停颜色 */
+    
+    /* Font family */
+    --font-primary: 'Noto Sans SC', sans-serif; /* 主要正文字体 */
+    --font-display: 'LXGW WenKai Screen', sans-serif; /* 标题、显示字体 */
 }

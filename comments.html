@@ -10,7 +10,8 @@
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body class="theme-cosmic-dream">
-    
+    <!-- 全局页面过渡遮罩 -->
+    <div id="global-page-transition-overlay"></div>
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
@@ -30,8 +31,8 @@
         </div>
     </header>
 
-    <main class="container content-page">
-        <section class="comment-section animate__fade-in">
+    <main class="container content-page animate__fade-in">
+        <section class="comment-section">
             <h2 class="page-title animate__slide-up">说点什么吧！给我留言</h2>
 
             <div class="comment-form-container animate__slide-up" data-delay="100">
@@ -39,11 +40,11 @@
                 <form id="comment-form">
                     <div class="form-group">
                         <label for="comment-author">你的名字:</label>
-                        <input type="text" id="comment-author" required placeholder="例如：次元游客">
+                        <input type="text" id="comment-author" required placeholder="例如：次元游客" class="animate__pop-in-focus">
                     </div>
                     <div class="form-group">
                         <label for="comment-text">留言内容:</label>
-                        <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！"></textarea>
+                        <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！" class="animate__pop-in-focus"></textarea>
                     </div>
                     <button type="submit" class="button">提交留言</button>
                     <p class="form-hint">你的留言将保存在当前浏览器中，换个浏览器或清除缓存就看不到了哦</p>
@@ -53,7 +54,8 @@
             <div class="comments-list-container animate__fade-in" data-delay="300">
                 <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
                 <div id="comments-list" class="posts-grid">
-                    <!-- 留言将通过JS在此处动态生成 -->
+                     <!-- 留言内容将由js/comments.js动态加载 -->
+                     <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
                 </div>
             </div>
         </section>
@@ -67,17 +69,18 @@
     </footer>
 
     <!-- 看板娘 Live2D -->
-    <div id="live2d-widget" class="live2d-widget-container"></div>
+    <div id="live2d-widget" class="live2d-widget-container animate__fade-in"></div>
     <button id="back-to-top" title="返回顶部">↑</button>
 
-    <!-- 关键: 同时引用两个JS文件 -->
+    <!-- 注意: 留言板需要同时加载 script.js (全局功能) 和 comments.js (留言板功能) -->
     <script src="js/script.js"></script>
-    <script src="js/comments.js"></script> <!-- 留言板专用JS -->
+    <script src="js/comments.js"></script>
 
+    <!-- Live2D 初始化，模型路径在index.html中已修改 -->
     <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
     <script>
         L2Dwidget.init({
-            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json", "scale": 1 },
+            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-wanko@1.0.5/assets/wanko.model.json", "scale": 1 },
             "display": { "position": "right", "width": 150, "height": 300, "hOffset": 10, "vOffset": -20 },
             "mobile": { "show": true, "scale": 0.5 },
             "react": { "opacityDefault": 0.8, "opacityOnHover": 1 }

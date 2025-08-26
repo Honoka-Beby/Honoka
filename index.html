@@ -4,12 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Honoka的小屋 - 欢迎来到我的二次元世界</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body class="theme-cosmic-dream is-homepage">
-
+    <!-- 全局页面过渡遮罩，在页面跳转时激活 -->
+    <div id="global-page-transition-overlay"></div>
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
@@ -20,54 +22,52 @@
                 <h1 class="blog-title blog-title--animated">
                     <a href="index.html">Honoka的小屋</a>
                 </h1>
-                <p class="hero-subtitle">一个关于动画、梦想和代码的秘密基地 ✨</p>
-                <nav class="hero-nav">
+                <p class="hero-subtitle animate__slide-up" data-delay="100">一个关于动画、梦想和代码的秘密基地 ✨</p>
+                <nav class="hero-nav animate__slide-up" data-delay="200">
                     <a href="blog.html" class="nav-link">文章</a>
                     <a href="about.html" class="nav-link">关于</a>
                     <a href="comments.html" class="nav-link">留言</a>
                 </nav>
             </div>
-            <a href="#posts-section" class="scroll-down-arrow">
+            <!-- "探索更多"按钮，点击后通过JS触发页面过渡到blog.html -->
+            <a href="blog.html" class="scroll-down-arrow animate__fade-in" data-delay="300">
                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
                 <span>探索更多</span>
             </a>
         </section>
-
-        <!-- 主页下方直接衔接文章，这里是占位，实际内容在 blog.html -->
     </main>
 
     <!-- 看板娘 Live2D -->
-    <div id="live2d-widget" class="live2d-widget-container"></div>
+    <div id="live2d-widget" class="live2d-widget-container animate__fade-in"></div>
     
     <!-- 返回顶部按钮 -->
     <button id="back-to-top" title="返回顶部">↑</button>
 
     <script src="js/script.js"></script>
     
-    <!-- 引入看板娘JS，请确保网络可访问 -->
+    <!-- 引入看板娘JS库，并初始化为白毛萝莉 "Wanko" -->
     <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
     <script>
-        // 初始化看板娘
         L2Dwidget.init({
             "model": {
-                // 你可以从这里找到更多模型: https://github.com/stevenjoezhang/live2d-widget-models
-                "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json",
+                // 白毛萝莉 “Wanko” 模型路径
+                "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-wanko@1.0.5/assets/wanko.model.json",
                 "scale": 1
             },
             "display": {
-                "position": "right", // right or left
-                "width": 150,
-                "height": 300,
-                "hOffset": 10,
-                "vOffset": -20
+                "position": "right", // 放置在右侧
+                "width": 150,        // 宽度
+                "height": 300,       // 高度
+                "hOffset": 10,       // 水平偏移
+                "vOffset": -20       // 垂直偏移
             },
             "mobile": {
-                "show": true, // 手机端是否显示
-                "scale": 0.5
+                "show": true,        // 手机端是否显示
+                "scale": 0.5         // 手机端显示大小比例
             },
             "react": {
-                "opacityDefault": 0.8,
-                "opacityOnHover": 1
+                "opacityDefault": 0.8, // 默认不透明度
+                "opacityOnHover": 1    // 鼠标悬停时完全不透明
             }
         });
     </script>
