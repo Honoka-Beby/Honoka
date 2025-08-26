@@ -27,6 +27,8 @@ body {
     /* transition: background-image 1s ease-out; /* 已移入 JS 进行更精确控制 */
     cursor: none; /* 隐藏默认鼠标指针，交由JS控制自定义指针 */
     touch-action: pan-y; /* 优化移动端滚动性能 */
+    /* 当移动菜单打开时，body不允许滚动 */
+     &.no-scroll { overflow: hidden; }
 }
 
 /* 全局固定模糊叠加层：位于body背景之上，所有内容之下，提供统一的背景模糊和颜色基调 */
@@ -35,7 +37,7 @@ body::before {
     position: fixed; /* 固定在视口 */
     top: 0; left: 0; right: 0; bottom: 0;
     background: var(--body-overlay-bg); /* 半透明深色叠加层，允许背景图透出 */
-    backdrop-filter: blur(3px); /* 对下层内容（即body背景图）应用模糊 */
+    backdrop-filter: blur(var(--body-backdrop-blur)); /* 对下层内容（即body背景图）应用模糊 */
     z-index: -1; /* 位于正常内容之下，body背景图之上 */
     transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
 }
@@ -187,58 +189,62 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     animation: fadeIn 1.5s ease-out;
 }
 
-/* 主页标题 “Honoka的小屋” 的文字闪光动画 */
+/* 主页标题 “Honoka的小屋” 的字体动画 */
 .blog-title--animated > a {
-    color: #fff; /* 默认文字颜色，如果内容层级配置得当，此颜色会被伪元素覆盖 */
+    color: var(--text-color); /* 基础文字颜色为白色，但会被 background-clip 遮盖 */
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
-    text-shadow: 0 0 8px rgba(0, 0, 0, 0.5); 
+    text-shadow: none; /* 移除额外文字阴影 */
+    
+    /* 核心动画实现：使用背景渐变和背景裁剪 */
+    background: linear-gradient(
+        to right,
+        var(--text-color) 0%,      /* 默认白色部分 */
+        var(--text-color) 40%,     /* 默认白色部分 */
+        var(--primary-color) 50%,  /* 粉色高亮中心 */
+        var(--text-color) 60%,     /* 默认白色部分 */
+        var(--text-color) 100%     /* 默认白色部分 */
+    );
+    background-size: 200% auto; /* 让渐变比文本自身宽，这样可以移动 */
+    background-repeat: no-repeat;
+    -webkit-background-clip: text;   /* 裁剪背景为文字形状 */
+    background-clip: text; /* 标准 */
+    -webkit-text-fill-color: transparent ; /* 让文字填充变成透明，这样背景就能透出来 */
+    text-fill-color: transparent; /* 标准 */
+
     position: relative;
     display: inline-block; 
     vertical-align: top;
     line-height: 1.2;
-    padding: 0 10px; /* 标题边缘预留空间 */
-    /* overflow: hidden; Removed: not needed with new ::after approach */
-}
-/* 使用 ::after 伪元素创建滑过的粉色发光文字效果 */
-.blog-title--animated > a::after {
-    content: attr(data-original-text); /* 从data属性获取文本内容 */
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    color: var(--primary-color); /* 粉色文字 */
-    text-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.9); /* 更强的发光效果 */
-    opacity: 0; /* 默认透明 */
-    transform: translateX(-100%); /* 初始位置在文本区域左侧完全之外 */
-    animation: text-flow-shine 4s ease-in-out infinite both; /* 动画，无限循环 */
-    animation-delay: 0.5s; /* 动画初始延迟 */
-    pointer-events: none; /* 确保不影响鼠标和文本选择 */
-    white-space: nowrap; /* 防止伪元素文本换行 */
-    z-index: 1; /* 动画文字在原始文字之上 */
-    will-change: transform, opacity;
+    padding: 0 10px; /* 标题边缘预留空间，确保整个渐变都能划过 */
+    overflow: hidden; /* 裁剪动画超出部分 */
+
+    animation: text-marquee-color 4s ease-in-out infinite; 
+    will-change: background-position, transform; /* 针对动画优化性能 */
 }
 
-@keyframes text-flow-shine {
-    0% { transform: translateX(-100%); opacity: 0; }                        /* 开始：完全在左侧，透明 */
-    10% { opacity: 0.8; transform: translateX(-50%); }                      /* 缓慢滑入，透明度升高 */
-    50% { opacity: 0.8; transform: translateX(100%); }                     /* 滑过文字区域，保持透明度 */
-    60% { opacity: 0; transform: translateX(120%); }                        /* 完全滑出后，快速变为透明并移动到右侧之外 */
-    100% { transform: translateX(-100%); opacity: 0; }                     /* 重置到初始位置，透明，为下一轮循环做准备 */
+@keyframes text-marquee-color {
+    0% { background-position: -100% 0; }  /* 渐变从左侧-100%位置开始 */
+    60% { background-position: 200% 0; } /* 渐变滑动到右侧200%位置 */
+    100% { background-position: -100% 0; } /* 渐变重置到左侧-100%位置，重复循环 */
 }
 
 
 /* 导航栏中的标题，保持简洁，无特殊动画 */
 .main-header .blog-title--animated a { 
     font-size: 2rem; 
-    color: #fff; 
+    /* 导航栏标题不应用主页的复杂背景裁剪动画 */
+    color: var(--text-color); /* 直接设置为白色，不受背景裁剪影响 */
+    background: none;
+    -webkit-background-clip: unset;
+    background-clip: unset;
+    -webkit-text-fill-color: var(--text-color);
+    text-fill-color: var(--text-color);
     padding: 0 5px; 
+    animation: none; /* 禁用动画 */
 }
-.main-header .blog-title--animated a::after {
-    display: none; /* 在导航栏中隐藏标题的特殊动画 */
-}
+
 
 .hero-subtitle {
     font-size: clamp(1rem, 3vw, 1.2rem);
@@ -283,81 +289,57 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* --- General Header and Mobile Navigation --- */
 .main-header { 
-    padding: 1.5rem 0; 
+    padding: 1rem 0; /* 调整头部填充，让其更紧凑 */
     background: var(--header-bg-color); 
     border-bottom: 1px solid var(--border-color); 
     position: sticky; 
     top: 0; 
-    z-index: 100; 
+    z-index: 100; /* 高层级确保一直在顶层 */
     box-shadow: 0 2px 15px rgba(0,0,0,0.3); 
-    width: 100%; /* 确保在移动端是全宽 */
+    width: 100%; 
 }
 .main-header .container { 
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    flex-wrap: nowrap; /* 避免在容器内自动换行 */
+    flex-wrap: nowrap; 
 }
-.main-nav ul { 
-    list-style: none; display: flex; gap: 1.5rem; margin: 0;
+.main-nav {
+    display: block; /* 桌面端默认显示导航 */
+    /* 移动端样式将在媒体查询中覆盖 */
+    ul { list-style: none; display: flex; gap: 1.5rem; margin: 0;}
+    a { 
+        font-weight: 500; padding: 0.5em 0; border-bottom: 2px solid transparent; 
+        transition: border-color 0.3s ease, color 0.3s ease; 
+        -webkit-tap-highlight-color: transparent;
+    }
+    a:hover, a.active { border-color: var(--primary-color); color: var(--primary-color); }
 }
-.main-nav a { 
-    font-weight: 500; padding: 0.5em 0; border-bottom: 2px solid transparent; 
-    transition: border-color 0.3s ease, color 0.3s ease; 
-    -webkit-tap-highlight-color: transparent;
-}
-.main-nav a:hover, .main-nav a.active { border-color: var(--primary-color); color: var(--primary-color); }
 
-/* 汉堡包菜单和关闭按钮 */
-.menu-toggle {
-    display: none; /* 桌面端隐藏 */
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 8px; /* 较小填充 */
-    position: relative;
-    z-index: 101; 
+/* 汉堡包菜单和关闭按钮 - 桌面端隐藏 */
+.menu-toggle, .main-nav .menu-close {
+    display: none; 
 }
-.menu-toggle .icon-bar {
-    display: block;
-    width: 25px;
-    height: 3px;
-    background-color: var(--primary-color);
-    margin: 4px 0; /* 略小间距 */
-    transition: all 0.3s ease;
-    border-radius: 2px;
-}
-.main-nav .menu-close {
-    display: none; /* 默认隐藏 */
-    position: absolute;
-    top: 15px; 
-    right: 20px; 
-    font-size: 2.2em; /* 较大，易点击 */
-    color: var(--primary-color);
-    background: none;
-    border: none;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    z-index: 102; /* 确保在菜单内容之上 */
-}
+
 
 /* --- Page & Section Titles --- */
 .section-title, .page-title {
     font-family: var(--font-display); 
     font-weight: 700;
     color: #fff;
-    text-align: center;
+    text-align: center; /* **FIX**: 确保标题自身和内容居中 */
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
-    display: inline-block;
-    left: 50%; /* 使用left和transform确保宽度不定时也能居中 */
-    transform: translateX(-50%);
+    display: block; /* **FIX**: 确保是块级元素以便text-align: center作用 */
+    width: fit-content; /* **FIX**: 限制标题宽度方便居中 */
+    margin-left: auto; /* **FIX**: block元素居中 */
+    margin-right: auto; /* **FIX**: block元素居中 */
     padding-bottom: 0.8em;
 }
 .section-title::after, .page-title::after {
     content: '';
-    position: absolute;
+    position: absolute; /* 相对于父级标题`section-title/page-title`定位 */
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
@@ -371,14 +353,14 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 /* 包裹主要内容的容器，自身具有更强的背景模糊和颜色，使内容在动态背景上清晰可读 */
 .content-page-wrapper {
     background-color: var(--content-bg-color); /* 设置半透明背景色 */
-    backdrop-filter: blur(8px); /* 对下层（即body背景和body::before）应用更强的模糊 */
+    backdrop-filter: blur(var(--content-backdrop-blur)); /* 对下层（即body背景和body::before）应用更强的模糊 */
     border-radius: var(--border-radius-lg);
     box-shadow: 0 6px 25px rgba(0,0,0,0.25); 
     max-width: 900px;
     margin: 3rem auto;
     padding: 2.5rem 1.5rem;
     flex-grow: 1; /* 内容区弹性增长填充剩余空间 */
-    text-align: center; /* 默认居中，内部元素可覆盖 */
+    text-align: center; /* **主要居中修复点，确保所有块级子元素（如section, h2）默认居中** */
 }
 
 
@@ -393,7 +375,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     overflow: hidden;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(var(--card-backdrop-blur));
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     height: 100%; 
     display: flex;
@@ -407,10 +389,17 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     object-fit: cover; 
     transition: transform 0.3s ease; 
     font-size: 0; /* 隐藏img的alt文本，让其不会显示在无效图片位置 */
+    flex-shrink: 0; /* 防止图片在flex容器中被压缩 */
+    /* 当图片加载失败时，添加额外样式 */
+    &.is-loading-fallback {
+        background: linear-gradient(45deg, var(--primary-color-rgb), rgba(var(--secondary-color-rgb), 0.7)); /* 彩色背景 */
+        object-fit: contain; /* 包含整个图片，而不是剪切 */
+        padding: 10px; /* 如果图片很小会显示边框 */
+    }
 }
-/* .post-card:hover .post-thumbnail { transform: scale(1.05); } O */ /* Optional: thumbnail zoom on hover */
 
-.post-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column;} 
+
+.post-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; text-align: left; } /* 文章信息左对齐 */
 .post-info h3 { margin: 0 0 0.5rem; font-family: var(--font-display); font-size: 1.4rem; color: #fff; }
 .post-info h3:hover { color: var(--primary-color); } 
 .post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); flex-grow: 1;}
@@ -428,23 +417,33 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 
 /* --- Layout for About, Comments pages --- */
-.about-me-section p, .comment-section p {
-    font-size: 1.05em;
-    max-width: 760px;
+/* 为了确保内容文本默认居中，同时卡片标题居中 */
+.about-me-section, .comment-section {
+    width: 100%; /* 确保能占据容器的全部宽度 */
+    max-width: 800px; /* 大约是 .content-page-wrapper 的 max-width */
     margin-left: auto;
     margin-right: auto;
-    text-align: justify; 
-}
-.content-page-wrapper ol, .content-page-wrapper ul {
-    max-width: 760px;
-    margin-left: auto;
-    margin-right: auto;
-    text-align: justify;
+    /* text-align: center; */ /* 这一行通过 .content-page-wrapper 统一设置 */
 }
 
+.about-me-section p, .comment-section p {
+    font-size: 1.05em;
+    max-width: 760px; /* 进一步限制段落宽度以保持良好可读性 */
+    margin-left: auto;
+    margin-right: auto;
+    text-align: justify; /* 段落内容两端对齐 */
+}
+.content-page-wrapper ul, .content-page-wrapper ol { /* 列表也遵循居中内容的最大宽度和对齐 */
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left; /* 列表内容左对齐 */
+    padding-left: 2em; /* 标准列表缩进 */
+}
+
+
 .about-me-section .my-avatar {
-    width: 150px;
-    height: 150px;
+    width: 150px; height: 150px;
     border-radius: 50%;
     object-fit: cover;
     margin: 0 auto 1.5em;
@@ -457,7 +456,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     box-shadow: 0 0 0 12px rgba(var(--primary-color-rgb), 0.3);
 }
 .about-me-section .contact-info {
-    text-align: left;
+    text-align: left; /* 联系信息块内左对齐 */
     max-width: 480px;
     margin: 2em auto;
     padding: 1.5em;
@@ -480,11 +479,11 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     max-width: 700px;
     margin: 2rem auto;
-    text-align: left;
-    backdrop-filter: blur(5px);
+    text-align: left; /* 表单内容左对齐 */
+    backdrop-filter: blur(var(--card-backdrop-blur));
 }
 .comment-form-container h3 {
-    text-align: center;
+    text-align: center; /* 表单副标题居中 */
     color: var(--primary-color);
     margin-bottom: 1.5rem;
     font-family: var(--font-display); 
@@ -519,7 +518,7 @@ textarea { resize: vertical; min-height: 120px; }
     border-top: 1px dashed var(--border-color);
 }
 .comments-list-container h3 {
-    text-align: center;
+    text-align: center; /* 评论列表副标题居中 */
     margin-bottom: 1.5em;
     color: var(--secondary-color);
     font-family: var(--font-display); 
@@ -528,7 +527,10 @@ textarea { resize: vertical; min-height: 120px; }
 
 #comments-list {
     margin-top: 1em;
-    text-align: left;
+    text-align: left; /* 评论列表本身左对齐 */
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 20px; /* 评论卡片间距 */
 }
 .comment-card {
     background-color: var(--card-bg-color);
@@ -536,10 +538,9 @@ textarea { resize: vertical; min-height: 120px; }
     border-radius: var(--border-radius);
     padding: 1.5em;
     box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.1);
-    margin-bottom: 1.5em;
     position: relative;
     overflow: hidden;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(var(--card-backdrop-blur));
 }
 .comment-card::before {
     content: '💬';
@@ -569,18 +570,18 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* Articles Detail Page */
 .blog-post-detail {
-    background-color: var(--card-bg-color); /* Also a translucent card bg */
+    background-color: var(--card-bg-color); /* 也使用卡片背景，带模糊 */
     padding: 3em;
     border-radius: var(--border-radius-lg);
     box-shadow: 0 6px 20px rgba(var(--shadow-rgb), 0.2);
-    text-align: left;
+    text-align: left; /* 文章内容左对齐 */
     max-width: 900px; 
     margin: 3rem auto;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(var(--card-backdrop-blur));
 }
 .post-detail-title {
     font-size: 2.8em;
-    text-align: center;
+    text-align: center; /* 文章标题居中 */
     color: var(--primary-color);
     line-height: 1.3;
 }
@@ -606,6 +607,13 @@ textarea { resize: vertical; min-height: 120px; }
     box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
     font-size: 0; /* 隐藏img的alt文本 */
 }
+/* 图片加载失败时的背景样式 */
+.post-detail-banner.is-loading-fallback {
+    background: linear-gradient(45deg, var(--primary-color-rgb), rgba(var(--secondary-color-rgb), 0.7)); 
+    object-fit: contain; 
+    padding: 15px; 
+}
+
 .post-content h3 {
     margin-top: 2.5em;
     margin-bottom: 1em;
@@ -714,30 +722,35 @@ textarea { resize: vertical; min-height: 120px; }
         cursor: auto; 
     }
     body::before { 
-        backdrop-filter: blur(1px); /* 手机端背景模糊度更低，提升性能 */
+        backdrop-filter: blur(var(--body-backdrop-blur-mobile)); /* 手机端背景模糊度更低，提升性能 */
     }
     body.is-mobile #cursor-trail { 
         display: none !important; /* 手机端禁用自定义鼠标指针 */
     }
 
-    .main-header { padding: 0.8rem 0; } /* 手机端头部填充 */
+    .main-header { padding: 0.8rem 0; } 
     .main-header .container { 
-        flex-direction: row; /* 保持行排列 */
-        justify-content: space-between; /* 元素间距 */
+        flex-direction: row; 
+        justify-content: space-between; 
         align-items: center; 
-        gap: 0; /* 消除间距 */
+        gap: 0; 
     }
     .main-header .blog-title { margin-bottom: 0; }
-    .main-header .blog-title--animated a { font-size: 1.6rem; padding: 0 5px; } /* 缩小导航栏标题 */
+    .main-header .blog-title--animated a { font-size: 1.6rem; padding: 0 5px; } 
     
-    /* 隐藏桌面导航，显示汉堡包菜单 */
+    /* 汉堡包菜单和关闭按钮 - 手机端显示 */
+    .menu-toggle {
+        display: block; /* 在手机端显示汉堡包图标 */
+        z-index: 210; /* 比其他内容都高，为了能点击 */
+        appearance: none; /* 移除浏览器默认按钮样式 */
+    }
     .main-nav {
-        display: none; 
+        display: none; /* 手机端默认隐藏导航 */
         position: fixed;
         top: 0;
         right: -100%; /* 菜单初始状态：完全在屏幕右侧之外 */
         width: 75%; /* 菜单宽度，占屏幕的75% */
-        max-width: 300px;
+        max-width: 300px; /* 限制最大宽度 */
         height: 100vh;
         background-color: var(--header-bg-color); /* 菜单背景色 */
         box-shadow: -5px 0 15px rgba(0,0,0,0.5); /* 菜单阴影 */
@@ -747,14 +760,28 @@ textarea { resize: vertical; min-height: 120px; }
         justify-content: center;
         align-items: center;
         padding: 2rem;
+        /* 无额外内联元素，使其更像一个模块 */
+        &.is-open { /* 菜单打开状态 */
+            display: flex; /* Flex布局显示 */
+            right: 0; /* 滑入屏幕 */
+             /* overflow: hidden; */ /* 这一行通过 body 的 no-scroll 类实现 */
+             aria-expanded: true; /* 辅助阅读器状态 */
+        }
     }
-    .main-nav.is-open { /* 菜单打开状态 */
-        display: flex; /* Flex布局显示 */
-        right: 0; /* 滑入屏幕 */
-        overflow-y: hidden; /* 防止菜单内滚动混乱 */
-    }
-     .main-nav.is-open .menu-close {
+    .main-nav .menu-close {
         display: block; /* 显示关闭按钮 */
+        position: absolute;
+        top: 15px; 
+        right: 20px; 
+        font-size: 2em; 
+        font-weight: normal; /* "x"符号不需要加粗 */
+        color: var(--primary-color);
+        background: none;
+        border: none;
+        cursor: pointer;
+        padding: 5px;
+        -webkit-tap-highlight-color: transparent;
+        z-index: 202; /* 确保在菜单内容之上 */
     }
     .main-nav ul {
         flex-direction: column; /* 导航项垂直排列 */
@@ -762,6 +789,7 @@ textarea { resize: vertical; min-height: 120px; }
         width: 100%; 
         align-items: center;
         text-align: center;
+        padding-top: 3em; /* 避免和关闭按钮重叠 */
     }
     .main-nav a { 
         font-size: 1.2em; /* 增大导航文字 */
@@ -770,13 +798,10 @@ textarea { resize: vertical; min-height: 120px; }
         display: block;
         margin: 0.5em 0;
     }
-    .menu-toggle {
-        display: block; /* 手机端显示汉堡包图标 */
-        z-index: 201; /* 汉堡包图标层级更高 */
-    }
+
 
     /* 当菜单打开时，禁止body滚动 */
-    body.no-scroll { overflow: hidden; }
+    /* body.no-scroll { overflow: hidden; 可以直接在body上设置了 } */
 
 
     .posts-grid { grid-template-columns: 1fr; } /* 文章列表单列 */
@@ -791,6 +816,6 @@ textarea { resize: vertical; min-height: 120px; }
     .content-page-wrapper { margin: 1.5rem auto; padding: 1.5rem 1rem; }
     .blog-post-detail { padding: 1.5em; margin: 1.5rem auto;}
     .post-detail-title { font-size: 2em; }
-    .comments .page-title { margin-bottom: 1.5rem; } /* Reduce margin for comments title for compactness */
+    .comments .page-title { margin-bottom: 1.5rem; } 
     .comment-form-container, .contact-info { padding: 1.2rem; margin: 1.5rem auto;}
 }

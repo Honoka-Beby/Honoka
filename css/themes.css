@@ -9,10 +9,15 @@
     --body-overlay-bg: rgba(26, 22, 37, 0.3); /* 全局身体背景叠加层: 更加透明，让壁纸透出大部分 */
     --hero-overlay-bg: rgba(26, 22, 37, 0.75); /* 主页Hero区域的背景叠加层: 较不透明，保持前景文字对比度 */
 
+    --body-backdrop-blur: 3px;     /* 全局 body 模糊度 */
+    --content-backdrop-blur: 8px;  /* 内容区域更高模糊度 (磨砂玻璃感) */
+    --card-backdrop-blur: 5px;     /* 卡片更高模糊度 */
+    --body-backdrop-blur-mobile: 1px; /* 手机端 body 模糊度更低，性能考虑 */
+
     --bg-secondary-color: #2a2438; /* 稍微浅一点的紫色，用于一些区块 */
     --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
 
-    --card-bg-color: rgba(26, 22, 37, 0.85); /* 卡片背景（如文章卡片，评论卡片），提供良好背景可读性 */
+    --card-bg-color: rgba(26, 22, 37, 0.75); /* 卡片背景（如文章卡片，评论卡片），提供良好背景可读性 */
     --content-bg-color: rgba(26, 22, 37, 0.7); /* 主要内容区的半透明背景 (e.g. blog, about, comments, post-detail wrapper) */
     
     --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
