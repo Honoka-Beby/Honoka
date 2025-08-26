@@ -4,12 +4,17 @@
     --border-radius-lg: 12px;
 
     /* Base Colors - 深邃的星空紫 */
-    --bg-color: #1a1625; /* 深紫色背景 */
+    --bg-fallback-color: #1a1625; /* 纯色背景，用作加载时的后备 */
+    --bg-image: none; /* Dynamic, set by JS */
+    --body-overlay-bg: rgba(26, 22, 37, 0.7); /* 全局身体背景叠加层 */
+    --hero-overlay-bg: rgba(26, 22, 37, 0.75); /* 主页Hero区域的背景叠加层 */
+
     --bg-secondary-color: #2a2438; /* 稍微浅一点的紫色，用于一些区块 */
     --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
 
     --card-bg-color: rgba(26, 22, 37, 0.85); /* 卡片半透明背景，带一点点模糊效果 */
-    --card-page-bg: #2a2438; /* 独立内容页面背景，不透明 */
+    /* Removed --card-page-bg as content-page-wrapper now uses --content-bg-color */
+    --content-bg-color: rgba(26, 22, 37, 0.65); /* 主要内容区的半透明背景 (e.g. blog, about, comments, post-detail wrapper) */
     
     --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
     --shadow-rgb: 0, 0, 0; /* 用于阴影 */
@@ -27,7 +32,7 @@
     --secondary-color: #bd93f9; /* 辅助色，神秘紫 */
 
     /* Header/Footer/Forms */
-    --header-bg-color: rgba(26, 22, 37, 0.9); /* Header半透明背景 */
+    --header-bg-color: rgba(26, 22, 37, 0.95); /* Header更不透明 */
     --footer-bg-color: #110e1a; /* Footer深色背景 */
     --input-bg-color: var(--bg-secondary-color); /* 输入框背景 */
     

@@ -1,11 +1,17 @@
 /* --- Reset & Base Styles --- */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
+/* 'LXGW WenKai Screen' is from lxgw-wenkai-screen-webfont@1.1.0/style.css */
 @import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; }
 body {
-    background-color: var(--bg-color);
+    background-color: var(--bg-fallback-color); /* Fallback solid color */
+    background-image: var(--bg-image); /* Dynamic background image */
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed; /* Parallax scrolling effect */
     color: var(--text-color);
     font-family: var(--font-primary);
     line-height:1.7;
@@ -14,7 +20,19 @@ body {
     display: flex;
     flex-direction: column;
     cursor: none; /* 隐藏默认鼠标指针，交由JS控制自定义指针 */
+    will-change: background-image; /* Optimize for background transition */
+    transition: background-image 1s ease-out; /* Smooth transition for wallpaper change */
 }
+/* Body overlay for content readability on top of dynamic background */
+body::before {
+    content: '';
+    position: fixed; /* Fixed relative to viewport, covers everything */
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--body-overlay-bg); /* Dark, semi-transparent overlay */
+    backdrop-filter: blur(5px); /* Moderate blur for the background underneath */
+    z-index: -1; /* Place behind other content but above the body background image */
+}
+
 a { color: var(--link-color); text-decoration: none; transition: all 0.3s ease; }
 a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-color); }
 .container { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
@@ -43,17 +61,20 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
 /* --- Custom Cursor Trail --- */
 #cursor-trail {
     position: fixed;
-    width: 0; /* 控制初始隐藏 */
-    height: 0; /* 控制初始隐藏 */
+    width: 0;                       /* Initial width */
+    height: 0;                      /* Initial height */
     background: var(--primary-color);
     border-radius: 50%;
     pointer-events: none;
     z-index: 9999;
     transform: translate(-50%, -50%);
-    transition: width 0.2s, height 0.2s, opacity 0.3s;
+    transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.2s; /* Added background-color transition */
     opacity: 0;
+    will-change: top, left, width, height, opacity, transform;
 }
+/* Only show custom cursor on non-mobile devices and when body is hovered */
 body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px;} 
+
 
 .cursor-trail-dot {
     position: fixed;
@@ -64,8 +85,9 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     pointer-events: none;
     z-index: 9998;
     transform: translate(-50%, -50%);
-    opacity: 0.7; /* Initial opacity for fading trail */
-    animation: fadeOutTrail 0.5s forwards; /* Fades out individual dots */
+    opacity: 0.7; 
+    animation: fadeOutTrail 0.5s forwards; 
+    will-change: top, left, opacity, transform;
 }
 @keyframes fadeOutTrail {
     from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
@@ -80,11 +102,11 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     left: 0;
     width: 100vw;
     height: 100vh;
-    background-color: var(--bg-color); /* Matches theme background */
-    z-index: 9999; /* Higher than everything else */
+    background-color: var(--bg-fallback-color); /* Matches theme background */
+    z-index: 9999; 
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; /* Visibility changes after opacity */
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -96,13 +118,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 #global-page-transition-overlay.visible {
     opacity: 1;
     visibility: visible;
-    transition: opacity 0.4s ease-in, visibility 0s linear; /* Visible immediately for fade-in */
-}
-#global-page-transition-overlay .overlay-text {
-    margin-top: 1em;
-    font-family: var(--font-display);
-    font-size: 2em;
-    animation: pulse 1.5s infinite alternate;
+    transition: opacity 0.4s ease-in, visibility 0s linear; 
 }
 #global-page-transition-overlay .loader {
     border: 4px solid rgba(var(--primary-color-rgb), 0.2);
@@ -112,13 +128,31 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     height: 30px;
     animation: spin 1s linear infinite;
 }
+#global-page-transition-overlay .loader::before { /* Add a small glow effect */
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 50%;
+    box-shadow: 0 0 10px 2px var(--primary-color), inset 0 0 10px 2px var(--primary-color);
+    animation: pulse-glow 1.5s infinite alternate;
+}
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
+.overlay-text {
+    margin-top: 0.8em;
+    font-family: var(--font-display);
+    font-size: 2em;
+    animation: pulse 1.5s infinite alternate;
+}
 @keyframes pulse {
-    from { color: var(--primary-color); text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); }
-    to { color: var(--secondary-color); text-shadow: 0 0 10px rgba(var(--secondary-color-rgb), 0.5); }
+    0% { color: var(--primary-color); text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); }
+    100% { color: var(--secondary-color); text-shadow: 0 0 10px rgba(var(--secondary-color-rgb), 0.5); }
+}
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 5px 1px var(--primary-color), inset 0 0 5px 1px var(--primary-color); }
+    100% { box-shadow: 0 0 15px 3px var(--secondary-color), inset 0 0 15px 3px var(--secondary-color); }
 }
 
 
@@ -133,19 +167,18 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     padding: 2rem;
     position: relative;
     overflow: hidden;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    transition: background-image 1.5s ease-out; /* 平滑壁纸切换 */
+    /* Hero section now just gets its own overlay over the global body background */
 }
+/* Ensure hero-section has its own darker overlay on top of body's global background-blur overlay */
 .hero-section::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: rgba(26, 22, 37, 0.75); /* 更深的遮罩 */
-    backdrop-filter: blur(8px); /* 更强的模糊效果 */
-    z-index: 1;
+    background: var(--hero-overlay-bg); /* Opaque background for hero section */
+    backdrop-filter: blur(3px); /* slightly less blur than body overlay maybe, or none */
+    z-index: 1; /* Above body overlay, below content */
 }
+
 .hero-content {
     position: relative;
     z-index: 2;
@@ -154,53 +187,54 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* HERO TITLE with ANIMATION */
 .blog-title--animated > a {
-    color: #fff; /* text color is white */
+    color: #fff; /* Keep text white */
     font-family: var(--font-display);
-    font-size: clamp(2.5rem, 10vw, 5rem); /* 更大的响应式字体 */
+    font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
-    text-shadow: 0 0 8px rgba(0, 0, 0, 0.5); /* Subtle text shadow for depth */
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.5); 
     position: relative;
-    overflow: hidden; /* Crucial: Clips the "光" as it slides */
-    display: inline-block; /* Needs to be a block/inline-block for overflow to work */
-    vertical-align: top; /* Prevents extra space below if it's inline */
+    overflow: hidden; /* Clips the light streak boundary */
+    display: inline-block; 
+    vertical-align: top;
     line-height: 1.2;
-    padding: 0 10px; /* give some room for glow fade at edges */
+    padding: 0 10px; /* Space for the light to fade at horizontal ends */
+    /* text-decoration: none; */ /* Ensure no underline */
 }
 
+/* The pink light trail for the homepage title */
 .blog-title--animated > a::before {
-    content: ''; /* No text, just a visual glow */
+    content: '';
     position: absolute;
-    top: 0;
-    left: -100%; /* Start off-screen left */
-    width: 60%; /* The width of the 'light streak' itself, relative to the <a> */
+    top: 0; /* Align with the text */
+    left: -150%; /* Start well off-screen to the left to fully 'emerge' */
+    width: 60%; /* Width of the light streak itself */
     height: 100%;
-    /* The gradient for the pink light */
     background: linear-gradient(
         90deg,
-        transparent,
-        rgba(var(--primary-color-rgb), 0.7) 50%, /* Brightest pink in the middle of streak */
-        transparent
+        transparent 0%, /* Start fully transparent */
+        rgba(var(--primary-color-rgb), 0.8) 50%, /* Brightest point (pink) */
+        transparent 100%  /* End fully transparent */
     );
-    filter: blur(5px) brightness(1.2); /* Soft blur for light glow, increased brightness */
-    animation: slide-text-shine 4s ease-in-out infinite both 1s; /* `both` keeps initial frame, `1s` delay */
-    mix-blend-mode: screen; /* This blends the light over the white text */
-    pointer-events: none; /* Make sure it doesn't block clicks on the text */
+    filter: brightness(1.5) blur(5px); /* Soft glow, slightly brighter */
+    mix-blend-mode: screen; /* Blend with the background for a light-like effect, text underneath remains white */
+    animation: slide-text-shine 4s ease-in-out infinite both; /* `both` means applies styles from 0% before start. 4s duration. */
+    pointer-events: none; /* Make sure it doesn't block interactions */
     z-index: 10; /* Ensure it's above the text */
 }
 
 @keyframes slide-text-shine {
-    0% { transform: translateX(-100%); opacity: 0; } /* Start off-screen left, invisible*/
-    5% { opacity: 0.9; } /* Fade in as "光" enters */
-    50% { transform: translateX(250%); opacity: 0.9; } /* Slide fully across and off to the right (50% streak width + 100% container width makes it more than cover) */
-    55% { opacity: 0; } /* Fade out quickly after passing and before resetting */
-    100% { transform: translateX(-100%); opacity: 0; } /* Reset position for next loop, remains invisible for the remainder of animation duration as a pause */
+    0% { transform: translateX(0%); opacity: 0; } /* Initial state: fully off-screen left */
+    10% { opacity: 1; transform: translateX(10%); } /* Gradually becomes visible, moves right */
+    60% { opacity: 1; transform: translateX(180%); } /* Full visible pass over text, goes off-screen right */
+    70% { opacity: 0; transform: translateX(200%); } /* Fades out completely off-screen */
+    100% { transform: translateX(0%); opacity: 0; } /* Resets to initial position, invisible, for next loop */
 }
 
 /* Specific styling for HEADER NAV (smaller title there) */
 .main-header .blog-title--animated a { 
     font-size: 2rem; 
     color: #fff; /* ensure header text is white */
-    padding: 0;
+    padding: 0 5px; /* Smaller padding in header */
 }
 .main-header .blog-title--animated a::before {
     display: none; /* Disable the shine effect in the header navigation */
@@ -281,61 +315,75 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     border-radius: 2px;
 }
 
-/* --- Post Cards --- */
+/* --- Content Page Wrapper (for blog, about, comments, posts) --- */
+/* This div wraps content and gives it a distinct background and blur on top of body wallpaper */
+.content-page-wrapper {
+    background-color: var(--content-bg-color); /* Slightly transparent background */
+    backdrop-filter: blur(8px); /* Blur the body wallpaper behind it */
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 6px 25px rgba(0,0,0,0.25); 
+    max-width: 900px; /* Max width for content */
+    margin: 3rem auto;
+    padding: 2.5rem 1.5rem;
+    flex-grow: 1;
+    text-align: center; /* Default center, individual elements override */
+}
+
+
+/* --- Posts Grid (Blog Page) --- */
 .posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
 .post-card {
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); /* Matches theme translucent card bg */
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     overflow: hidden;
-    backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px); /* Blend with parent .content-page-wrapper backdrop-filter */
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%; /* Make cards same height */
+    display: flex;
+    flex-direction: column;
 }
-.post-card a { color: inherit; display: block; } /* Ensure entire card is clickable */
+.post-card a { color: inherit; display: flex; flex-direction: column; height: 100%;} /* Ensure entire card is clickable */
 .post-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(var(--primary-color-rgb), 0.3); }
-.post-thumbnail { width: 100%; height: 200px; object-fit: cover; }
-.post-info { padding: 1.5rem; }
+.post-thumbnail { 
+    width: 100%; 
+    height: 200px; 
+    object-fit: cover; /* Cover ensures image fills space, prevents stretching */
+    transition: transform 0.3s ease; /* For potential hover effects */
+}
+/* .post-card:hover .post-thumbnail { transform: scale(1.05); } */ /* Optional: thumbnail zoom on hover */
+
+.post-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column;} /* Ensure info block grows */
 .post-info h3 { margin: 0 0 0.5rem; font-family: var(--font-display); font-size: 1.4rem; color: #fff; }
-.post-info h3:hover { color: var(--primary-color); }
-.post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); }
-.post-info time { font-size: 0.8em; color: var(--meta-text-color);}
-.post-tags {margin-top: 1em; display: flex; gap: 0.5em; flex-wrap: wrap;}
+.post-info h3:hover { color: var(--primary-color); } /* Only text color change, not the shimmer logic */
+.post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); flex-grow: 1;}
+.post-info time { font-size: 0.8em; color: var(--meta-text-color); margin-top: auto;} /* Push time to bottom */
+.post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
 .post-tags .tag {
     display: inline-block;
     background-color: rgba(var(--secondary-color-rgb), 0.2);
     color: var(--secondary-color);
-    padding: 0.3em 0.8em;
+    padding: 0.2em 0.8em;
     border-radius: 5px;
     font-size: 0.75em;
     opacity: 0.8;
 }
 
 
-/* --- Layout for generic content pages (About, Comments, Post Details) --- */
-main.container.content-page {
-    background-color: var(--card-page-bg); 
-    border-radius: var(--border-radius-lg);
-    box-shadow: 0 6px 25px rgba(0,0,0,0.25); 
-    max-width: 900px; 
-    margin: 3rem auto; /* Add margin to separate from header/footer */
-    padding: 2.5rem 1.5rem;
-    flex-grow: 1; /* Make content grow to fill space */
-    text-align: center;
-}
-main.container.content-page p {
+/* --- Layout for About, Comments pages --- */
+.about-me-section p, .comment-section p {
     font-size: 1.05em;
     max-width: 760px;
     margin-left: auto;
     margin-right: auto;
     text-align: justify; /* Justify text in content pages */
 }
-main.container.content-page ol, main.container.content-page ul {
+.content-page-wrapper ol, .content-page-wrapper ul {
     max-width: 760px;
     margin-left: auto;
     margin-right: auto;
     text-align: justify;
 }
-
 
 .about-me-section .my-avatar {
     width: 150px;
@@ -356,9 +404,10 @@ main.container.content-page ol, main.container.content-page ul {
     max-width: 480px;
     margin: 2em auto;
     padding: 1.5em;
-    background: rgba(var(--bg-secondary-color-rgb), 0.7);
+    background: rgba(var(--bg-secondary-color-rgb), 0.6); /* make it slightly more transparent */
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
+    backdrop-filter: blur(5px);
 }
 .about-me-section .contact-info h3 { color: var(--secondary-color); font-family: var(--font-display); border-bottom: 1px dashed var(--border-color); padding-bottom: 0.5em;}
 .about-me-section .contact-info ul { list-style: none; padding: 0.5em 0;}
@@ -367,7 +416,7 @@ main.container.content-page ol, main.container.content-page ul {
 
 /* Comments Form */
 .comment-form-container {
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); /* Matches theme translucent card bg */
     padding: 2.5rem;
     border-radius: var(--border-radius-lg);
     border: 1px solid var(--border-color);
@@ -375,12 +424,13 @@ main.container.content-page ol, main.container.content-page ul {
     max-width: 700px;
     margin: 2rem auto;
     text-align: left;
+    backdrop-filter: blur(5px);
 }
 .comment-form-container h3 {
     text-align: center;
     color: var(--primary-color);
     margin-bottom: 1.5rem;
-    font-family: var(--font-display); /* Changed font */
+    font-family: var(--font-display); 
     font-size: 1.8rem;
 }
 .form-group { margin-bottom: 1.5em; }
@@ -391,6 +441,7 @@ main.container.content-page ol, main.container.content-page ul {
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     background-color: var(--input-bg-color);
+    outline: none; /* remove default blue outline */
     color: var(--text-color);
     font-size: 1em;
     font-family: var(--font-primary);
@@ -398,7 +449,6 @@ main.container.content-page ol, main.container.content-page ul {
 }
 .form-group input[type="text"]:focus, .form-group textarea:focus {
     border-color: var(--primary-color);
-    outline: none;
     box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.3);
 }
 textarea { resize: vertical; min-height: 120px; }
@@ -415,7 +465,7 @@ textarea { resize: vertical; min-height: 120px; }
     text-align: center;
     margin-bottom: 1.5em;
     color: var(--secondary-color);
-    font-family: var(--font-display); /* Changed font */
+    font-family: var(--font-display); 
     font-size: 1.8rem;
 }
 
@@ -432,6 +482,7 @@ textarea { resize: vertical; min-height: 120px; }
     margin-bottom: 1.5em;
     position: relative;
     overflow: hidden;
+    backdrop-filter: blur(5px);
 }
 .comment-card::before {
     content: '💬';
@@ -461,13 +512,14 @@ textarea { resize: vertical; min-height: 120px; }
 
 /* Articles Detail Page */
 .blog-post-detail {
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); /* Also a translucent card bg */
     padding: 3em;
     border-radius: var(--border-radius-lg);
     box-shadow: 0 6px 20px rgba(var(--shadow-rgb), 0.2);
     text-align: left;
-    max-width: 900px; /* Increased max-width */
+    max-width: 900px; 
     margin: 3rem auto;
+    backdrop-filter: blur(5px);
 }
 .post-detail-title {
     font-size: 2.8em;
@@ -479,7 +531,6 @@ textarea { resize: vertical; min-height: 120px; }
     background: linear-gradient(90deg, transparent, var(--primary-color), var(--secondary-color), transparent);
     width: 80%;
 }
-
 .post-meta {
     color: var(--meta-text-color);
     font-size: 0.9em;
@@ -583,11 +634,12 @@ textarea { resize: vertical; min-height: 120px; }
     position: fixed;
     top: 0;
     left: 0;
-    width: 0%; /* Initial width */
-    height: 4px; /* Bar height */
+    width: 0%; 
+    height: 4px; 
     background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
-    z-index: 1001; /* Above header */
+    z-index: 1001; 
     box-shadow: 0 0 10px var(--primary-color);
+    transition: width 0.1s linear; /* Smooth fill */
 }
 
 
@@ -598,14 +650,37 @@ textarea { resize: vertical; min-height: 120px; }
 }
 
 
-/* --- Responsive Adjustments --- */
+/* --- Responsive Adjustments - Mobile Specific --- */
 @media (max-width: 767px) {
-    .main-header .container { flex-direction: column; text-align: center; }
-    .main-nav ul { flex-direction: column; gap: 0.5em; margin-top: 1em; }
-    .main-header .blog-title { margin-bottom: 1em; }
-    .main-header .blog-title--animated a { font-size: 1.8rem; }
-    
-    .blog-title--animated > a::before { display: none; } /* Disable shimmer on mobile titles */
+    body {
+        cursor: auto; /* Revert to default cursor on mobile */
+    }
+    body::before { /* Adjust body overlay for mobile if needed, e.g., less blur due to performance */
+        backdrop-filter: blur(3px); /* Slightly less blur on mobile */
+    }
+    body.is-mobile #cursor-trail { 
+        display: none !important; /* Hide custom cursor on mobile definitively */
+    }
+
+    .main-header { padding: 1rem 0; } /* Smaller header padding on mobile */
+    .main-header .container { flex-direction: column; text-align: center; gap: 0.5rem; } /* Stack elements */
+    .main-header .blog-title { margin-bottom: 0.5em; } /* Reduce gap below title */
+    .main-header .blog-title--animated a { font-size: 1.8rem; padding: 0 5px; } /* Smaller font, ensure padding */
+    .main-header .blog-title--animated a::before {
+        display: none; /* Disable shimmer on mobile header title */
+    }
+    .main-nav ul { 
+        flex-direction: row; /* Keep nav items in a row if possible */
+        gap: 0.8rem; 
+        margin-top: 0.5em; 
+        justify-content: center; /* Center nav items */
+        flex-wrap: wrap; /* Allow wrapping if too many items */
+    }
+    .main-nav a { 
+        font-size: 0.9em; 
+        padding: 0.3em 0.6em; /* Smaller padding for nav links */
+        white-space: nowrap; /* Prevent nav links from breaking */
+    }
 
     .posts-grid { grid-template-columns: 1fr; }
     .post-detail-banner { height: 250px; }
@@ -614,12 +689,10 @@ textarea { resize: vertical; min-height: 120px; }
     .hero-content { padding: 1rem; }
     .hero-subtitle { font-size: 0.9rem; }
     .hero-nav .nav-link { margin: 0 0.5rem; padding: 0.3rem 0.8rem; font-size: 0.95rem; }
-    #back-to-top { bottom: 1.5rem; right: 1.5rem; width: 35px; height: 35px; font-size: 1.2rem; }
+    #back-to-top { bottom: 1rem; right: 1rem; width: 35px; height: 35px; font-size: 1.2rem; }
 
-    main.container.content-page { margin: 1.5rem auto; padding: 1.5rem 1rem; }
+    .content-page-wrapper { margin: 1.5rem auto; padding: 1.5rem 1rem; }
     .blog-post-detail { padding: 1.5em; margin: 1.5rem auto;}
     .post-detail-title { font-size: 2em; }
-    .comment-form-container { padding: 1.5rem; margin: 1.5rem auto;}
-    body.is-mobile #cursor-trail { display: none !important; } /* Hide custom cursor on mobile definitively */
+    .comment-form-container, .contact-info { padding: 1.2rem; margin: 1.5rem auto;}
 }
-

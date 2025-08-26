@@ -37,7 +37,7 @@
         </div>
     </header>
 
-    <main class="container content-page animate__fade-in">
+    <main class="container content-page-wrapper animate__fade-in">
         <article class="blog-post-detail">
             <h2 class="post-detail-title animate__slide-up">我与《你的名字》的初次邂逅：情感的交织与时间的奇迹 ✨</h2>
             <div class="post-meta animate__slide-up" data-delay="100">
@@ -45,8 +45,8 @@
                 <span class="post-tags"><span class="tag">#影评</span><span class="tag">#治愈</span><span class="tag">#新海诚</span></span>
             </div>
             
-            <!-- 注意这里的图片路径 -->
-            <img src="../img/post-detail-1.png" alt="《你的名字》电影剧照" class="post-detail-banner animate__fade-in" data-delay="200">
+            <!-- post-detail-banner 会被 js/script.js 动态替换为随机动漫壁纸 -->
+            <img src="../img/post-detail-banner-fallback.png" data-src-type="wallpaper" alt="《你的名字》电影剧照" class="post-detail-banner animate__fade-in" data-delay="200">
 
             <div class="post-content animate__slide-up" data-delay="300">
                 <p>
@@ -67,8 +67,9 @@
            
             <div class="post-share-buttons animate__slide-up" data-delay="400">
                 <span>分享此文章到:</span>
-                <a href="https://service.weibo.com/share/share.php?url=encoded_current_url&title=encoded_article_title" target="_blank" class="share-button weibo">Weibo</a>
-                <a href="https://connect.qq.com/widget/shareqq/index.html?url=encoded_current_url&title=encoded_article_title&pics=encoded_image_url" target="_blank" class="share-button qq">QQ</a>
+                <!-- 注意这些链接通过 JS 动态填充当前的 URL 和标题 -->
+                <a href="#" target="_blank" class="share-button weibo">Weibo</a>
+                <a href="#" target="_blank" class="share-button qq">QQ</a>
                 <a href="#" onclick="alert('微信分享请使用手机截图或浏览器分享功能'); return false;" class="share-button wechat">WeChat</a> <!-- 微信分享通常需要服务器端或客户端JS，这里是占位和说明 -->
             </div>
 
@@ -105,6 +106,7 @@
     </script>
     <script>
         // 确保分享链接获取当前页面URL和标题 (用于Weibo, QQ)
+        // 这个脚本片段通常在 script.js 中有全局处理，这里保留是为了在文章加载时立即生效
         document.addEventListener('DOMContentLoaded', () => {
              const currentUrl = encodeURIComponent(window.location.href);
              const articleTitle = encodeURIComponent(document.title.split(' - ')[0]); // Get only article titie, not blog title

@@ -8,15 +8,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Global Page Transition Overlay Management ---
     const pageTransitionOverlay = document.getElementById('global-page-transition-overlay');
     if (pageTransitionOverlay) {
-        // Prepare overlay content
-        pageTransitionOverlay.innerHTML = `
-            <div class="loader"></div>
-            <p class="overlay-text">加载中...</p>
-        `;
+        // Prepare overlay content (if not already present from HTML)
+        if (!pageTransitionOverlay.querySelector('.loader')) {
+            pageTransitionOverlay.innerHTML = `
+                <div class="loader"></div>
+                <p class="overlay-text">加载中...</p>
+            `;
+        }
 
-        // Hide overlay after new page loads
-        // Using a slight delay to ensure the page is fully rendered before hiding
-        // And giving a subtle fade-out transition.
+        // Hide overlay after new page loads if it was (re)displayed
         setTimeout(() => {
             pageTransitionOverlay.classList.remove('visible');
             setTimeout(() => {
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = urlToNavigate; // Fallback if overlay is missing
             return;
         }
-        pageTransitionOverlay.style.display = 'flex'; // Ensure it's visible property before adding class
+        pageTransitionOverlay.style.display = 'flex'; 
         pageTransitionOverlay.classList.add('visible');
         
         // After fade-in transition (0.4s CSS), navigate
@@ -42,86 +42,135 @@ document.addEventListener('DOMContentLoaded', () => {
     // Intercept all internal link clicks for smooth transitions
     document.querySelectorAll('a').forEach(link => {
         const href = link.getAttribute('href');
-        if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.includes('#') && !isMobile) {
-            // Apply transition only to standard internal page links
+        // Apply transition only to standard internal page links that are not fragments (#)
+        // And not external links, as transitions are only client-side.
+        if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.includes('#')) {
             link.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default link behavior
+                e.preventDefault(); 
                 activatePageTransition(href);
             });
         }
     });
 
-    // --- Random Anime Wallpaper API for Homepage ---
-    const setupHomepageBackground = async () => {
-        const heroSection = document.querySelector('.hero-section');
-        if (!heroSection || !document.body.classList.contains('is-homepage')) {
-            return; // Only proceed if on the homepage and .hero-section exists
+    // --- Random Anime Wallpaper API for dynamic backgrounds/images ---
+    const fetchRandomAnimeImage = async (targetElement, type = 'background') => {
+        let imageUrl = '';
+        const apiEndpoints = [
+            'https://wallpaper.pics/api/random_wallpaper?category=anime&orientation=landscape', // Higher quality, landscape
+            'https://api.paugram.com/wallpaper?source=sina', // Fallback 1: Anime images
+            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' // Fallback 2: Anime images
+        ];
+        
+        // Helper to generate a random pastel-like color for fallback gradient
+        function getRandomGradient() {
+            const h1 = Math.floor(Math.random() * 360);
+            const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; // Slightly different hue
+            const s = Math.floor(Math.random() * 30) + 70; // Saturation 70-100%
+            const l = Math.floor(Math.random() * 15) + 70; // Lightness 70-85%
+            return `linear-gradient(135deg, hsl(${h1}, ${s}%, ${l}%), hsl(${h2}, ${s}%, ${l}%))`;
         }
 
-        try {
-            let imageUrl;
-            const apiEndpoints = [
-                'https://api.paugram.com/wallpaper?source=sina', // 动漫图片质量高
-                'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json', // 备用动漫图片
-                'https://source.unsplash.com/random/1920x1080/?anime,fantasy' // 通用动漫/幻想图片 (可能非纯动漫)
-            ];
-
-            for (const api of apiEndpoints) {
-                try {
-                    const response = await fetch(api);
-                    if (response.ok) {
-                        const data = await response.json();
-                        // Adjusting for different API response structures
-                        if (api.includes('paugram') && data && data.data && data.data.url) {
-                            console.log("Using Paugram API:", data.data.url);
-                            imageUrl = data.data.url;
-                            break;
-                        } else if (api.includes('btstu.cn') && data && data.imgurl) {
-                             console.log("Using BTSTU API:", data.imgurl);
-                            imageUrl = data.imgurl;
-                            break;
-                        } else if(api.includes('unsplash') && response.url) { // unsplash directly gives image URL on redirect
-                            console.log("Using Unsplash API:", response.url);
-                            imageUrl = response.url;
-                            break;
-                        }
-                    }
-                } catch (innerError) {
-                    console.warn(`API ${api} failed, trying next.`, innerError);
-                }
-            }
-
-            if (imageUrl) {
-                // Preload image for smoother transition
-                const img = new Image();
-                img.src = imageUrl;
-                img.onload = () => {
-                    heroSection.style.backgroundImage = `url(${imageUrl})`;
-                };
-                img.onerror = () => {
-                    console.warn("Wallpaper preloading failed, setting directly without transition.");
-                    heroSection.style.backgroundImage = `url(${imageUrl})`;
-                };
-            } else {
-                throw new Error("No valid image URL found from any API.");
-            }
+        // First attempt, use Unsplash with specific keywords for "horizontal anime" images.
+        // Unsplash API requires client ID usually. This is a generic public endpoint that might redirect.
+        // It provides varied images, may not be strictly anime, but landscape.
+        const unsplashKeywordAPI = `https://source.unsplash.com/random/1920x1080/?anime,fantasy,hd-wallpaper,landscape`; 
+        apiEndpoints.unshift(unsplashKeywordAPI); // Add it to the front for a try
         
-        } catch (error) {
-            console.error('Failed to fetch any wallpaper:', error);
-            // Fallback background in case all APIs fail
-            heroSection.style.backgroundColor = 'var(--bg-color)'; 
-            heroSection.style.backgroundImage = `linear-gradient(135deg, ${getRandomColor()}, ${getRandomColor()});`;
-            heroSection.style.transition = 'background-image 5s ease-in-out';
+
+        for (const api of apiEndpoints) {
+            try {
+                const response = await fetch(api);
+                if (response.ok) {
+                    // Check if it's the direct image URL (like unsplash or some specific APIs)
+                    if (response.redirected && response.url && api.includes('unsplash')) {
+                        imageUrl = response.url;
+                        console.log(`Using Unsplash keyword API: ${imageUrl}`);
+                        break;
+                    }
+
+                    const data = await response.json();
+                    if (api.includes('wallpaper.pics') && data && data.image) {
+                        imageUrl = data.image.url;
+                        console.log(`Using wallpaper.pics API (Lanscape): ${imageUrl}`);
+                        break;
+                    } else if (api.includes('paugram') && data && data.data && data.data.url) {
+                        imageUrl = data.data.url;
+                        console.log(`Using Paugram API: ${imageUrl}`);
+                        break;
+                    } else if (api.includes('btstu.cn') && data && data.imgurl) {
+                        imageUrl = data.imgurl;
+                        console.log(`Using BTSTU API: ${imageUrl}`);
+                        break;
+                    }
+                }
+            } catch (innerError) {
+                console.warn(`API ${api} failed, trying next.`, innerError);
+            }
+        }
+
+        if (imageUrl) {
+            const img = new Image();
+            img.src = imageUrl;
+            img.onload = () => {
+                if (type === 'background') {
+                    // Apply to body via CSS variable
+                    document.documentElement.style.setProperty('--bg-image', `url(${imageUrl})`);
+                } else if (type === 'image') {
+                    // Apply to <img> src attribute
+                    targetElement.src = imageUrl;
+                }
+            };
+            img.onerror = () => {
+                console.warn(`Preloading image "${imageUrl}" failed, setting fallback.`);
+                if (type === 'background') {
+                    document.documentElement.style.setProperty('--bg-image', getRandomGradient());
+                } else if (type === 'image' && targetElement.dataset.srcType === 'wallpaper') {
+                    // For postcards and banners, use a gradient or specific fallback image
+                    targetElement.src = targetElement.dataset.fallbackSrc || `img/post-${type}-fallback.png`;
+                    targetElement.style.objectFit = 'contain'; // Make sure fallback image is fully visible
+                }
+            };
+        } else {
+            console.error('Failed to get any image URL from APIs.');
+            if (type === 'background') {
+                document.documentElement.style.setProperty('--bg-image', getRandomGradient());
+            } else if (type === 'image' && targetElement.dataset.srcType === 'wallpaper') {
+                targetElement.src = targetElement.dataset.fallbackSrc || `img/post-${type}-fallback.png`;
+                targetElement.style.objectFit = 'contain';
+            }
         }
     };
-    
-    // Helper to generate a random pastel-like color for fallback gradient
-    function getRandomColor() {
-        const h = Math.floor(Math.random() * 360);
-        const s = Math.floor(Math.random() * 30) + 70; // Saturation 70-100%
-        const l = Math.floor(Math.random() * 15) + 70; // Lightness 70-85%
-        return `hsl(${h}, ${s}%, ${l}%)`;
+
+    // --- Main Wallpaper for Body (all pages) ---
+    // Make sure this is called on every page load for the body background
+    // Unless it's the homepage specifically handling its own hero background.
+    if (!document.body.classList.contains('is-homepage')) {
+        fetchRandomAnimeImage(document.body, 'background');
     }
+    
+    // --- Homepage Hero Background (specific for homepage, uses same API) ---
+    const setupHomepageBackground = () => {
+        const heroSection = document.querySelector('.hero-section');
+        if (heroSection && document.body.classList.contains('is-homepage')) {
+             fetchRandomAnimeImage(document.body, 'background'); // Set body background explicitly on homepage too
+        }
+    };
+
+    // --- Dynamic Article Thumbnail/Banner Images ---
+    const setupDynamicPostImages = () => {
+        // Blog list page thumbnails
+        document.querySelectorAll('.post-thumbnail[data-src-type="wallpaper"]').forEach(img => {
+            img.dataset.fallbackSrc = img.src; // Store original src as fallback
+            fetchRandomAnimeImage(img, 'image');
+        });
+
+        // Article detail page banners
+        const detailBanner = document.querySelector('.post-detail-banner[data-src-type="wallpaper"]');
+        if (detailBanner) {
+            detailBanner.dataset.fallbackSrc = detailBanner.src; // Store original src as fallback
+            fetchRandomAnimeImage(detailBanner, 'image');
+        }
+    };
 
     // --- Intersection Observer for Scroll-Triggered Animations ---
     const setupScrollAnimations = () => {
@@ -137,7 +186,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         animatedElements.forEach(el => observer.observe(el));
 
-        // Ensure header is visible regardless of scroll animation setup
         const mainHeader = document.querySelector('.main-header');
         if (mainHeader) {
             mainHeader.classList.add('is-visible');
@@ -165,9 +213,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Custom Cursor Trail Effect ---
     const setupCursorTrail = () => {
         const cursorDot = document.getElementById('cursor-trail');
-        if (!cursorDot || isMobile) { // Disable on mobile devices
-            if (cursorDot) cursorDot.style.display = 'none';
-            document.body.style.cursor = 'auto';
+        if (!cursorDot || isMobile) { // Disable on mobile devices based on isMobile flag
+            if (cursorDot) cursorDot.style.display = 'none'; // Hide if element exists
+            document.body.style.cursor = 'auto'; // Revert to default
             return;
         }
         
@@ -207,7 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const progressBar = document.getElementById('read-progress-bar');
         const content = document.querySelector('.blog-post-detail .post-content');
 
-        if (!progressBar || !content) return; // Only activate on article detail pages
+        if (!progressBar || !content) return; 
 
         window.addEventListener('scroll', () => {
             const contentHeight = content.offsetHeight;
@@ -215,21 +263,40 @@ document.addEventListener('DOMContentLoaded', () => {
             const windowHeight = window.innerHeight;
             const scrollFromTop = window.scrollY;
 
-            // Calculate how far scrolled within the content area
-            let scrolled = (scrollFromTop + windowHeight - contentOffsetTop) / contentHeight * 100;
-            
+            let scrolled = (scrollFromTop - contentOffsetTop + windowHeight / 2) / (contentHeight + windowHeight / 2) * 100;
+
             if (scrolled < 0) scrolled = 0;
             if (scrolled > 100) scrolled = 100;
 
             progressBar.style.width = scrolled + '%';
         });
     };
+    
+    // global share links on post pages so share works immediately when clicked
+    const setupShareButtons = () => {
+      if (document.querySelector('.post-share-buttons')) {
+        const currentUrl = encodeURIComponent(window.location.href);
+        const pageTitle = document.title;
+        const articleTitle = encodeURIComponent(pageTitle.split(' - ')[0] || pageTitle); // Get only article titie, not blog title
+
+        document.querySelectorAll('.post-share-buttons a.weibo').forEach(btn => {
+           btn.href = `https://service.weibo.com/share/share.php?url=${currentUrl}&title=${articleTitle}`;
+        });
+        document.querySelectorAll('.post-share-buttons a.qq').forEach(btn => {
+           btn.href = `https://connect.qq.com/widget/shareqq/index.html?url=${currentUrl}&title=${articleTitle}`;
+        });
+      }
+    };
 
 
     // Initialize all features on DOM Ready
-    setupHomepageBackground();
+    setupHomepageBackground(); // Calls fetchRandomAnimeImage for body bg on homepage
+    fetchRandomAnimeImage(document.body, 'background'); // Ensures all pages have a body bg initially
+    setupDynamicPostImages(); // Fetches images for post thumbnails and banners
     setupScrollAnimations();
     setupBackToTopButton();
     setupCursorTrail();
     setupReadProgressBar(); // Conditional, will only run on article pages
+    setupShareButtons(); // Prepare initial share links
 });
+

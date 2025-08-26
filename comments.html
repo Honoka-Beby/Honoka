@@ -31,7 +31,7 @@
         </div>
     </header>
 
-    <main class="container content-page animate__fade-in">
+    <main class="container content-page-wrapper animate__fade-in">
         <section class="comment-section">
             <h2 class="page-title animate__slide-up">说点什么吧！给我留言</h2>
 
@@ -40,11 +40,11 @@
                 <form id="comment-form">
                     <div class="form-group">
                         <label for="comment-author">你的名字:</label>
-                        <input type="text" id="comment-author" required placeholder="例如：次元游客" class="animate__pop-in-focus">
+                        <input type="text" id="comment-author" required placeholder="例如：次元游客">
                     </div>
                     <div class="form-group">
                         <label for="comment-text">留言内容:</label>
-                        <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！" class="animate__pop-in-focus"></textarea>
+                        <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！"></textarea>
                     </div>
                     <button type="submit" class="button">提交留言</button>
                     <p class="form-hint">你的留言将保存在当前浏览器中，换个浏览器或清除缓存就看不到了哦</p>
@@ -55,7 +55,7 @@
                 <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
                 <div id="comments-list" class="posts-grid">
                      <!-- 留言内容将由js/comments.js动态加载 -->
-                     <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
+                     <p class="no-comments-message animate__slide-up">还没有留言呢，成为第一个留下足迹的人吧！</p>
                 </div>
             </div>
         </section>
