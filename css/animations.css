@@ -1,86 +1,32 @@
-/* --- Fade In/Out and Pop In/Out Animations --- */
+/* --- Title Shine Animation --- */
+@keyframes shine-effect {
+    0% { transform: translateX(-150%) skewX(-30deg); }
+    40% { transform: translateX(150%) skewX(-30deg); }
+    100% { transform: translateX(150%) skewX(-30deg); }
+}
 
-/* Base animation classes */
-[class*="animate__"] {
+/* --- Base animation classes (for Intersection Observer) --- */
+.animate__fade-in, .animate__slide-up {
     opacity: 0;
-    transform: translateY(20px);
     transition: opacity 0.8s ease-out, transform 0.8s ease-out;
     will-change: opacity, transform;
 }
-/* This class will be added by JS to trigger animation */
+
 [class*="animate__"].is-visible {
     opacity: 1;
     transform: translateY(0);
 }
 
-/* Specific animation types */
-
-/* Fade In */
 .animate__fade-in {
-    opacity: 0;
-    transform: none; /* No initial 'pop' */
-}
-.animate__fade-in.is-visible {
-    opacity: 1;
     transform: none;
 }
 
-/* Fade Up (default animation) */
-.animate__fade-up {
-    /* Inherits base transform translateY(20px) */
-     opacity: 0;
-}
-
-/* Pop In */
-.animate__pop-in {
-    opacity: 0;
-    transform: scale(0.8);
-}
-.animate__pop-in.is-visible {
-    opacity: 1;
-    transform: scale(1);
+/* --- New Post Card Animation --- */
+.animate__slide-up {
+    transform: translateY(50px);
 }
 
 /* Delay for staggering animations */
 [data-delay="100"] { transition-delay: 0.1s; }
 [data-delay="200"] { transition-delay: 0.2s; }
 [data-delay="300"] { transition-delay: 0.3s; }
-[data-delay="400"] { transition-delay: 0.4s; }
-[data-delay="500"] { transition-delay: 0.5s; }
-/* Add more as needed for longer sequences */
-
-/* --- Interactive Hover Animations (Pop on hover / Fade on hover) --- */
-
-.animate__pop-in-hover {
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-.animate__pop-in-hover:hover {
-    transform: scale(1.03) translateY(-5px); /* Slightly pop out and lift */
-    box-shadow: 0 8px 25px rgba(var(--shadow-rgb,0,0,0), 0.2);
-}
-
-.animate__fade-out-hover { /* For elements that should fade when hovered over for specific effect */
-    transition: opacity 0.3s ease;
-}
-.animate__fade-out-hover:hover {
-    opacity: 0.8;
-}
-
-/* Optional: Keyframe for a more pronounced initial animation */
-@keyframes popInEffect {
-    from {
-        opacity: 0;
-        transform: scale(0.7) translateY(50px);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1) translateY(0);
-    }
-}
-
-/* Usage example for keyframe: */
-/* .my-element-with-keyframe {
-    animation: popInEffect 0.8s ease-out 0.2s forwards;
-    opacity: 0; // Essential for 'forwards' to prevent flicker
-}
-*/

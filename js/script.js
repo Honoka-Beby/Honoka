@@ -1,82 +1,98 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- Theme Switching Logic ---
-    const themeToggler = document.getElementById('theme-toggler');
-    const themeDropdown = document.querySelector('.theme-dropdown');
-    const body = document.body;
 
-    // Load saved theme or default to 'default'
-    const savedTheme = localStorage.getItem('blogTheme') || 'default';
-    body.classList.add(`theme-${savedTheme}`);
+    // --- Random Anime Wallpaper API for Homepage ---
+    const setupHomepageBackground = async () => {
+        if (document.body.classList.contains('is-homepage')) {
+            try {
+                // 这个API可能不稳定，可以换成其他，如 https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json
+                const response = await fetch('https://api.paugram.com/wallpaper?source=sina');
+                if (!response.ok) throw new Error('Network response was not ok');
+                const data = await response.json();
+                if (data && data.data && data.data.url) {
+                    const heroSection = document.querySelector('.hero-section');
+                    // Preload image for smoother transition
+                    const img = new Image();
+                    img.src = data.data.url;
+                    img.onload = () => {
+                        heroSection.style.backgroundImage = `url(${data.data.url})`;
+                    };
+                }
+            } catch (error) {
+                console.error('Failed to fetch wallpaper:', error);
+                // Fallback background in case API fails
+                document.querySelector('.hero-section').style.backgroundColor = '#1a1625';
 
-    themeToggler.addEventListener('click', (e) => {
-        e.preventDefault(); // Prevent default link behavior
-        e.stopPropagation(); // Stop propagation to prevent immediate closing from body click
-        themeDropdown.classList.toggle('menu-hidden');
-        themeDropdown.classList.toggle('menu-visible');
-    });
-
-    themeDropdown.addEventListener('click', (e) => {
-        if (e.target.tagName === 'LI') {
-            const newTheme = e.target.dataset.themeName;
-            
-            // Remove all existing theme classes
-            body.className = body.className.replace(/theme-[a-z-]+/g, ''); 
-            
-            // Add the new theme class
-            body.classList.add(`theme-${newTheme}`);
-            localStorage.setItem('blogTheme', newTheme);
-            
-            // Close the dropdown
-            themeDropdown.classList.remove('menu-visible');
-            themeDropdown.classList.add('menu-hidden');
+            }
         }
-    });
-
-    // Close the dropdown if clicking anywhere else on the document
-    document.addEventListener('click', (e) => {
-        if (!themeToggler.contains(e.target) && !themeDropdown.contains(e.target)) {
-            themeDropdown.classList.remove('menu-visible');
-            themeDropdown.classList.add('menu-hidden');
-        }
-    });
-
-
-    // --- Scroll-Triggered Animations ---
-    const faders = document.querySelectorAll('.animate__fade-in, .animate__fade-up, .animate__pop-in');
-
-    const appearOptions = {
-        threshold: 0.2, // Element is 20% in view
-        rootMargin: "0px 0px -50px 0px" // Start animating it a bit before it reaches viewport bottom
     };
 
-    const appearOnScroll = new IntersectionObserver((entries, appearOnScroll) => {
-        entries.forEach(entry => {
-            if (!entry.isIntersecting) {
-                return;
+    // --- Scroll-Triggered Animations ---
+    const setupScrollAnimations = () => {
+        const animatedElements = document.querySelectorAll('.animate__fade-in, .animate__slide-up');
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('is-visible');
+                    observer.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.1 });
+
+        animatedElements.forEach(el => observer.observe(el));
+    };
+
+    // --- Back to Top Button ---
+    const setupBackToTopButton = () => {
+        const btn = document.getElementById('back-to-top');
+        if (!btn) return;
+
+        window.addEventListener('scroll', () => {
+            if (window.scrollY > 300) {
+                btn.classList.add('show');
+            } else {
+                btn.classList.remove('show');
             }
-            entry.target.classList.add('is-visible');
-            appearOnScroll.unobserve(entry.target); // Stop observing once it's visible
         });
-    }, appearOptions);
 
-    faders.forEach(fader => {
-        appearOnScroll.observe(fader);
-    });
+        btn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    };
+    
+    // --- Custom Cursor Trail Effect ---
+    const setupCursorTrail = () => {
+        const cursorDot = document.getElementById('cursor-trail');
+        if (!cursorDot) return;
+        
+        window.addEventListener('mousemove', e => {
+            cursorDot.style.left = `${e.clientX}px`;
+            cursorDot.style.top = `${e.clientY}px`;
 
-    // --- Special animation for header and top elements on page load ---
-    // These elements should animate immediately, not wait for scroll
-    document.querySelector('.main-header').classList.add('is-visible');
-    const blogTitle = document.querySelector('.blog-title');
-    if (blogTitle && window.location.pathname.endsWith('index.html') || window.location.pathname === '/'){ // Only animate on index page
-        setTimeout(() => blogTitle.classList.add('is-visible'), 100);
-    }
+            let trail = document.createElement('div');
+            trail.className = 'cursor-trail-dot';
+            document.body.appendChild(trail);
+            trail.style.left = `${e.clientX}px`;
+            trail.style.top = `${e.clientY}px`;
+            
+            setTimeout(() => {
+                trail.style.opacity = '0';
+                setTimeout(() => {
+                   if (trail.parentNode) {
+                        trail.parentNode.removeChild(trail);
+                   }
+                }, 500);
+            }, 10);
+        });
 
-    if (document.querySelector('.my-avatar')) {
-        setTimeout(() => document.querySelector('.my-avatar').classList.add('is-visible'), 200);
-    }
-    if (document.querySelector('.page-title')) {
-        setTimeout(() => document.querySelector('.page-title').classList.add('is-visible'), 300);
-    }
+        document.querySelectorAll('a, button, input').forEach(el => {
+            el.onmouseenter = () => cursorDot.style.transform = 'translate(-50%,-50%) scale(1.5)';
+            el.onmouseleave = () => cursorDot.style.transform = 'translate(-50%,-50%) scale(1)';
+        });
+    };
 
-
+    // Initialize all features
+    setupHomepageBackground();
+    setupScrollAnimations();
+    setupBackToTopButton();
+    setupCursorTrail();
 });

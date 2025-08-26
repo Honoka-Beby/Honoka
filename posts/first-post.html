@@ -3,28 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>我与《你的名字》的初次邂逅 - 星光茶话会</title>
+    <title>我与《你的名字》的初次邂逅 - Honoka的小屋</title>
+    <!-- 注意这里的路径 -->
     <link rel="icon" href="../img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="../css/animations.css">
 </head>
-<body class="theme-default">
+<body class="theme-cosmic-dream">
+
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
     <header class="main-header animate__fade-in">
         <div class="container">
-            <h1 class="blog-title"><a href="../index.html">星光茶话会</a></h1>
+            <h1 class="blog-title blog-title--animated">
+                <!-- 注意这里的路径 -->
+                <a href="../index.html">Honoka的小屋</a>
+            </h1>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="../index.html">首页</a></li>
+                    <!-- 注意这里的路径 -->
+                    <li><a href="../index.html">主页</a></li>
+                    <li><a href="../blog.html">文章</a></li>
                     <li><a href="../about.html">关于我</a></li>
                     <li><a href="../comments.html">留言板</a></li>
-                     <li><a href="#" id="theme-toggler">主题 ▼</a>
-                        <ul class="theme-dropdown menu-hidden">
-                            <li data-theme-name="default">默认主题</li>
-                            <li data-theme-name="sakura">樱花之语</li>
-                            <li data-theme-name="night-sky">夜空星辰</li>
-                        </ul>
-                    </li>
                 </ul>
             </nav>
         </div>
@@ -32,14 +35,15 @@
 
     <main class="container content-page">
         <article class="blog-post-detail animate__fade-in">
-            <h2 class="post-detail-title animate__fade-up">我与《你的名字》的初次邂逅：情感的交织与时间的奇迹 ✨</h2>
-            <div class="post-meta animate__fade-up" data-delay="100">
-                <time datetime="2024-04-23">2024年4月23日</time> by <span class="author-name">二次元观测者</span>
+            <h2 class="post-detail-title animate__slide-up">我与《你的名字》的初次邂逅：情感的交织与时间的奇迹 ✨</h2>
+            <div class="post-meta animate__slide-up" data-delay="100">
+                <time datetime="2024-04-23">2024年4月23日</time> by <span class="author-name">Honoka</span>
             </div>
             
-            <img src="../img/post-detail-1.png" alt="《你的名字》电影剧照或海报" class="post-detail-banner animate__pop-in">
+            <!-- 注意这里的路径 -->
+            <img src="../img/post-detail-1.png" alt="《你的名字》电影剧照" class="post-detail-banner animate__fade-in" data-delay="200">
 
-            <div class="post-content animate__fade-up" data-delay="200">
+            <div class="post-content animate__slide-up" data-delay="300">
                 <p>
                     还记得第一次走进电影院观看《你的名字》时的震撼吗？对我来说，那不仅仅是一场视觉盛宴，更是一次灵魂的洗礼。新海诚导演的作品总是能将日常与奇幻无缝衔接，而《你的名字》无疑将这种风格推向了极致。
                 </p>
@@ -54,29 +58,37 @@
                 <p>
                     影片最打动我的，并非是那些瑰丽的画面，而是那份跨越时空的、未曾明确言语却又深植灵魂的联系。泷和三叶不断地寻找彼此，即使记忆变得模糊，即使名字无法清晰地忆起，那种“我一定要找到你”的信念，是如此强大而美好。“如果有一天我们再见面，我肯定一眼就能认出你”——当他们终于在阶梯上相遇，那一刻，所有的等待与努力都是值得的。这种纯粹的爱与羁绊，也让我更加相信，世间总有一份奇迹等着真正想找寻它的人。
                 </p>
-                <p>
-                    你呢？你第一次看《你的名字》时，有没有被哪个场景或者哪句台词深深打动？如果你也有想分享的，欢迎在评论区告诉我！期待与你一起，重温这部跨越次元的经典之作。
-                </p>
             </div>
 
-            <!-- 这里可以放置文章专属的评论模块，或者指向公共留言板 -->
-            <div class="read-more animate__pop-in-hover">
-                <a href="../index.html" class="button">← 返回首页</a>
+            <div class="read-more animate__slide-up" data-delay="400">
+                <!-- 注意这里的路径 -->
+                <a href="../blog.html" class="button">← 返回文章列表</a>
             </div>
         </article>
     </main>
 
     <footer class="main-footer animate__fade-in">
         <div class="container">
-            <p>&copy; 2024 星光茶话会 - 二次元观测者. All rights reserved.</p>
+            <p>&copy; 2025 Honoka的小屋. All rights reserved.</p>
             <p>QQ: 3203418940</p>
-            <div class="social-links">
-                <a href="#" target="_blank">AniList</a>
-                <a href="#" target="_blank">Bilibili</a>
-            </div>
         </div>
     </footer>
 
+    <!-- 看板娘 Live2D -->
+    <div id="live2d-widget" class="live2d-widget-container"></div>
+    <button id="back-to-top" title="返回顶部">↑</button>
+
+    <!-- 注意这里的路径 -->
     <script src="../js/script.js"></script>
+
+    <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
+    <script>
+        L2Dwidget.init({
+            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json", "scale": 1 },
+            "display": { "position": "right", "width": 150, "height": 300, "hOffset": 10, "vOffset": -20 },
+            "mobile": { "show": true, "scale": 0.5 },
+            "react": { "opacityDefault": 0.8, "opacityOnHover": 1 }
+        });
+    </script>
 </body>
 </html>

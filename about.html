@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>留言板 - Honoka的小屋</title>
+    <title>关于我 - Honoka的小屋</title>
     <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
 </head>
 <body class="theme-cosmic-dream">
-    
+
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
@@ -31,31 +31,27 @@
     </header>
 
     <main class="container content-page">
-        <section class="comment-section animate__fade-in">
-            <h2 class="page-title animate__slide-up">说点什么吧！给我留言</h2>
-
-            <div class="comment-form-container animate__slide-up" data-delay="100">
-                <h3>留下你的足迹~</h3>
-                <form id="comment-form">
-                    <div class="form-group">
-                        <label for="comment-author">你的名字:</label>
-                        <input type="text" id="comment-author" required placeholder="例如：次元游客">
-                    </div>
-                    <div class="form-group">
-                        <label for="comment-text">留言内容:</label>
-                        <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！"></textarea>
-                    </div>
-                    <button type="submit" class="button">提交留言</button>
-                    <p class="form-hint">你的留言将保存在当前浏览器中，换个浏览器或清除缓存就看不到了哦</p>
-                </form>
+        <section class="about-me-section animate__fade-in">
+            <img src="img/avatar.png" alt="我的二次元头像" class="my-avatar animate__slide-up">
+            <h2 class="page-title animate__slide-up" data-delay="100">你好，我是Honoka！🌌</h2>
+            <p class="animate__slide-up" data-delay="200">
+                欢迎来到我的小屋，一个专属二次元爱好者的温馨角落。我是这里的主人，你可以叫我Honoka！从小浸泡在动画、漫画和轻小说的世界里，二次元对我来说，不仅仅是兴趣，更是一种生活态度和发现美的视角。
+            </p>
+            <p class="animate__slide-up" data-delay="300">
+                我热爱探讨每一季的新番，对经典老番如数家珍；喜欢分享那些触动心弦的漫画故事，以及在虚拟游戏中感受到的每一次心跳。在这里，我会与你分享我的最新观影感受、对某个角色的独到见解、偶尔也会晒晒我的手办收藏，或者是一些关于二次元文化的小思考。
+            </p>
+            <p class="animate__slide-up" data-delay="400">
+                如果你也和我有相同的爱好，喜欢探讨动漫世界的无限可能，或者只是想找个地方放松心情，听听关于二次元的“八卦”，那就加入进来吧！我非常期待与你交流。
+            </p>
+            <div class="contact-info animate__slide-up" data-delay="500">
+                <h3>联系我:</h3>
+                <ul>
+                    <li><strong>QQ:</strong> 3203418940</li>
+                    <li><strong>Email:</strong> your.email@example.com (建议填写真实邮箱或留空)</li>
+                    <li><strong>Bilibili:</strong> <a href="#" target="_blank">你的B站主页</a></li>
+                </ul>
             </div>
-
-            <div class="comments-list-container animate__fade-in" data-delay="300">
-                <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
-                <div id="comments-list" class="posts-grid">
-                    <!-- 留言将通过JS在此处动态生成 -->
-                </div>
-            </div>
+            <p class="animate__slide-up" data-delay="600">期待与你在二次元的星光下相遇！✨</p>
         </section>
     </main>
 
@@ -70,10 +66,7 @@
     <div id="live2d-widget" class="live2d-widget-container"></div>
     <button id="back-to-top" title="返回顶部">↑</button>
 
-    <!-- 关键: 同时引用两个JS文件 -->
     <script src="js/script.js"></script>
-    <script src="js/comments.js"></script> <!-- 留言板专用JS -->
-
     <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
     <script>
         L2Dwidget.init({

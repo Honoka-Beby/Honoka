@@ -1,142 +1,49 @@
-/* --- CSS Variables for Theming --- */
+/* --- CSS Variables for Cosmic Dream Theme --- */
 :root {
     --border-radius: 8px;
     --border-radius-lg: 12px;
-    --shadow-rgb: 0, 0, 0; /* Default for shadow */
-}
 
-/* --- Default Theme (星尘蓝 / Star Dust Blue) --- */
-.theme-default {
-    /* Base Colors */
-    --bg-color: #f0f4f8; /* Very light gray-blue */
-    --card-bg-color: #ffffff;
-    --card-page-bg: #fdfdfd; 
-    --bg-hover-color: #e6f0f7; /* Light hover background */
-    --border-color: #e0e6ed; /* Light gray border */
+    /* Base Colors - 深邃的星空紫 */
+    --bg-color: #1a1625;
+    --bg-secondary-color: #2a2438;
+    --card-bg-color: rgba(26, 22, 37, 0.8);
+    --border-color: rgba(255, 121, 198, 0.2);
+    --shadow-rgb: 0, 0, 0;
 
-    /* Text Colors */
-    --text-color: #334e68; /* Dark blue-gray */
-    --heading-color: #213c54; /* Even darker blue-gray */
-    --meta-text-color: #6a7c8e; /* Lighter blue-gray for metadata */
-    --post-title-color: #334e68;
-
-    /* Accent & Primary Colors */
-    --primary-color: #6a9acb; /* Sky blue */
-    --primary-color-rgb: 106, 154, 203;
-    --primary-hover-color: #5587ba; /* Darker blue on hover */
-    --secondary-color: #8bbcdc; /* Lighter cyan-blue */
-    --accent-color: #9cdbd9; /* Mint light blue */
-    --accent-light: #c2eceb;
-
-    /* Header & Nav */
-    --header-bg-color: #5a8ab8; /* Primary header blue */
-    --header-bg-image: linear-gradient(135deg, rgba(80,120,160,0.9), rgba(120,180,220,0.9)), url('../img/header-bg.png'); /* 示例背景图与渐变 */
-    --header-text-color: #ffffff; 
-    --nav-link-color: #e0f2f7; /* Light header link */
-    --nav-link-hover-color: #ffffff;
-
-    /* Footer */
-    --footer-bg-color: #4b6e92; /* Darker footer blue */
-    --footer-text-color: #e0eaf3;
-    --footer-link-color: #c0d4ed;
-    --footer-link-hover-color: #ffffff;
-
-    /* Forms */
-    --input-bg-color: #edf2f7;
-
-    /* Links */
-    --link-color: #6a9acb;
-    --link-hover-color: #5587ba;
-
-
-}
-
-/* --- Sakura Theme (樱花之语 / Sakura Whisper) --- */
-.theme-sakura {
-    /* Base Colors */
-    --bg-color: #ffeef2; /* Very light pink */
-    --card-bg-color: #ffffff;
-    --card-page-bg: #fffbfd;
-    --bg-hover-color: #ffe0e9;
-    --border-color: #fcd5e0;
-
-    /* Text Colors */
-    --text-color: #6e495d; /* Dark plum */
-    --heading-color: #5a3c4c;
-    --meta-text-color: #9b7189;
-    --post-title-color: #5a3c4c;
-
-    /* Accent & Primary Colors */
-    --primary-color: #ff99b3; /* Soft sakura pink */
-    --primary-color-rgb: 255, 153, 179;
-    --primary-hover-color: #ff7f99;
-    --secondary-color: #f7b2c7;
-    --accent-color: #ffb7c5; /* Pinker accent */
-    --accent-light: #ffdaf0;
-
-    /* Header & Nav */
-    --header-bg-color: #f890b0; /* Deeper pink header */
-    --header-bg-image: linear-gradient(135deg, rgba(255,140,180,0.9), rgba(255,180,210,0.9)), url('../img/theme-bg-sakura.png'); /* 樱花背景图 */
-    --header-text-color: #ffffff;
-    --nav-link-color: #ffebeb;
-    --nav-link-hover-color: #ffffff;
-
-    /* Footer */
-    --footer-bg-color: #e680a0;
-    --footer-text-color: #ffe0e9;
-    --footer-link-color: #fddbe6;
-    --footer-link-hover-color: #ffffff;
-
-    /* Forms */
-    --input-bg-color: #fff4f8;
-
-    /* Links */
-    --link-color: #ff99b3;
-    --link-hover-color: #ff7f99;
-}
-
-
-/* --- Night Sky Theme (夜空星辰 / Night Sky Stars) --- */
-.theme-night-sky {
-    /* Base Colors */
-    --bg-color: #1a1a2e; /* Deep purple-black */
-    --card-bg-color: #272740;
-    --card-page-bg: #22223a;
-    --bg-hover-color: #3b3b55;
-    --border-color: #4a4a68;
-
-    /* Text Colors */
-    --text-color: #e0e0e0; /* Light gray */
+    /* Text Colors - 温和的星光白 */
+    --text-color: #dcd7e6;
     --heading-color: #ffffff;
-    --meta-text-color: #b0b0b0;
-    --post-title-color: #e8e8e8;
+    --meta-text-color: #9e9aac;
 
-    /* Accent & Primary Colors */
-    --primary-color: #8d4fbf; /* Cosmic purple */
-    --primary-color-rgb: 141, 79, 191;
-    --primary-hover-color: #6a3a91;
-    --secondary-color: #a788c7;
-    --accent-color: #ace5ff; /* Bright sky blue */
-    --accent-light: #cef4ff;
-
-    /* Header & Nav */
-    --header-bg-color: #16213e;
-    --header-bg-image: linear-gradient(135deg, rgba(22,33,62,0.95), rgba(40,50,90,0.95)), url('../img/theme-bg-nightsky.png'); /* 夜空背景图 */
-    --header-text-color: #ffffff;
-    --nav-link-color: #cfe2f2;
-    --nav-link-hover-color: #ffffff;
-
-    /* Footer */
-    --footer-bg-color: #0f1c30;
-    --footer-text-color: #bcccdc;
-    --footer-link-color: #92bada;
-    --footer-link-hover-color: #ffffff;
-
-    /* Forms */
-    --input-bg-color: #363654;
+    /* Accent & Primary Colors - 亮眼的少女粉 */
+    --primary-color: #ff79c6;
+    --primary-color-rgb: 255, 121, 198;
+    --primary-hover-color: #ff92d0;
+    --secondary-color: #bd93f9; /* 辅助紫色 */
 
     /* Links */
-    --link-color: #8d4fbf;
-    --link-hover-color: #ace5ff;
+    --link-color: var(--primary-color);
+    --link-hover-color: var(--primary-hover-color);
+    
+    /* Header/Footer/Forms */
+    --header-bg-color: rgba(26, 22, 37, 0.7);
+    --footer-bg-color: #110e1a;
+    --input-bg-color: var(--bg-secondary-color);
+    
+    /* Font family - 留言板标题也改用这个更柔和的字体 */
+    --font-primary: 'Noto Sans SC', sans-serif;
+    --font-display: 'LXGW WenKai Screen', 'Noto Sans SC', sans-serif; /* 一个更柔和的展示字体 */
 }
 
+/* 引入字体 */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
+
+
+body {
+    -webkit-font-smoothing: antialiased;
+    font-family: var(--font-primary);
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    cursor: none; /* 隐藏默认鼠标指针 */
+}

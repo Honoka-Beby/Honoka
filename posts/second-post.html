@@ -3,28 +3,31 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>手办坑里的那些趣事和我最爱的Waifu - 星光茶话会</title>
+    <title>手办坑里的那些趣事和我最爱的Waifu - Honoka的小屋</title>
     <link rel="icon" href="../img/favicon.ico" type="image/x-icon">
+    <!-- 注意css及js文件的路径，都加了 ../ 返回上一级目录 -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="../css/animations.css">
 </head>
-<body class="theme-default">
+<body class="theme-cosmic-dream">
+
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
     <header class="main-header animate__fade-in">
         <div class="container">
-            <h1 class="blog-title"><a href="../index.html">星光茶话会</a></h1>
+            <h1 class="blog-title blog-title--animated">
+                <!-- 注意主页链接路径 -->
+                <a href="../index.html">Honoka的小屋</a>
+            </h1>
             <nav class="main-nav">
                 <ul>
-                    <li><a href="../index.html">首页</a></li>
+                    <!-- 注意所有导航链接路径 -->
+                    <li><a href="../index.html">主页</a></li>
+                    <li><a href="../blog.html">文章</a></li>
                     <li><a href="../about.html">关于我</a></li>
                     <li><a href="../comments.html">留言板</a></li>
-                     <li><a href="#" id="theme-toggler">主题 ▼</a>
-                        <ul class="theme-dropdown menu-hidden">
-                            <li data-theme-name="default">默认主题</li>
-                            <li data-theme-name="sakura">樱花之语</li>
-                            <li data-theme-name="night-sky">夜空星辰</li>
-                        </ul>
-                    </li>
                 </ul>
             </nav>
         </div>
@@ -32,14 +35,15 @@
 
     <main class="container content-page">
         <article class="blog-post-detail animate__fade-in">
-            <h2 class="post-detail-title animate__fade-up">手办坑里的那些趣事和我最爱的Waifu：我的次元收藏之旅 💖</h2>
-            <div class="post-meta animate__fade-up" data-delay="100">
-                <time datetime="2024-04-18">2024年4月18日</time> by <span class="author-name">二次元观测者</span>
+            <h2 class="post-detail-title animate__slide-up">手办坑里的那些趣事和我最爱的Waifu：我的次元收藏之旅 💖</h2>
+            <div class="post-meta animate__slide-up" data-delay="100">
+                <time datetime="2024-04-18">2024年4月18日</time> by <span class="author-name">Honoka</span>
             </div>
             
-            <img src="../img/post-detail-2.png" alt="我的手办 coleção" class="post-detail-banner animate__pop-in">
+            <!-- 注意图片路径 -->
+            <img src="../img/post-detail-2.png" alt="我的手办 coleção" class="post-detail-banner animate__fade-in" data-delay="200">
 
-            <div class="post-content animate__fade-up" data-delay="200">
+            <div class="post-content animate__slide-up" data-delay="300">
                 <p>
                     各位二次元同好，大家好！今天想跟大家分享一下我这些年在“手办坑”里的那些趣事和心得。从入坑到现在，我的钱包仿佛被施了“魅惑”魔法，但每次拆开包裹、点亮展示柜的那一刻，所有的“牺牲”都变得无比值得！谁让这些小可爱们，真的能把二次元的魅力带到现实呢！
                 </p>
@@ -52,7 +56,7 @@
                 </p>
                 <h3>💖 “Waifu”的力量：我的心头好</h3>
                 <p>
-                    说到收藏，怎能不提我的“waifu”呢？每个二次元粉丝心里都有那么几个触及灵魂的角色吧。对我来说，她就是《Re:从零开始的异世界生活》里的**艾米莉亚**碳！（偷偷说，雷姆和拉姆我也都非常爱啦！）
+                    说到收藏，怎能不提我的“waifu”呢？每个二次元粉丝心里都有那么几个触及灵魂的角色吧。对我来说，她就是《Re:从零开始的异世界生活》里的<strong>艾米莉亚</strong>碳！（偷偷说，雷姆和拉姆我也都非常爱啦！）
                 </p>
                 <p>
                     最初是被动画中她纯真善良的性格、总是为他人着想的温柔所吸引。后来收藏了她的正版手办：穿着洁白晚礼服，半透明的秀发如同夜空中的星辰般闪耀，手中的魔晶石微光粼粼，摆在展示柜C位，每天都能感受到她的温柔治愈。这款手办不仅还原了艾米莉亚的形象，更完美捕捉了她那份圣洁又带着一丝丝忧郁的气质，仿佛她真的在我眼前一样。每次看到她，就觉得一天的疲惫都烟消云散了。这就是Waifu的魔力啊！
@@ -66,23 +70,36 @@
                 </p>
             </div>
 
-            <div class="read-more animate__pop-in-hover">
-                <a href="../index.html" class="button">← 返回首页</a>
+            <div class="read-more animate__slide-up" data-delay="400">
+                <!-- 返回文章列表页的链接 -->
+                <a href="../blog.html" class="button">← 返回文章列表</a>
             </div>
         </article>
     </main>
 
     <footer class="main-footer animate__fade-in">
         <div class="container">
-            <p>&copy; 2024 星光茶话会 - 二次元观测者. All rights reserved.</p>
+            <p>&copy; 2025 Honoka的小屋. All rights reserved.</p>
             <p>QQ: 3203418940</p>
-            <div class="social-links">
-                <a href="#" target="_blank">AniList</a>
-                <a href="#" target="_blank">Bilibili</a>
-            </div>
         </div>
     </footer>
 
+    <!-- 看板娘 Live2D -->
+    <div id="live2d-widget" class="live2d-widget-container"></div>
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" title="返回顶部">↑</button>
+
+    <!-- 注意js文件的路径，都加了 ../ 返回上一级目录 -->
     <script src="../js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
+    <script>
+        // 看板娘初始化，确保CDN链接可访问
+        L2Dwidget.init({
+            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json", "scale": 1 },
+            "display": { "position": "right", "width": 150, "height": 300, "hOffset": 10, "vOffset": -20 },
+            "mobile": { "show": true, "scale": 0.5 },
+            "react": { "opacityDefault": 0.8, "opacityOnHover": 1 }
+        });
+    </script>
 </body>
 </html>

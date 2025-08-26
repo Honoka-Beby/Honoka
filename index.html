@@ -3,99 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>星光茶话会 - 你的二次元小站</title>
-    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <title>Honoka的小屋 - 欢迎来到我的二次元世界</title>
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
 </head>
-<body class="theme-default">
-    <header class="main-header animate__fade-in">
-        <div class="container">
-            <h1 class="blog-title"><a href="index.html">星光茶话会</a></h1>
-            <nav class="main-nav">
-                <ul>
-                    <li><a href="index.html">首页</a></li>
-                    <li><a href="about.html">关于我</a></li>
-                    <li><a href="comments.html">留言板</a></li>
-                    <li><a href="#" id="theme-toggler">主题 ▼</a>
-                        <ul class="theme-dropdown menu-hidden">
-                            <li data-theme-name="default">默认主题</li>
-                            <li data-theme-name="sakura">樱花之语</li>
-                            <li data-theme-name="night-sky">夜空星辰</li>
-                        </ul>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+<body class="theme-cosmic-dream is-homepage">
 
-    <main class="container">
-        <section class="featured-post animate__pop-in">
-            <h2 class="section-title">✨ 精选推荐 ✨</h2>
-            <div class="post-card large-card">
-                <a href="posts/first-post.html">
-                    <img src="img/post-thumbnail-1.png" alt="「你的名字」影评图" class="post-thumbnail">
-                    <div class="post-info">
-                        <h3>我与《你的名字》的初次邂逅：情感的交织与时间的奇迹</h3>
-                        <p class="post-excerpt">还记得第一次走进电影院观看《你的名字》时的震撼吗？那不仅仅是一个关于“交换身体”的奇幻故事，更是一段关于寻找、关于约定、关于时空交错的史诗爱恋。新海诚的每一帧都如画卷般精美，彗星划过天际，红色的结绳牵起了缘分，仿佛带领我进入了一个触手可及的二次元世界...</p>
-                        <time datetime="2024-04-23">2024年4月23日</time>
-                    </div>
-                </a>
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
+    <main class="main-content">
+        <!-- 全屏封面区域 -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="blog-title blog-title--animated">
+                    <a href="index.html">Honoka的小屋</a>
+                </h1>
+                <p class="hero-subtitle">一个关于动画、梦想和代码的秘密基地 ✨</p>
+                <nav class="hero-nav">
+                    <a href="blog.html" class="nav-link">文章</a>
+                    <a href="about.html" class="nav-link">关于</a>
+                    <a href="comments.html" class="nav-link">留言</a>
+                </nav>
             </div>
+            <a href="#posts-section" class="scroll-down-arrow">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="m19 12-7 7-7-7"/></svg>
+                <span>探索更多</span>
+            </a>
         </section>
 
-        <section class="recent-posts">
-            <h2 class="section-title">最新文章</h2>
-            <div class="posts-grid">
-                <!-- 文章列表，由JS或手动添加 -->
-                <div class="post-card animate__fade-up">
-                    <a href="posts/first-post.html">
-                        <img src="img/post-thumbnail-1.png" alt="「你的名字」影评" class="post-thumbnail">
-                        <div class="post-info">
-                            <h3>我与《你的名字》的初次邂逅</h3>
-                            <p class="post-excerpt">每个人的心中都有那么一部动画，它不仅仅是影像，更是连接我们情感世界的桥梁。</p>
-                            <time datetime="2024-04-23">2024年4月23日</time>
-                        </div>
-                    </a>
-                </div>
-                <div class="post-card animate__fade-up" data-delay="100">
-                    <a href="posts/second-post.html">
-                        <img src="img/post-thumbnail-2.png" alt="手办收藏" class="post-thumbnail">
-                        <div class="post-info">
-                            <h3>手办坑里的那些趣事和我最爱的waifu</h3>
-                            <p class="post-excerpt">从一无所知的小白到拥有几十个手办的“资深”玩家，这些年我在手办坑里掉过多少把眼泪？</p>
-                            <time datetime="2024-04-18">2024年4月18日</time>
-                        </div>
-                    </a>
-                </div>
-                <!-- 更多文章可以像这样添加 -->
-                <div class="post-card animate__fade-up" data-delay="200">
-                    <a href="#">
-                        <img src="img/post-thumbnail-3.png" alt="番剧推荐" class="post-thumbnail">
-                        <div class="post-info">
-                            <h3>四月新番速览：不容错过的几部神作预定！</h3>
-                            <p class="post-excerpt">又到了充满希望的四月，今年的新番竞争依然激烈，我已经帮大家筛选出了最值得关注的几部番剧。</p>
-                            <time datetime="2024-04-10">2024年4月10日</time>
-                        </div>
-                    </a>
-                </div>
-            </div>
-        </section>
+        <!-- 主页下方直接衔接文章，这里是占位，实际内容在 blog.html -->
     </main>
 
-    <footer class="main-footer animate__fade-in" data-delay="300">
-        <div class="container">
-            <p>&copy; 2024 星光茶话会 - 二次元观测者. All rights reserved.</p>
-            <p>QQ: 3203418940</p>
-            <div class="social-links">
-                <a href="#" target="_blank">AniList</a>
-                <a href="#" target="_blank">Bilibili</a>
-            </div>
-        </div>
-    </footer>
+    <!-- 看板娘 Live2D -->
+    <div id="live2d-widget" class="live2d-widget-container"></div>
+    
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" title="返回顶部">↑</button>
 
     <script src="js/script.js"></script>
-    <!-- 对于所有页面共享的动画，也可以放在script.js里统一处理 -->
+    
+    <!-- 引入看板娘JS，请确保网络可访问 -->
+    <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
+    <script>
+        // 初始化看板娘
+        L2Dwidget.init({
+            "model": {
+                // 你可以从这里找到更多模型: https://github.com/stevenjoezhang/live2d-widget-models
+                "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json",
+                "scale": 1
+            },
+            "display": {
+                "position": "right", // right or left
+                "width": 150,
+                "height": 300,
+                "hOffset": 10,
+                "vOffset": -20
+            },
+            "mobile": {
+                "show": true, // 手机端是否显示
+                "scale": 0.5
+            },
+            "react": {
+                "opacityDefault": 0.8,
+                "opacityOnHover": 1
+            }
+        });
+    </script>
 </body>
 </html>

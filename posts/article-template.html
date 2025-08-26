@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>【新文章标题】 - Honoka的小屋</title> <!-- 修改这里 -->
+    <link rel="icon" href="../img/favicon.ico" type="image/x-icon">
+    <!-- 注意css及js文件的路径，都加了 ../ 返回上一级目录 -->
+    <link rel="stylesheet" href="../css/style.css">
+    <link rel="stylesheet" href="../css/themes.css">
+    <link rel="stylesheet" href="../css/animations.css">
+</head>
+<body class="theme-cosmic-dream">
+
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
+    <header class="main-header animate__fade-in">
+        <div class="container">
+            <h1 class="blog-title blog-title--animated">
+                <!-- 注意主页链接路径 -->
+                <a href="../index.html">Honoka的小屋</a>
+            </h1>
+            <nav class="main-nav">
+                <ul>
+                    <!-- 注意所有导航链接路径 -->
+                    <li><a href="../index.html">主页</a></li>
+                    <li><a href="../blog.html">文章</a></li>
+                    <li><a href="../about.html">关于我</a></li>
+                    <li><a href="../comments.html">留言板</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container content-page">
+        <article class="blog-post-detail animate__fade-in">
+            <h2 class="post-detail-title animate__slide-up">这里是你的新文章标题！🌟</h2> <!-- 修改这里 -->
+            <div class="post-meta animate__slide-up" data-delay="100">
+                <time datetime="2025-01-01">2025年1月1日</time> by <span class="author-name">Honoka</span> <!-- 修改这里 -->
+            </div>
+            
+            <!-- 请更改这里的图片路径，它应该指向 img/ 目录下的图片 -->
+            <img src="../img/post-thumbnail-example.png" alt="文章封面或插图" class="post-detail-banner animate__fade-in" data-delay="200">
+
+            <div class="post-content animate__slide-up" data-delay="300">
+                <p>
+                    Honoka，欢迎你开始创作你的文章！这里是你展示才华、分享故事和感受的地方。
+                    请删除这段示范文字，并开始输入你自己的内容。记住，你的真实声音和独特的见解，
+                    是让“Honoka的小屋”充满魅力的源泉。
+                </p>
+                <p>
+                    这里可以是你对最新番剧的深入评论，也可以是你对某个二次元角色的爱意表达；
+                    或许是一段关于手办收藏的趣事，亦或是一篇对二次元世界某个主题的思考。
+                    不要害怕分享你的感受，因为正是这些，让你的博客与众不同。
+                </p>
+                <h3>💡 写作小贴士</h3>
+                <ol>
+                    <li><strong>写真情实感:</strong> 最好的文章是真性情的流露。</li>
+                    <li><strong>加入图片:</strong> 用二次元图片（动画截图、同人图、自己的收藏照）点缀你的文章，让它更生动。</li>
+                    <li><strong>分段清楚:</strong> 使用`<h3>`标签划分小节，用`<p>`标签分段，使阅读体验更佳。</li>
+                    <li><strong>与读者互动:</strong> 可以在文章末尾提问，鼓励读者留言交流。</li>
+                </ol>
+                <p>
+                    期待你的精彩文章！✨
+                </p>
+            </div>
+
+            <div class="read-more animate__slide-up" data-delay="400">
+                <!-- 返回文章列表页的链接 -->
+                <a href="../blog.html" class="button">← 返回文章列表</a>
+            </div>
+        </article>
+    </main>
+
+    <footer class="main-footer animate__fade-in">
+        <div class="container">
+            <p>&copy; 2025 Honoka的小屋. All rights reserved.</p>
+            <p>QQ: 3203418940</p>
+        </div>
+    </footer>
+
+    <!-- 看板娘 Live2D -->
+    <div id="live2d-widget" class="live2d-widget-container"></div>
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" title="返回顶部">↑</button>
+
+    <!-- 注意js文件的路径，都加了 ../ 返回上一级目录 -->
+    <script src="../js/script.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
+    <script>
+        L2Dwidget.init({
+            "model": { "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-shizuku@1.0.5/assets/shizuku.model.json", "scale": 1 },
+            "display": { "position": "right", "width": 150, "height": 300, "hOffset": 10, "vOffset": -20 },
+            "mobile": { "show": true, "scale": 0.5 },
+            "react": { "opacityDefault": 0.8, "opacityOnHover": 1 }
+        });
+    </script>
+</body>
+</html>
