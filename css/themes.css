@@ -5,18 +5,19 @@
 
     /* Base Colors - 深邃的星空紫 */
     --bg-fallback-color: #1a1625; /* 纯色背景，用作加载时的后备 */
-    --bg-image: none; /* Dynamic, set by JS */
-    --body-overlay-bg: rgba(26, 22, 37, 0.7); /* 全局身体背景叠加层 */
-    --hero-overlay-bg: rgba(26, 22, 37, 0.75); /* 主页Hero区域的背景叠加层 */
+    --bg-image: none; /* Dynamic, set by JS to image URL */
+    --body-overlay-bg: rgba(26, 22, 37, 0.3); /* 全局身体背景叠加层: 更加透明，让壁纸透出大部分 */
+    --hero-overlay-bg: rgba(26, 22, 37, 0.75); /* 主页Hero区域的背景叠加层: 较不透明，保持前景文字对比度 */
 
     --bg-secondary-color: #2a2438; /* 稍微浅一点的紫色，用于一些区块 */
     --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
 
-    --card-bg-color: rgba(26, 22, 37, 0.85); /* 卡片半透明背景，带一点点模糊效果 */
-    /* Removed --card-page-bg as content-page-wrapper now uses --content-bg-color */
-    --content-bg-color: rgba(26, 22, 37, 0.65); /* 主要内容区的半透明背景 (e.g. blog, about, comments, post-detail wrapper) */
+    --card-bg-color: rgba(26, 22, 37, 0.85); /* 卡片背景（如文章卡片，评论卡片），提供良好背景可读性 */
+    --content-bg-color: rgba(26, 22, 37, 0.7); /* 主要内容区的半透明背景 (e.g. blog, about, comments, post-detail wrapper) */
     
     --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
+    /* Secondary color RGB values for use in rgba(). Ensure these match the main secondary-color */
+    --secondary-color-rgb: 189, 147, 249; 
     --shadow-rgb: 0, 0, 0; /* 用于阴影 */
 
     /* Text Colors - 温和的星光白 */
@@ -27,12 +28,11 @@
     /* Accent & Primary Colors - 亮眼的少女粉 */
     --primary-color: #ff79c6; /* 主色调，亮粉色 */
     --primary-color-rgb: 255, 121, 198; /* 用于RGBA计算 */
-    --secondary-color-rgb: 189, 147, 249; /* 用于RGBA计算 */
     --primary-hover-color: #ff92d0; /* 主色调悬停，稍亮 */
     --secondary-color: #bd93f9; /* 辅助色，神秘紫 */
 
     /* Header/Footer/Forms */
-    --header-bg-color: rgba(26, 22, 37, 0.95); /* Header更不透明 */
+    --header-bg-color: rgba(26, 22, 37, 0.95); /* Header更不透明，使其在任何背景下都显眼 */
     --footer-bg-color: #110e1a; /* Footer深色背景 */
     --input-bg-color: var(--bg-secondary-color); /* 输入框背景 */
     

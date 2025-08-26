@@ -15,8 +15,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 <p class="overlay-text">加载中...</p>
             `;
         }
-
-        // Hide overlay after new page loads if it was (re)displayed
+        // Initially hide overlay after page loads
+        // Using a slight delay to ensure the page is fully rendered before hiding
         setTimeout(() => {
             pageTransitionOverlay.classList.remove('visible');
             setTimeout(() => {
@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = urlToNavigate; // Fallback if overlay is missing
             return;
         }
-        pageTransitionOverlay.style.display = 'flex'; 
+        pageTransitionOverlay.style.display = 'flex'; // Make sure overlay is ready to be shown
         pageTransitionOverlay.classList.add('visible');
         
         // After fade-in transition (0.4s CSS), navigate
@@ -53,107 +53,113 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Random Anime Wallpaper API for dynamic backgrounds/images ---
-    const fetchRandomAnimeImage = async (targetElement, type = 'background') => {
+    /**
+     * Fetches a random anime image from various APIs.
+     * @param {HTMLElement} targetElement - The element to apply the image to (body for background, img for src).
+     * @param {string} type - 'background' or 'image'
+     * @param {boolean} preferLandscape - Whether to prioritize landscape images.
+     */
+    const fetchRandomAnimeImage = async (targetElement, type = 'background', preferLandscape = true) => {
         let imageUrl = '';
+        const unsplashKeywords = (type === 'image' && preferLandscape) ? 'anime,manga,landscape,art,fantasy,wide' : 'anime,manga,wallpaper';
         const apiEndpoints = [
-            'https://wallpaper.pics/api/random_wallpaper?category=anime&orientation=landscape', // Higher quality, landscape
-            'https://api.paugram.com/wallpaper?source=sina', // Fallback 1: Anime images
-            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' // Fallback 2: Anime images
+            // Unsplash for diverse landscape possibility, first in priority
+            `https://source.unsplash.com/random/1920x1080/?${unsplashKeywords}`, 
+            'https://www.dmoe.cc/random.php',       // Random anime (sometimes landscape, direct image)
+            'https://api.adicw.cn/img/rand',          // Random anime (direct image)
+            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' // Random anime (JSON)
         ];
         
-        // Helper to generate a random pastel-like color for fallback gradient
-        function getRandomGradient() {
-            const h1 = Math.floor(Math.random() * 360);
-            const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; // Slightly different hue
-            const s = Math.floor(Math.random() * 30) + 70; // Saturation 70-100%
-            const l = Math.floor(Math.random() * 15) + 70; // Lightness 70-85%
-            return `linear-gradient(135deg, hsl(${h1}, ${s}%, ${l}%), hsl(${h2}, ${s}%, ${l}%))`;
-        }
-
-        // First attempt, use Unsplash with specific keywords for "horizontal anime" images.
-        // Unsplash API requires client ID usually. This is a generic public endpoint that might redirect.
-        // It provides varied images, may not be strictly anime, but landscape.
-        const unsplashKeywordAPI = `https://source.unsplash.com/random/1920x1080/?anime,fantasy,hd-wallpaper,landscape`; 
-        apiEndpoints.unshift(unsplashKeywordAPI); // Add it to the front for a try
-        
-
         for (const api of apiEndpoints) {
             try {
-                const response = await fetch(api);
-                if (response.ok) {
-                    // Check if it's the direct image URL (like unsplash or some specific APIs)
-                    if (response.redirected && response.url && api.includes('unsplash')) {
+                // Unsplash and direct image APIs (dmoe.cc, adicw.cn) often return an image directly
+                if (api.includes('unsplash.com') || api.includes('dmoe.cc') || api.includes('adicw.cn')) {
+                    const response = await fetch(api, { method: 'GET', redirect: 'follow' }); // Automatically follow redirects to the final image URL
+                    if (response.ok && response.url && response.url.match(/\.(jpeg|jpg|gif|png|webp)$/i)) { // Ensure it's an image URL
                         imageUrl = response.url;
-                        console.log(`Using Unsplash keyword API: ${imageUrl}`);
+                        console.log(`Using Direct Image API (${api.split('?')[0]}): ${imageUrl.substring(0, 100)}...`);
                         break;
                     }
-
-                    const data = await response.json();
-                    if (api.includes('wallpaper.pics') && data && data.image) {
-                        imageUrl = data.image.url;
-                        console.log(`Using wallpaper.pics API (Lanscape): ${imageUrl}`);
-                        break;
-                    } else if (api.includes('paugram') && data && data.data && data.data.url) {
-                        imageUrl = data.data.url;
-                        console.log(`Using Paugram API: ${imageUrl}`);
-                        break;
-                    } else if (api.includes('btstu.cn') && data && data.imgurl) {
-                        imageUrl = data.imgurl;
-                        console.log(`Using BTSTU API: ${imageUrl}`);
-                        break;
+                } 
+                // Handling for JSON-based APIs like BTSTU
+                else if (api.includes('btstu.cn')) {
+                    const response = await fetch(api);
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data && data.imgurl && data.imgurl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                            imageUrl = data.imgurl;
+                            console.log(`Using BTSTU API (${api}): ${imageUrl.substring(0, 100)}...`);
+                            break;
+                        }
                     }
                 }
             } catch (innerError) {
-                console.warn(`API ${api} failed, trying next.`, innerError);
+                console.warn(`API ${api} failed, trying next:`, innerError);
             }
         }
-
+        
+        // --- Image Loading and Application ---
         if (imageUrl) {
-            const img = new Image();
-            img.src = imageUrl;
-            img.onload = () => {
+            const imgToLoad = new Image();
+            imgToLoad.src = imageUrl;
+            imgToLoad.onload = () => {
                 if (type === 'background') {
-                    // Apply to body via CSS variable
+                    // Apply to body and transition
                     document.documentElement.style.setProperty('--bg-image', `url(${imageUrl})`);
                 } else if (type === 'image') {
                     // Apply to <img> src attribute
                     targetElement.src = imageUrl;
                 }
+                targetElement.classList.remove('is-loading-fallback'); 
             };
-            img.onerror = () => {
-                console.warn(`Preloading image "${imageUrl}" failed, setting fallback.`);
-                if (type === 'background') {
-                    document.documentElement.style.setProperty('--bg-image', getRandomGradient());
-                } else if (type === 'image' && targetElement.dataset.srcType === 'wallpaper') {
-                    // For postcards and banners, use a gradient or specific fallback image
-                    targetElement.src = targetElement.dataset.fallbackSrc || `img/post-${type}-fallback.png`;
-                    targetElement.style.objectFit = 'contain'; // Make sure fallback image is fully visible
-                }
+            imgToLoad.onerror = (e) => {
+                console.warn(`Image preloading failed for ${imageUrl}, attempting fallback for target. Reason:`, e);
+                applyFallbackImage(targetElement, type);
             };
         } else {
-            console.error('Failed to get any image URL from APIs.');
-            if (type === 'background') {
-                document.documentElement.style.setProperty('--bg-image', getRandomGradient());
-            } else if (type === 'image' && targetElement.dataset.srcType === 'wallpaper') {
-                targetElement.src = targetElement.dataset.fallbackSrc || `img/post-${type}-fallback.png`;
-                targetElement.style.objectFit = 'contain';
-            }
+            console.error('Failed to get any image URL from APIs after all attempts.');
+            applyFallbackImage(targetElement, type);
         }
     };
-
-    // --- Main Wallpaper for Body (all pages) ---
-    // Make sure this is called on every page load for the body background
-    // Unless it's the homepage specifically handling its own hero background.
-    if (!document.body.classList.contains('is-homepage')) {
-        fetchRandomAnimeImage(document.body, 'background');
-    }
     
-    // --- Homepage Hero Background (specific for homepage, uses same API) ---
-    const setupHomepageBackground = () => {
-        const heroSection = document.querySelector('.hero-section');
-        if (heroSection && document.body.classList.contains('is-homepage')) {
-             fetchRandomAnimeImage(document.body, 'background'); // Set body background explicitly on homepage too
+    // --- Helper for fallback images (to avoid repetition) ---
+    const applyFallbackImage = (targetElement, type) => {
+        if (type === 'background') {
+             // Set a dynamic gradient background directly to --bg-image CSS variable
+            document.documentElement.style.setProperty('--bg-image', getRandomGradient());
+        } else if (type === 'image') {
+            // Determine the correct fallback image path based on element type
+            const fallbackSrc = targetElement.dataset.fallbackSrc || 
+                                (targetElement.classList.contains('post-thumbnail') ? '../img/post-thumbnail-fallback.png' : 
+                                 '../img/post-detail-banner-fallback.png'); // Correct path for posts
+            targetElement.src = fallbackSrc;
+            targetElement.style.objectFit = 'contain'; 
+            targetElement.classList.add('is-loading-fallback'); 
+            // Also try to set a simple transparent background if it's an image element
+            targetElement.style.backgroundImage = getRandomGradient();
+            targetElement.style.backgroundClip = 'padding-box';
+            targetElement.style.backgroundSize = 'cover';
         }
+    };
+    
+    function getRandomGradient() {
+        const h1 = Math.floor(Math.random() * 360);
+        const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; 
+        const s = Math.floor(Math.random() * 30) + 70; 
+        const l = Math.floor(Math.random() * 15) + 70; 
+        return `linear-gradient(135deg, hsl(${h1}, ${s}%, ${l}%), hsl(${h2}, ${s}%, ${l}%))`;
+    }
+
+    // --- Main Body Background (for all pages except homepage's hero section) ---
+    // This runs on every page. For homepage, it just sets the body bg that's under hero overlay.
+    fetchRandomAnimeImage(document.body, 'background', true); // Prefer landscape for body background
+
+    // --- Homepage Hero Background specifically uses `body` wallpaper now, no separate fetch
+    const setupHomepageBackground = () => {
+        // Redundant with global body call, intentionally calls it so it refreshes just-in-case 
+        // and ensures the homepage always has the newest random wallpaper.
+        // The hero_section overlay is handled purely by CSS.
+        // It relies on the global fetchRandomAnimeImage for body.
     };
 
     // --- Dynamic Article Thumbnail/Banner Images ---
@@ -161,14 +167,14 @@ document.addEventListener('DOMContentLoaded', () => {
         // Blog list page thumbnails
         document.querySelectorAll('.post-thumbnail[data-src-type="wallpaper"]').forEach(img => {
             img.dataset.fallbackSrc = img.src; // Store original src as fallback
-            fetchRandomAnimeImage(img, 'image');
+            fetchRandomAnimeImage(img, 'image', true); // Prefer landscape for thumbnails
         });
 
         // Article detail page banners
         const detailBanner = document.querySelector('.post-detail-banner[data-src-type="wallpaper"]');
         if (detailBanner) {
             detailBanner.dataset.fallbackSrc = detailBanner.src; // Store original src as fallback
-            fetchRandomAnimeImage(detailBanner, 'image');
+            fetchRandomAnimeImage(detailBanner, 'image', true); // Prefer landscape for banners
         }
     };
 
@@ -179,7 +185,15 @@ document.addEventListener('DOMContentLoaded', () => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target);
+                    // Only unobserve if not an element that needs to repeatedly animate (e.g. homepage title)
+                    if (!entry.target.classList.contains('blog-title--animated')) {
+                         observer.unobserve(entry.target);
+                    }
+                } else {
+                    // For homepage title, reset if it goes out of view (e.g., scrolled up and hero visible again)
+                     if (entry.target.classList.contains('blog-title--animated') && document.body.classList.contains('is-homepage')) {
+                        // Keep it potentially animated
+                     }
                 }
             });
         }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
@@ -188,7 +202,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const mainHeader = document.querySelector('.main-header');
         if (mainHeader) {
-            mainHeader.classList.add('is-visible');
+            mainHeader.classList.add('is-visible'); // Header always visible
         }
     };
 
@@ -213,12 +227,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Custom Cursor Trail Effect ---
     const setupCursorTrail = () => {
         const cursorDot = document.getElementById('cursor-trail');
-        if (!cursorDot || isMobile) { // Disable on mobile devices based on isMobile flag
-            if (cursorDot) cursorDot.style.display = 'none'; // Hide if element exists
-            document.body.style.cursor = 'auto'; // Revert to default
+        // Disable on mobile devices; if no cursorDot or isMobile, stop
+        if (!cursorDot || isMobile) { 
+            if (cursorDot) cursorDot.style.display = 'none'; 
+            document.body.style.cursor = 'auto'; 
             return;
         }
         
+        // desktop only cursor trail
         window.addEventListener('mousemove', e => {
             cursorDot.style.left = `${e.clientX}px`;
             cursorDot.style.top = `${e.clientY}px`;
@@ -236,18 +252,18 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500); 
         });
 
-        document.querySelectorAll('a, button, input[type="text"], textarea, .post-card').forEach(el => {
-            el.onmouseenter = () => {
+        document.querySelectorAll('a, button, input:not([type="submit"]), textarea, .post-card').forEach(el => {
+            el.onmouseenter = () => { // Hover effects for cursor
                 cursorDot.style.transform = 'translate(-50%,-50%) scale(1.5)';
                 cursorDot.style.backgroundColor = 'var(--secondary-color)';
             };
-            el.onmouseleave = () => {
+            el.onmouseleave = () => { // Revert hover effects for cursor
                 cursorDot.style.transform = 'translate(-50%,-50%) scale(1)';
                 cursorDot.style.backgroundColor = 'var(--primary-color)';
             };
         });
         
-        setTimeout(() => cursorDot.style.opacity = '1', 100);
+        setTimeout(() => cursorDot.style.opacity = '1', 100); // Initial fade-in of main cursor dot
     };
 
     // --- Read Progress Bar for Article Pages ---
@@ -255,7 +271,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const progressBar = document.getElementById('read-progress-bar');
         const content = document.querySelector('.blog-post-detail .post-content');
 
-        if (!progressBar || !content) return; 
+        if (!progressBar || !content) return; // Only activate if elements exist
 
         window.addEventListener('scroll', () => {
             const contentHeight = content.offsetHeight;
@@ -263,40 +279,95 @@ document.addEventListener('DOMContentLoaded', () => {
             const windowHeight = window.innerHeight;
             const scrollFromTop = window.scrollY;
 
-            let scrolled = (scrollFromTop - contentOffsetTop + windowHeight / 2) / (contentHeight + windowHeight / 2) * 100;
+            // Calculate progress more robustly to account for viewport height
+            let scrollableHeight = contentHeight - windowHeight;
+            let currentScrollPosition = scrollFromTop - contentOffsetTop;
+            
+            let progress = (currentScrollPosition / scrollableHeight) * 100;
+            
+            if (progress < 0) progress = 0;
+            if (progress > 100) progress = 100;
 
-            if (scrolled < 0) scrolled = 0;
-            if (scrolled > 100) scrolled = 100;
-
-            progressBar.style.width = scrolled + '%';
+            progressBar.style.width = progress + '%';
         });
     };
     
-    // global share links on post pages so share works immediately when clicked
-    const setupShareButtons = () => {
-      if (document.querySelector('.post-share-buttons')) {
-        const currentUrl = encodeURIComponent(window.location.href);
-        const pageTitle = document.title;
-        const articleTitle = encodeURIComponent(pageTitle.split(' - ')[0] || pageTitle); // Get only article titie, not blog title
+    // --- Setup Mobile Menu (Hamburger) ---
+    const setupMobileMenu = () => {
+        if (!isMobile) return; 
 
-        document.querySelectorAll('.post-share-buttons a.weibo').forEach(btn => {
-           btn.href = `https://service.weibo.com/share/share.php?url=${currentUrl}&title=${articleTitle}`;
+        const menuToggle = document.querySelector('.menu-toggle');
+        const mainNav = document.querySelector('.main-nav');
+        const menuClose = document.querySelector('.menu-close');
+        const mainHeader = document.querySelector('.main-header');
+        
+        if (!menuToggle || !mainNav || !menuClose || !mainHeader) return;
+
+        // Open menu
+        menuToggle.addEventListener('click', () => {
+            mainNav.classList.add('is-open');
+             document.body.classList.add('no-scroll'); // Disable body scroll
         });
-        document.querySelectorAll('.post-share-buttons a.qq').forEach(btn => {
-           btn.href = `https://connect.qq.com/widget/shareqq/index.html?url=${currentUrl}&title=${articleTitle}`;
+
+        // Close menu (from close button)
+        menuClose.addEventListener('click', () => {
+            mainNav.classList.remove('is-open');
+            document.body.classList.remove('no-scroll'); // Enable body scroll
         });
-      }
+
+        // Close menu when a navigation link is clicked inside the menu
+        mainNav.querySelectorAll('a').forEach(link => {
+            // Check if link is an internal link that triggers the page transition
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.includes('#')) {
+                link.addEventListener('click', () => {
+                    // Slight delay to allow page transition to start visually before menu fully closes
+                    setTimeout(() => {
+                        mainNav.classList.remove('is-open');
+                        document.body.classList.remove('no-scroll');
+                    }, 400); // Match or slightly exceed page transition duration
+                });
+            } else { // Handle external links or hash links normally
+                link.addEventListener('click', () => {
+                    mainNav.classList.remove('is-open');
+                    document.body.classList.remove('no-scroll');
+                });
+            }
+        });
+    };
+
+    // --- Share buttons for article pages ---
+    const setupShareButtons = () => {
+        // Collect all share buttons; if on non-post page, this won't find elements
+        const shareButtons = document.querySelectorAll('.post-share-buttons a.weibo, .post-share-buttons a.qq');
+        if (shareButtons.length === 0) return; // Only run on post pages with share buttons
+
+        const currentUrl = encodeURIComponent(window.location.href);
+        const articleTitle = encodeURIComponent(document.title.split(' - ')[0] || "Honoka的小屋"); // Use blog title as fallback
+
+        shareButtons.forEach(btn => {
+            if (btn.classList.contains('weibo')) {
+                btn.href = `https://service.weibo.com/share/share.php?url=${currentUrl}&title=${articleTitle}`;
+            } else if (btn.classList.contains('qq')) {
+                // QQ share also supports optional `pics` parameter
+                // Requires article's main image URL (not easy to get dynamically without server-side rendered info)
+                // For simplicity, we'll omit `pics` for now or use a generic one.
+                const imgElement = document.querySelector('.post-detail-banner');
+                const imgUrl = imgElement ? encodeURIComponent(imgElement.src) : '';
+                btn.href = `https://connect.qq.com/widget/shareqq/index.html?url=${currentUrl}&title=${articleTitle}${imgUrl ? '&pics=' + imgUrl : ''}`;
+            }
+        });
     };
 
 
-    // Initialize all features on DOM Ready
-    setupHomepageBackground(); // Calls fetchRandomAnimeImage for body bg on homepage
-    fetchRandomAnimeImage(document.body, 'background'); // Ensures all pages have a body bg initially
-    setupDynamicPostImages(); // Fetches images for post thumbnails and banners
+    // --- Initialize all features on DOM Ready ---
+    setupHomepageBackground(); 
+    setupDynamicPostImages(); 
     setupScrollAnimations();
     setupBackToTopButton();
     setupCursorTrail();
-    setupReadProgressBar(); // Conditional, will only run on article pages
-    setupShareButtons(); // Prepare initial share links
+    setupReadProgressBar(); 
+    setupMobileMenu(); // Setup mobile menu logic
+    setupShareButtons();
 });
 

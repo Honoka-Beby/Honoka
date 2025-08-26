@@ -20,7 +20,15 @@
             <h1 class="blog-title blog-title--animated">
                 <a href="index.html">Honoka的小屋</a>
             </h1>
+            <!-- 手机端菜单切换按钮 -->
+            <button class="menu-toggle" aria-label="Toggle navigation">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
             <nav class="main-nav">
+                <!-- 手机端关闭菜单按钮 -->
+                <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
                     <li><a href="index.html">主页</a></li>
                     <li><a href="blog.html">文章</a></li>
@@ -31,14 +39,14 @@
         </div>
     </header>
 
-    <main class="container">
+    <main class="container content-page-wrapper">
         <section class="recent-posts" id="posts-section">
             <h2 class="section-title animate__slide-up">我的随笔</h2>
             <div class="posts-grid">
                 <!-- 第一篇文章卡片 -->
                 <div class="post-card animate__slide-up">
                     <a href="posts/first-post.html">
-                        <!-- post-thumbnail 会被 js/script.js 动态替换为随机动漫壁纸 -->
+                        <!-- data-src-type="wallpaper" 标识此图片应由 js/script.js 动态替换为随机壁纸 -->
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="「你的名字」影评" class="post-thumbnail">
                         <div class="post-info">
                             <h3>我与《你的名字》的初次邂逅：情感的交织与时间的奇迹</h3>
@@ -51,7 +59,6 @@
                 <!-- 第二篇文章卡片 -->
                 <div class="post-card animate__slide-up" data-delay="100">
                     <a href="posts/second-post.html">
-                        <!-- post-thumbnail 会被 js/script.js 动态替换为随机动漫壁纸 -->
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="手办收藏" class="post-thumbnail">
                         <div class="post-info">
                             <h3>手办坑里的那些趣事和我最爱的waifu：我的次元收藏之旅</h3>
@@ -64,7 +71,6 @@
                 <!-- 范例文章卡片，你可以替换为自己的新文章 -->
                 <div class="post-card animate__slide-up" data-delay="200">
                     <a href="posts/article-template.html"> 
-                        <!-- post-thumbnail 会被 js/script.js 动态替换为随机动漫壁纸 -->
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="番剧推荐" class="post-thumbnail">
                         <div class="post-info">
                             <h3>四月新番速览：不容错过的几部神作预定！</h3>
@@ -91,7 +97,6 @@
     <button id="back-to-top" title="返回顶部">↑</button>
 
     <script src="js/script.js"></script>
-    <!-- Live2D 初始化，模型路径在index.html中已修改 -->
     <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
     <script>
         L2Dwidget.init({

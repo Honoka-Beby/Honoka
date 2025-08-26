@@ -3,34 +3,41 @@
 /* 'LXGW WenKai Screen' is from lxgw-wenkai-screen-webfont@1.1.0/style.css */
 @import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
 
-* { box-sizing: border-box; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+html { scroll-behavior: smooth; } /* 平滑滚动 */
+
 body {
     background-color: var(--bg-fallback-color); /* Fallback solid color */
-    background-image: var(--bg-image); /* Dynamic background image */
-    background-size: cover;
-    background-position: center center;
-    background-repeat: no-repeat;
-    background-attachment: fixed; /* Parallax scrolling effect */
+    background-image: var(--bg-image); /* Dynamic background image, set by JS */
+    background-size: cover;          /* 覆盖整个背景区域 */
+    background-position: center center; /* 图片居中 */
+    background-repeat: no-repeat;    /* 不重复 */
+    background-attachment: fixed;    /* 背景固定，实现视差滚动效果 */
     color: var(--text-color);
     font-family: var(--font-primary);
     line-height:1.7;
-    -webkit-font-smoothing: antialiased;
+    -webkit-font-smoothing: antialiased; /* 抗锯齿，平滑文字 */
     min-height: 100vh;
     display: flex;
     flex-direction: column;
+    /* transition: background-image 1s ease-out; /* 已移入 JS 进行更精确控制 */
     cursor: none; /* 隐藏默认鼠标指针，交由JS控制自定义指针 */
-    will-change: background-image; /* Optimize for background transition */
-    transition: background-image 1s ease-out; /* Smooth transition for wallpaper change */
+    touch-action: pan-y; /* 优化移动端滚动性能 */
 }
-/* Body overlay for content readability on top of dynamic background */
+
+/* 全局固定模糊叠加层：位于body背景之上，所有内容之下，提供统一的背景模糊和颜色基调 */
 body::before {
     content: '';
-    position: fixed; /* Fixed relative to viewport, covers everything */
+    position: fixed; /* 固定在视口 */
     top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--body-overlay-bg); /* Dark, semi-transparent overlay */
-    backdrop-filter: blur(5px); /* Moderate blur for the background underneath */
-    z-index: -1; /* Place behind other content but above the body background image */
+    background: var(--body-overlay-bg); /* 半透明深色叠加层，允许背景图透出 */
+    backdrop-filter: blur(3px); /* 对下层内容（即body背景图）应用模糊 */
+    z-index: -1; /* 位于正常内容之下，body背景图之上 */
+    transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
 }
 
 a { color: var(--link-color); text-decoration: none; transition: all 0.3s ease; }
@@ -50,6 +57,7 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
     font-size: 1em;
     font-family: var(--font-primary);
     text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    -webkit-tap-highlight-color: transparent; /* 消除移动端点击蓝色背景 */
 }
 .button:hover {
     background-color: var(--primary-hover-color);
@@ -61,25 +69,22 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
 /* --- Custom Cursor Trail --- */
 #cursor-trail {
     position: fixed;
-    width: 0;                       /* Initial width */
-    height: 0;                      /* Initial height */
+    width: 0; height: 0; /* 控制初始隐藏 */
     background: var(--primary-color);
     border-radius: 50%;
-    pointer-events: none;
+    pointer-events: none; /* 确保不影响鼠标交互 */
     z-index: 9999;
-    transform: translate(-50%, -50%);
-    transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.2s; /* Added background-color transition */
+    transform: translate(-50%, -50%); /* 居中定位 */
+    transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.2s;
     opacity: 0;
     will-change: top, left, width, height, opacity, transform;
 }
-/* Only show custom cursor on non-mobile devices and when body is hovered */
+/* 鼠标进入body时，在非移动端显示自定义指针 */
 body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px;} 
-
 
 .cursor-trail-dot {
     position: fixed;
-    width: 6px;
-    height: 6px;
+    width: 6px; height: 6px;
     background: var(--primary-color);
     border-radius: 50%;
     pointer-events: none;
@@ -98,15 +103,12 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 /* --- Global Page Transition Overlay --- */
 #global-page-transition-overlay {
     position: fixed;
-    top: 0;
-    left: 0;
-    width: 100vw;
-    height: 100vh;
-    background-color: var(--bg-fallback-color); /* Matches theme background */
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: var(--bg-fallback-color); /* 过渡背景色 */
     z-index: 9999; 
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; 
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; /* 视觉和可见性分步过渡 */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -116,25 +118,26 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     font-family: var(--font-primary);
 }
 #global-page-transition-overlay.visible {
-    opacity: 1;
+    opacity: 1; /* 触发淡入 */
     visibility: visible;
     transition: opacity 0.4s ease-in, visibility 0s linear; 
 }
 #global-page-transition-overlay .loader {
+    position: relative; /* 用于loader内部的glow伪元素 */
     border: 4px solid rgba(var(--primary-color-rgb), 0.2);
     border-top: 4px solid var(--primary-color);
     border-radius: 50%;
     width: 30px;
     height: 30px;
-    animation: spin 1s linear infinite;
+    animation: spin 1s linear infinite; /* 旋转动画 */
 }
-#global-page-transition-overlay .loader::before { /* Add a small glow effect */
+#global-page-transition-overlay .loader::before { /* Loader的圆环辉光 */
     content: '';
     position: absolute;
     top: -2px; left: -2px; right: -2px; bottom: -2px;
     border-radius: 50%;
     box-shadow: 0 0 10px 2px var(--primary-color), inset 0 0 10px 2px var(--primary-color);
-    animation: pulse-glow 1.5s infinite alternate;
+    animation: pulse-glow 1.5s infinite alternate; /* 辉光跳动动画 */
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -144,7 +147,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin-top: 0.8em;
     font-family: var(--font-display);
     font-size: 2em;
-    animation: pulse 1.5s infinite alternate;
+    animation: pulse 1.5s infinite alternate; /* 文字跳动动画 */
 }
 @keyframes pulse {
     0% { color: var(--primary-color); text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); }
@@ -167,77 +170,74 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     padding: 2rem;
     position: relative;
     overflow: hidden;
-    /* Hero section now just gets its own overlay over the global body background */
 }
-/* Ensure hero-section has its own darker overlay on top of body's global background-blur overlay */
+/* 主页Hero区域的背景叠加层，比全局overlay更深，确保文字可读性 */
 .hero-section::before {
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--hero-overlay-bg); /* Opaque background for hero section */
-    backdrop-filter: blur(3px); /* slightly less blur than body overlay maybe, or none */
-    z-index: 1; /* Above body overlay, below content */
+    background: var(--hero-overlay-bg); /* opaque or semi-opaque dark background */
+    backdrop-filter: blur(5px); /* Moderate blur for the underlying body background image */
+    z-index: 1; /* Above body overlay, below hero-content */
 }
 
 .hero-content {
     position: relative;
-    z-index: 2;
+    z-index: 2; /* 确保内容在叠加层之上 */
     animation: fadeIn 1.5s ease-out;
 }
 
-/* HERO TITLE with ANIMATION */
+/* 主页标题 “Honoka的小屋” 的文字闪光动画 */
 .blog-title--animated > a {
-    color: #fff; /* Keep text white */
+    color: #fff; /* 默认文字颜色，如果内容层级配置得当，此颜色会被伪元素覆盖 */
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
     text-shadow: 0 0 8px rgba(0, 0, 0, 0.5); 
     position: relative;
-    overflow: hidden; /* Clips the light streak boundary */
     display: inline-block; 
     vertical-align: top;
     line-height: 1.2;
-    padding: 0 10px; /* Space for the light to fade at horizontal ends */
-    /* text-decoration: none; */ /* Ensure no underline */
+    padding: 0 10px; /* 标题边缘预留空间 */
+    /* overflow: hidden; Removed: not needed with new ::after approach */
 }
-
-/* The pink light trail for the homepage title */
-.blog-title--animated > a::before {
-    content: '';
+/* 使用 ::after 伪元素创建滑过的粉色发光文字效果 */
+.blog-title--animated > a::after {
+    content: attr(data-original-text); /* 从data属性获取文本内容 */
     position: absolute;
-    top: 0; /* Align with the text */
-    left: -150%; /* Start well off-screen to the left to fully 'emerge' */
-    width: 60%; /* Width of the light streak itself */
+    top: 0;
+    left: 0;
+    width: 100%;
     height: 100%;
-    background: linear-gradient(
-        90deg,
-        transparent 0%, /* Start fully transparent */
-        rgba(var(--primary-color-rgb), 0.8) 50%, /* Brightest point (pink) */
-        transparent 100%  /* End fully transparent */
-    );
-    filter: brightness(1.5) blur(5px); /* Soft glow, slightly brighter */
-    mix-blend-mode: screen; /* Blend with the background for a light-like effect, text underneath remains white */
-    animation: slide-text-shine 4s ease-in-out infinite both; /* `both` means applies styles from 0% before start. 4s duration. */
-    pointer-events: none; /* Make sure it doesn't block interactions */
-    z-index: 10; /* Ensure it's above the text */
+    color: var(--primary-color); /* 粉色文字 */
+    text-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.9); /* 更强的发光效果 */
+    opacity: 0; /* 默认透明 */
+    transform: translateX(-100%); /* 初始位置在文本区域左侧完全之外 */
+    animation: text-flow-shine 4s ease-in-out infinite both; /* 动画，无限循环 */
+    animation-delay: 0.5s; /* 动画初始延迟 */
+    pointer-events: none; /* 确保不影响鼠标和文本选择 */
+    white-space: nowrap; /* 防止伪元素文本换行 */
+    z-index: 1; /* 动画文字在原始文字之上 */
+    will-change: transform, opacity;
 }
 
-@keyframes slide-text-shine {
-    0% { transform: translateX(0%); opacity: 0; } /* Initial state: fully off-screen left */
-    10% { opacity: 1; transform: translateX(10%); } /* Gradually becomes visible, moves right */
-    60% { opacity: 1; transform: translateX(180%); } /* Full visible pass over text, goes off-screen right */
-    70% { opacity: 0; transform: translateX(200%); } /* Fades out completely off-screen */
-    100% { transform: translateX(0%); opacity: 0; } /* Resets to initial position, invisible, for next loop */
+@keyframes text-flow-shine {
+    0% { transform: translateX(-100%); opacity: 0; }                        /* 开始：完全在左侧，透明 */
+    10% { opacity: 0.8; transform: translateX(-50%); }                      /* 缓慢滑入，透明度升高 */
+    50% { opacity: 0.8; transform: translateX(100%); }                     /* 滑过文字区域，保持透明度 */
+    60% { opacity: 0; transform: translateX(120%); }                        /* 完全滑出后，快速变为透明并移动到右侧之外 */
+    100% { transform: translateX(-100%); opacity: 0; }                     /* 重置到初始位置，透明，为下一轮循环做准备 */
 }
 
-/* Specific styling for HEADER NAV (smaller title there) */
+
+/* 导航栏中的标题，保持简洁，无特殊动画 */
 .main-header .blog-title--animated a { 
     font-size: 2rem; 
-    color: #fff; /* ensure header text is white */
-    padding: 0 5px; /* Smaller padding in header */
+    color: #fff; 
+    padding: 0 5px; 
 }
-.main-header .blog-title--animated a::before {
-    display: none; /* Disable the shine effect in the header navigation */
+.main-header .blog-title--animated a::after {
+    display: none; /* 在导航栏中隐藏标题的特殊动画 */
 }
 
 .hero-subtitle {
@@ -281,13 +281,65 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
 
-/* --- General Header --- */
-.main-header { padding: 1.5rem 0; background: var(--header-bg-color); border-bottom: 1px solid var(--border-color); position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 15px rgba(0,0,0,0.3); }
-.main-header .container { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
-.main-nav ul { list-style: none; display: flex; gap: 1.5rem; margin: 0;}
-.main-nav a { font-weight: 500; padding: 0.5em 0; border-bottom: 2px solid transparent; transition: border-color 0.3s ease, color 0.3s ease; }
+/* --- General Header and Mobile Navigation --- */
+.main-header { 
+    padding: 1.5rem 0; 
+    background: var(--header-bg-color); 
+    border-bottom: 1px solid var(--border-color); 
+    position: sticky; 
+    top: 0; 
+    z-index: 100; 
+    box-shadow: 0 2px 15px rgba(0,0,0,0.3); 
+    width: 100%; /* 确保在移动端是全宽 */
+}
+.main-header .container { 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    flex-wrap: nowrap; /* 避免在容器内自动换行 */
+}
+.main-nav ul { 
+    list-style: none; display: flex; gap: 1.5rem; margin: 0;
+}
+.main-nav a { 
+    font-weight: 500; padding: 0.5em 0; border-bottom: 2px solid transparent; 
+    transition: border-color 0.3s ease, color 0.3s ease; 
+    -webkit-tap-highlight-color: transparent;
+}
 .main-nav a:hover, .main-nav a.active { border-color: var(--primary-color); color: var(--primary-color); }
 
+/* 汉堡包菜单和关闭按钮 */
+.menu-toggle {
+    display: none; /* 桌面端隐藏 */
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px; /* 较小填充 */
+    position: relative;
+    z-index: 101; 
+}
+.menu-toggle .icon-bar {
+    display: block;
+    width: 25px;
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 4px 0; /* 略小间距 */
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+.main-nav .menu-close {
+    display: none; /* 默认隐藏 */
+    position: absolute;
+    top: 15px; 
+    right: 20px; 
+    font-size: 2.2em; /* 较大，易点击 */
+    color: var(--primary-color);
+    background: none;
+    border: none;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 102; /* 确保在菜单内容之上 */
+}
 
 /* --- Page & Section Titles --- */
 .section-title, .page-title {
@@ -299,7 +351,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     font-size: 2.5rem;
     position: relative;
     display: inline-block;
-    left: 50%;
+    left: 50%; /* 使用left和transform确保宽度不定时也能居中 */
     transform: translateX(-50%);
     padding-bottom: 0.8em;
 }
@@ -316,48 +368,53 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 }
 
 /* --- Content Page Wrapper (for blog, about, comments, posts) --- */
-/* This div wraps content and gives it a distinct background and blur on top of body wallpaper */
+/* 包裹主要内容的容器，自身具有更强的背景模糊和颜色，使内容在动态背景上清晰可读 */
 .content-page-wrapper {
-    background-color: var(--content-bg-color); /* Slightly transparent background */
-    backdrop-filter: blur(8px); /* Blur the body wallpaper behind it */
+    background-color: var(--content-bg-color); /* 设置半透明背景色 */
+    backdrop-filter: blur(8px); /* 对下层（即body背景和body::before）应用更强的模糊 */
     border-radius: var(--border-radius-lg);
     box-shadow: 0 6px 25px rgba(0,0,0,0.25); 
-    max-width: 900px; /* Max width for content */
+    max-width: 900px;
     margin: 3rem auto;
     padding: 2.5rem 1.5rem;
-    flex-grow: 1;
-    text-align: center; /* Default center, individual elements override */
+    flex-grow: 1; /* 内容区弹性增长填充剩余空间 */
+    text-align: center; /* 默认居中，内部元素可覆盖 */
 }
 
 
 /* --- Posts Grid (Blog Page) --- */
-.posts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 30px; }
+.posts-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 响应式列 */
+    gap: 30px; 
+}
 .post-card {
-    background-color: var(--card-bg-color); /* Matches theme translucent card bg */
+    background-color: var(--card-bg-color); 
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius-lg);
     overflow: hidden;
-    backdrop-filter: blur(5px); /* Blend with parent .content-page-wrapper backdrop-filter */
+    backdrop-filter: blur(5px);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
-    height: 100%; /* Make cards same height */
+    height: 100%; 
     display: flex;
     flex-direction: column;
 }
-.post-card a { color: inherit; display: flex; flex-direction: column; height: 100%;} /* Ensure entire card is clickable */
+.post-card a { color: inherit; display: flex; flex-direction: column; height: 100%;} 
 .post-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(var(--primary-color-rgb), 0.3); }
 .post-thumbnail { 
     width: 100%; 
     height: 200px; 
-    object-fit: cover; /* Cover ensures image fills space, prevents stretching */
-    transition: transform 0.3s ease; /* For potential hover effects */
+    object-fit: cover; 
+    transition: transform 0.3s ease; 
+    font-size: 0; /* 隐藏img的alt文本，让其不会显示在无效图片位置 */
 }
-/* .post-card:hover .post-thumbnail { transform: scale(1.05); } */ /* Optional: thumbnail zoom on hover */
+/* .post-card:hover .post-thumbnail { transform: scale(1.05); } O */ /* Optional: thumbnail zoom on hover */
 
-.post-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column;} /* Ensure info block grows */
+.post-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column;} 
 .post-info h3 { margin: 0 0 0.5rem; font-family: var(--font-display); font-size: 1.4rem; color: #fff; }
-.post-info h3:hover { color: var(--primary-color); } /* Only text color change, not the shimmer logic */
+.post-info h3:hover { color: var(--primary-color); } 
 .post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); flex-grow: 1;}
-.post-info time { font-size: 0.8em; color: var(--meta-text-color); margin-top: auto;} /* Push time to bottom */
+.post-info time { font-size: 0.8em; color: var(--meta-text-color); margin-top: auto;} 
 .post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
 .post-tags .tag {
     display: inline-block;
@@ -376,7 +433,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     max-width: 760px;
     margin-left: auto;
     margin-right: auto;
-    text-align: justify; /* Justify text in content pages */
+    text-align: justify; 
 }
 .content-page-wrapper ol, .content-page-wrapper ul {
     max-width: 760px;
@@ -392,7 +449,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     object-fit: cover;
     margin: 0 auto 1.5em;
     border: 4px solid var(--primary-color);
-    box-shadow: 0 0 0 8px rgba(var(--primary-color-rgb), 0.2); /* Added glow effect */
+    box-shadow: 0 0 0 8px rgba(var(--primary-color-rgb), 0.2); 
     transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .about-me-section .my-avatar:hover {
@@ -404,7 +461,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     max-width: 480px;
     margin: 2em auto;
     padding: 1.5em;
-    background: rgba(var(--bg-secondary-color-rgb), 0.6); /* make it slightly more transparent */
+    background: rgba(var(--bg-secondary-color-rgb), 0.6); 
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     backdrop-filter: blur(5px);
@@ -416,7 +473,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* Comments Form */
 .comment-form-container {
-    background-color: var(--card-bg-color); /* Matches theme translucent card bg */
+    background-color: var(--card-bg-color); 
     padding: 2.5rem;
     border-radius: var(--border-radius-lg);
     border: 1px solid var(--border-color);
@@ -441,7 +498,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     background-color: var(--input-bg-color);
-    outline: none; /* remove default blue outline */
+    outline: none; 
     color: var(--text-color);
     font-size: 1em;
     font-family: var(--font-primary);
@@ -547,6 +604,7 @@ textarea { resize: vertical; min-height: 120px; }
     border-radius: var(--border-radius);
     margin-bottom: 2em;
     box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
+    font-size: 0; /* 隐藏img的alt文本 */
 }
 .post-content h3 {
     margin-top: 2.5em;
@@ -557,7 +615,7 @@ textarea { resize: vertical; min-height: 120px; }
     font-family: var(--font-display);
     font-size: 1.8em;
 }
-.post-content p, .post-content ul, .post-content ol { /* Applied to lists too */
+.post-content p, .post-content ul, .post-content ol { 
     font-size: 1.05em;
     margin-bottom: 1.5em;
     line-height: 1.8;
@@ -639,7 +697,7 @@ textarea { resize: vertical; min-height: 120px; }
     background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
     z-index: 1001; 
     box-shadow: 0 0 10px var(--primary-color);
-    transition: width 0.1s linear; /* Smooth fill */
+    transition: width 0.1s linear; 
 }
 
 
@@ -653,36 +711,75 @@ textarea { resize: vertical; min-height: 120px; }
 /* --- Responsive Adjustments - Mobile Specific --- */
 @media (max-width: 767px) {
     body {
-        cursor: auto; /* Revert to default cursor on mobile */
+        cursor: auto; 
     }
-    body::before { /* Adjust body overlay for mobile if needed, e.g., less blur due to performance */
-        backdrop-filter: blur(3px); /* Slightly less blur on mobile */
+    body::before { 
+        backdrop-filter: blur(1px); /* 手机端背景模糊度更低，提升性能 */
     }
     body.is-mobile #cursor-trail { 
-        display: none !important; /* Hide custom cursor on mobile definitively */
+        display: none !important; /* 手机端禁用自定义鼠标指针 */
     }
 
-    .main-header { padding: 1rem 0; } /* Smaller header padding on mobile */
-    .main-header .container { flex-direction: column; text-align: center; gap: 0.5rem; } /* Stack elements */
-    .main-header .blog-title { margin-bottom: 0.5em; } /* Reduce gap below title */
-    .main-header .blog-title--animated a { font-size: 1.8rem; padding: 0 5px; } /* Smaller font, ensure padding */
-    .main-header .blog-title--animated a::before {
-        display: none; /* Disable shimmer on mobile header title */
+    .main-header { padding: 0.8rem 0; } /* 手机端头部填充 */
+    .main-header .container { 
+        flex-direction: row; /* 保持行排列 */
+        justify-content: space-between; /* 元素间距 */
+        align-items: center; 
+        gap: 0; /* 消除间距 */
     }
-    .main-nav ul { 
-        flex-direction: row; /* Keep nav items in a row if possible */
-        gap: 0.8rem; 
-        margin-top: 0.5em; 
-        justify-content: center; /* Center nav items */
-        flex-wrap: wrap; /* Allow wrapping if too many items */
+    .main-header .blog-title { margin-bottom: 0; }
+    .main-header .blog-title--animated a { font-size: 1.6rem; padding: 0 5px; } /* 缩小导航栏标题 */
+    
+    /* 隐藏桌面导航，显示汉堡包菜单 */
+    .main-nav {
+        display: none; 
+        position: fixed;
+        top: 0;
+        right: -100%; /* 菜单初始状态：完全在屏幕右侧之外 */
+        width: 75%; /* 菜单宽度，占屏幕的75% */
+        max-width: 300px;
+        height: 100vh;
+        background-color: var(--header-bg-color); /* 菜单背景色 */
+        box-shadow: -5px 0 15px rgba(0,0,0,0.5); /* 菜单阴影 */
+        transition: right 0.3s ease-in-out; /* 滑动动画 */
+        z-index: 200; /* 高层级，覆盖所有内容 */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+    }
+    .main-nav.is-open { /* 菜单打开状态 */
+        display: flex; /* Flex布局显示 */
+        right: 0; /* 滑入屏幕 */
+        overflow-y: hidden; /* 防止菜单内滚动混乱 */
+    }
+     .main-nav.is-open .menu-close {
+        display: block; /* 显示关闭按钮 */
+    }
+    .main-nav ul {
+        flex-direction: column; /* 导航项垂直排列 */
+        gap: 1.5rem; /* 增大导航项间距 */
+        width: 100%; 
+        align-items: center;
+        text-align: center;
     }
     .main-nav a { 
-        font-size: 0.9em; 
-        padding: 0.3em 0.6em; /* Smaller padding for nav links */
-        white-space: nowrap; /* Prevent nav links from breaking */
+        font-size: 1.2em; /* 增大导航文字 */
+        padding: 0.5em 0;
+        min-width: 150px;
+        display: block;
+        margin: 0.5em 0;
+    }
+    .menu-toggle {
+        display: block; /* 手机端显示汉堡包图标 */
+        z-index: 201; /* 汉堡包图标层级更高 */
     }
 
-    .posts-grid { grid-template-columns: 1fr; }
+    /* 当菜单打开时，禁止body滚动 */
+    body.no-scroll { overflow: hidden; }
+
+
+    .posts-grid { grid-template-columns: 1fr; } /* 文章列表单列 */
     .post-detail-banner { height: 250px; }
     .page-title, .section-title { font-size: 1.8rem; }
     
@@ -694,5 +791,6 @@ textarea { resize: vertical; min-height: 120px; }
     .content-page-wrapper { margin: 1.5rem auto; padding: 1.5rem 1rem; }
     .blog-post-detail { padding: 1.5em; margin: 1.5rem auto;}
     .post-detail-title { font-size: 2em; }
+    .comments .page-title { margin-bottom: 1.5rem; } /* Reduce margin for comments title for compactness */
     .comment-form-container, .contact-info { padding: 1.2rem; margin: 1.5rem auto;}
 }
