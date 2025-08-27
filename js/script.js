@@ -21,6 +21,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pageTransitionOverlay.classList.remove('visible');
             setTimeout(() => {
                 pageTransitionOverlay.style.display = 'none';
+                document.body.classList.remove('no-scroll'); // Re-enable body scroll if it was disabled
             }, 500); // Match CSS transition duration
         }, 100); 
     }
@@ -43,8 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Intercept all internal link clicks for smooth transitions
     document.querySelectorAll('a').forEach(link => {
         const href = link.getAttribute('href');
-        // Apply transition only to standard internal page links that are not fragments (#)
-        // And not external links, as transitions are only client-side.
         if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.includes('#')) {
             link.addEventListener('click', (e) => {
                 e.preventDefault(); 
@@ -70,11 +69,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const unsplashKeywords = (type === 'image' && preferLandscape) ? 'anime,manga,landscape,art,fantasy,wide' : 'anime,manga,wallpaper';
         // Ordered by perceived reliability and suitability for landscape anime
         const apiEndpoints = [
-            `https://source.unsplash.com/random/${width}x${height}/?${unsplashKeywords}`, // Unsplash for diverse landscape possibility 
-            'https://iw233.cn/api/Pure.php',               // Direct image API, often landscape anime. NEW!
-            'https://www.dmoe.cc/random.php',              // Direct image API, usually landscape anime
-            'https://api.adicw.cn/img/rand',               // Direct image API, mixed portrait/landscape
-            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' // JSON API, fallback for mixed orientation
+            `https://source.unsplash.com/random/${width}x${height}/?${unsplashKeywords}`, /* Unsplash for diverse landscape possibility */
+            'https://iw233.cn/api/Pure.php',               /* Direct image API, often landscape anime. */
+            'https://api.adicw.cn/img/rand',               /* Direct image API, mixed portrait/landscape */
+            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' /* JSON API, fallback for mixed orientation */
         ];
         
         for (const api of apiEndpoints) {
@@ -89,13 +87,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const contentType = response.headers.get('content-type');
                     // Check if it's a direct image URL (most of the top APIs)
                      if (contentType && contentType.startsWith('image/')) {
-                        // For iw233.cn, the URL might sometimes be redirect, sometimes direct image
-                        imageUrl = response.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? response.url : 
-                                   (response.redirected ? response.url : ''); // Use redirected URL if available and is image
-                        if(!imageUrl && api.includes('iw233.cn') || api.includes('dmoe.cc') || api.includes('adicw.cn')){
-                             // For these, assume the response.url *is* the image if contentType matches.
-                             imageUrl = response.url;
-                        }
+                        imageUrl = response.url;
                         console.log(`Using Direct Image API (${api.split('?')[0]}): ${imageUrl ? imageUrl.substring(0, 50) + '...' : 'Invalid URL'}`);
                         if (imageUrl) break;
                     } 
@@ -131,12 +123,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 targetElement.classList.remove('is-loading-fallback'); 
             };
-            imgToLoad.onerror = (e) => {
-                console.warn(`Image preloading failed for ${imageUrl}, trying fallback. Reason:`, e);
+            imgToLoad.onerror = (e) => { // If preloading of the fetched image fails
+                console.warn(`Preloaded image (${imageUrl}) failed to load. Applying fallback.`);
                 applyFallbackImage(targetElement, type);
             };
         } else {
-            console.error('Failed to get any image URL from APIs after all attempts.');
+            console.error('Failed to get any image URL from APIs after all attempts. Applying fallback.');
             applyFallbackImage(targetElement, type);
         }
     };
@@ -147,31 +139,32 @@ document.addEventListener('DOMContentLoaded', () => {
              // Set a dynamic gradient background directly to --bg-image CSS variable
             document.documentElement.style.setProperty('--bg-image', getRandomGradient());
         } else if (type === 'image') {
-            const pathPrefix = (targetElement.closest('body').classList.contains('is-homepage')) ? 'img/' : '../img/';
-            const fallbackSrc = targetElement.dataset.fallbackSrc || 
-                                (targetElement.classList.contains('post-thumbnail') ? `${pathPrefix}post-thumbnail-fallback.png` : 
-                                 targetElement.classList.contains('post-detail-banner') ? `${pathPrefix}post-detail-banner-fallback.png` : '');
+            const fallbackSuffix = targetElement.classList.contains('post-thumbnail') ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
+            const baseRelativePath = targetElement.src.includes('img/') ? 'img/' : '../img/'; // Determine ./img/ or ../img/
+            const localFallbackSrc = `${baseRelativePath}${fallbackSuffix}`;
             
-            if (fallbackSrc) {
-                targetElement.src = fallbackSrc;
-                targetElement.style.objectFit = 'contain'; 
-                targetElement.classList.add('is-loading-fallback'); 
-            } else {
-                // If specific fallback image not found, use a gradient directly on the image element
-                targetElement.src = 'data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%221%22%20height%3D%221%22%3E%3C%2Fsvg%3E'; // Transparent 1x1 SVG
+            targetElement.src = localFallbackSrc; // Set src to the local fallback
+            targetElement.style.objectFit = 'contain'; 
+            targetElement.classList.add('is-loading-fallback'); 
+            console.log(`Using local fallback image: ${localFallbackSrc}`);
+
+            // Optionally, add a gradient background as a visual improvement if even the local image might fail/be transparent
+            if(window.getComputedStyle(targetElement).backgroundImage === 'none') { // Only add if no other background is present
                 targetElement.style.backgroundImage = getRandomGradient();
-                targetElement.style.backgroundClip = 'padding-box';
+                targetElement.style.backgroundRepeat = 'no-repeat';
+                targetElement.style.backgroundPosition = 'center';
                 targetElement.style.backgroundSize = 'cover';
-                targetElement.classList.add('is-loading-fallback'); 
+                console.log('Added gradient overlay for local fallback image.');
             }
         }
     };
     
     function getRandomGradient() {
+        // Generate more vibrant colors specific for fallback gradients
         const h1 = Math.floor(Math.random() * 360);
         const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; 
-        const s = Math.floor(Math.random() * 30) + 70; 
-        const l = Math.floor(Math.random() * 15) + 70; 
+        const s = Math.floor(Math.random() * 50) + 50; // Saturation 50-100%
+        const l = Math.floor(Math.random() * 20) + 60; // Lightness 60-80%
         return `linear-gradient(135deg, hsl(${h1}, ${s}%, ${l}%), hsl(${h2}, ${s}%, ${l}%))`;
     }
 
@@ -180,8 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Homepage Hero Background (just placeholder on homepage init)---
     const setupHomepageBackground = () => {
-         // The hero section's visual background (image) is now tied to the body's global background-image, fixed as per CSS.
-         // This function now primarily ensures body background is set, which is handled above.
+         // This function now primarily just acts as a placeholder as body background is handled above for all pages.
     };
 
     // --- Dynamic Article Thumbnail/Banner Images ---
@@ -205,8 +197,9 @@ document.addEventListener('DOMContentLoaded', () => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
-                    // We only unobserve non-homepage-title elements to allow homepage title to restart animation (CSS-driven)
-                    if (!document.body.classList.contains('is-homepage') || !entry.target.closest('.blog-title--animated')) {
+                    // We only unobserve non-homepage-title and non-header-title elements
+                    // Homepage and Header titles' animations are handled by CSS infinite animations.
+                    if (!entry.target.classList.contains('is-homepage-title') && !entry.target.classList.contains('is-header-title')) {
                          observer.unobserve(entry.target);
                     }
                 } 
@@ -292,23 +285,32 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!progressBar || !content) return; // Only activate if elements exist
 
         window.addEventListener('scroll', () => {
-            const contentHeight = content.offsetHeight;
-            const contentOffsetTop = content.offsetTop;
+            const contentRect = content.getBoundingClientRect();
+            const documentHeight = Math.max(
+                document.body.scrollHeight, 
+                document.documentElement.scrollHeight, 
+                document.body.offsetHeight, 
+                document.documentElement.offsetHeight, 
+                document.body.clientHeight, 
+                document.documentElement.clientHeight
+            );
             const windowHeight = window.innerHeight;
             const scrollFromTop = window.scrollY;
 
-            // Calculate progress to fill bar as user scrolls past content
-            let scrolled = (scrollFromTop - contentOffsetTop);
-            let scrollRange = contentHeight - windowHeight; // How much user typically needs to scroll
-
-            if (scrollRange <= 0) scrollRange = 1; // Prevent division by zero or negative if content is shorter than viewport or equal
-
-            let progress = (scrolled / scrollRange) * 100;
+            // Calculate progress to fill bar as user scrolls through the entire content portion visually
+            // This version calculates progress relative to full document scrollable height
+            let totalScrollableHeight = documentHeight - windowHeight;
+            let currentReadProgress = Math.min(100, (scrollFromTop / totalScrollableHeight) * 100);
             
-            if (progress < 0) progress = 0;
-            if (progress > 100) progress = 100;
+            // Or - if only within the article bounds:
+            // let articleStart = contentRect.top + window.scrollY;
+            // let articleEnd = contentRect.bottom + window.scrollY;
+            // let effectiveScroll = scrollFromTop - articleStart;
+            // let effectiveReach = articleEnd - articleStart - windowHeight;
+            // let progress = Math.min(100, Math.max(0, (effectiveScroll / effectiveReach) * 100));
 
-            progressBar.style.width = progress + '%';
+
+            progressBar.style.width = currentReadProgress + '%';
         });
 
         // Ensure progress bar updates correctly on initial load
@@ -318,11 +320,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Setup Main Navigation Menu (Unified Hamburger for Desktop/Mobile) ---
     const setupMainMenu = () => {
         const menuToggle = document.querySelector('.menu-toggle');
-        const mainNav = document.getElementById('main-nav-menu'); // Use ID for main navigation
+        const mainNav = document.getElementById('main-nav-menu'); 
         const menuClose = document.querySelector('.main-nav .menu-close');
         
         if (!menuToggle || !mainNav || !menuClose) {
             console.warn('Menu elements not found, main menu features disabled.');
+            // Even if elements not found, might need to reset no-scroll if previous state was bad
+             document.body.classList.remove('no-scroll');
             return;
         }
 
@@ -330,7 +334,6 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle.addEventListener('click', () => {
             mainNav.classList.add('is-open');
             menuToggle.setAttribute('aria-expanded', 'true');
-            // Disable body scroll when menu is open
             document.body.classList.add('no-scroll'); 
         });
 
@@ -338,24 +341,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeMenu = () => {
             mainNav.classList.remove('is-open');
             menuToggle.setAttribute('aria-expanded', 'false');
-            // Enable body scroll when menu is closed
-            document.body.classList.remove('no-scroll'); 
+            document.body.classList.remove('no-scroll');
         };
 
         menuClose.addEventListener('click', closeMenu);
 
         // Close menu when a navigation link is clicked inside the menu
         mainNav.querySelectorAll('a').forEach(link => {
-            // Check if link is an internal link that triggers the page transition
             const href = link.getAttribute('href');
             if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.includes('#')) {
                 link.addEventListener('click', () => {
-                    // Slight delay to allow page transition to start visually before menu fully closes
                     setTimeout(() => {
-                        closeMenu(); // Call universal close menu function
-                    }, 400); // Match or slightly exceed page transition duration (0.3s nav + 0.4s page)
+                        closeMenu(); 
+                    }, 400); // Wait for page transition and menu close animation
                 });
-            } else { // Handle external links or hash links normally
+            } else { 
                 link.addEventListener('click', closeMenu);
             }
         });
@@ -402,14 +402,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- Initialize all features on DOM Ready ---
-    setupHomepageBackground(); // Homepage specific setup
-    setupDynamicPostImages(); // Fetches images for post thumbnails and banners
+    setupHomepageBackground(); 
+    setupDynamicPostImages(); 
     setupScrollAnimations();
     setupBackToTopButton();
     setupCursorTrail();
     setupReadProgressBar(); 
-    setupMainMenu(); // Setup of unified hamburger menu
+    setupMainMenu(); 
     setupShareButtons();
-    setupFooterDetails(); // Setup footer dynamic content
+    setupFooterDetails(); 
 });
-
