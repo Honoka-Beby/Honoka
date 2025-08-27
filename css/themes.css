@@ -27,6 +27,7 @@
 
     /* Text Colors - 温和的星光白 */
     --text-color: #dcd7e6; /* 主体文本颜色 */
+    --text-color-rgb: 220, 215, 230; /* 新增 RGB 变量，用于颜色计算 */
     --heading-color: #ffffff; /* 标题颜色 */
     --meta-text-color: #9e9aac; /* 元信息/辅助文本颜色 */
 

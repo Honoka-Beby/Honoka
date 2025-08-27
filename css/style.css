@@ -24,7 +24,6 @@ body {
     min-height: 100vh;
     display: flex;
     flex-direction: column;
-    /* transition: background-image 1s ease-out; /* 已移入 JS 进行更精确控制 */
     cursor: none; /* 隐藏默认鼠标指针，交由JS控制自定义指针 */
     touch-action: pan-y; /* 优化移动端滚动性能 */
     /* 当移动菜单打开时，body不允许滚动 */
@@ -193,60 +192,71 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     animation: fadeIn 1.5s ease-out;
 }
 
-/* 主页标题 “Honoka的小屋” 的动画 (白字保留, 粉色走马灯辉光) */
+/* 主页标题 “Honoka的小屋” 的白字保留+粉色发光光束划过动画 */
 .blog-title--animated.is-homepage-title > a { 
-    color: var(--text-color); /* 基础文字颜色保持白色 */
+    color: var(--text-color); /* Fallback/base text color if masking fails */
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
-    text-shadow: none; /* 移除默认的 text-shadow */
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); /* Base light shadow for the white text */
     position: relative;
     display: inline-block; 
     vertical-align: top;
     line-height: 1.2;
-    padding: 0 10px; /* 标题边缘预留空间 */
+    padding: 0 10px; 
     overflow: hidden; /* **关键点：裁剪 mask 效果** */
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
-    /* 使用 -webkit-mask-image (Masking) 来实现渐变发光 */
-    -webkit-mask-image: linear-gradient(
-        currentcolor, /* 文字默认的白色 --text-color */
-        currentcolor /* 直到发光区域 */
+    /* Mask magic for the flowing pink glow */
+    /* 背景色/渐变将成为 Mask 的内容 */
+    background-image: linear-gradient(90deg, 
+        rgba(var(--text-color-rgb), 1) 0%, /* Base White, strong enough not to dissolve visually too fast */
+        rgba(var(--text-color-rgb), 1) 40%, 
+        var(--body-overlay-bg) 50%, /* Make this spot darker so the glow below can punch through, acting as a "hole" */
+        rgba(var(--text-color-rgb), 1) 60%, 
+        rgba(var(--text-color-rgb), 1) 100%
     );
-    mask-image: linear-gradient(
-        currentcolor,
-        currentcolor
-    );
-     /* 纹理背景 for mask, 包含粉色发光区 */
-    background: linear-gradient(90deg, 
-        transparent 0%, 
-        transparent 40%, 
-        var(--primary-color) 50%, /* 粉色发光的中心 */
-        transparent 60%, 
-        transparent 100%
-    );
-    background-size: 200%; /* 让纹理背景宽于文字，以便滚动 */
+     -webkit-mask-image: var(--_mask);
+    mask-image: var(--_mask);
+     -webkit-mask-composite: source-out;
+    mask-composite: exclude; /* Subtracts the mask image from original content (white text) */
+    background-size: 300% 100%; /* Wider mask to animate across entire text area. Adjusted from 200% to 300% */
+     animation: homepage-title-mask-slide 4s linear infinite;
 
-    /* 创建这个粉色发光带的动画 */
-    animation: homepage-title-mask-glow 4s ease-in-out infinite, 
-               homepage-title-glow-color 4s ease-in-out infinite;
-               /* 一个控制移动，一个控制颜色和发光（通过滤镜drop-shadow模拟） */
-     /* 默认文字颜色，但在 mask 生效时会被 background 纹理叠加 */
-     color: var(--text-color); /* 基础颜色白色 */
+     /* **Now, the actual glowing paint that fills the mask-defined holes** */
+     /* This background is what gets painted in the "subtracted" mask area */
+    background-color: var(--primary-color); /* The base color for the glow */
+    box-shadow: 0 0 10px var(--primary-color), /* Stronger central glow */
+                0 0 20px rgba(var(--primary-color-rgb), 0.7), /* Wider glow */
+                0 0 30px rgba(var(--primary-color-rgb), 0.5); /* Widest, softer glow */ 
+}
 
-     /* 为整个文字元素添加发光滤镜，使其发光时更明显 */
-     filter: drop-shadow(0 0 5px rgba(var(--primary-color-rgb), 0.7)) /* 软发光 */
-             drop-shadow(0 0 10px rgba(var(--primary-color-rgb), 0.4)); /* 更宽、更柔和的光 */
+@property --_mask {
+  syntax: '<image>';
+  inherits: true;
+  initial-value: linear-gradient(currentcolor, currentcolor);
 }
 
 
-/* 控制发光带在文字上移动的动画 */
-@keyframes homepage-title-mask-glow {
-    0% { background-position: -100% 0; } /* 纹理从左侧开始 */
-    100% { background-position: 200% 0; } /* 纹理向右移动 */
+@keyframes homepage-title-mask-slide {
+    0% { 
+        background-position: -200% 0; /* Start far left */
+        filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); /* Subtle white glow when no pink color */
+    } 
+    25% { /* pink coming in */ }
+    50% { 
+        background-position: 200% 0;  /* Pass through to far right */
+        filter: drop-shadow(0 0 10px rgba(var(--primary-color-rgb), 0.8)); /* Stronger pink glow at peak */
+    }
+    75% { /* pink going out */ }
+    100% { 
+        background-position: -200% 0; /* Reset for loop */
+        filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); /* Subtle white glow */
+    }
 }
+
 
 /* 导航栏 "Honoka的小屋" 标题的粉色慢速呼吸式辉光动画 (仅发光，不滑动) */
 .main-header .blog-title--animated.is-header-title > a { /* 应用到导航栏标题 */
@@ -259,19 +269,16 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     padding: 0 5px; 
     animation: header-text-pulse-glow 2s ease-in-out infinite alternate; /* 慢速的文字辉光动画 */
     will-change: text-shadow; 
-    /* 禁用 mask 相关的属性 */
+    /* 禁用主页标题的 Mask 相关的属性和背景 */
     -webkit-mask-image: none;
     mask-image: none;
-    background: none; /* 移除可能继承的背景 */
-    filter: none; /* 移除可能继承的滤镜 */
-    text-shadow: 0 0 5px rgba(255, 255, 255, 0.4); /* 给文字一个基础的柔和白光 */
+    background-image: none; /* 移除背景图片动画 */
+    background-color: transparent; /* 确保背景色透明 */
+    box-shadow: none; /* 移除 box-shadow */
+    filter: none; /* 移除总体的 filter */
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); /* 给文字一个基础的柔和白光 */
 }
 
-/* 导航栏标题不使用 ::before 伪元素滑动光束，而是通过 text-shadow 自身发光 */
-.main-header .blog-title--animated.is-header-title > a::before {
-    content: none; 
-    display: none;
-}
 @keyframes header-text-pulse-glow {
     0% { text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.4), 0 0 10px rgba(var(--secondary-color-rgb), 0.2); }
     100% { text-shadow: 0 0 10px var(--primary-color), 0 0 20px rgba(var(--secondary-color-rgb), 0.5); }
@@ -320,8 +327,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* --- General Header and Navigation (Unified Hamburger Menu) --- */
 .main-header { 
-    padding: 0.5rem 0.5rem; 
-    min-height: 55px; 
+    padding: 0.3rem 0.5rem; /* 全局导航栏更薄，左右略微填充 */
+    min-height: 50px; /* 保证最小高度 */
     display: flex; 
     align-items: center; 
     justify-content: center; 
@@ -372,7 +379,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 
 .main-nav {
-    display: block; /* For JS control */
+    display: block; 
     position: fixed;
     top: 0;
     right: -100%; /* 菜单初始状态：完全在屏幕右侧之外 */
@@ -380,7 +387,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     height: 100vh; 
     background-color: var(--header-bg-color); 
     box-shadow: -5px 0 15px rgba(0,0,0,0.5); 
-    transition: right 0.3s ease-in-out, opacity 0.3s ease; 
+    transition: right 0.3s ease-in-out, opacity 0.3s ease, visibility 0.3s ease; /* 调整过渡属性 */
     z-index: 200; 
     flex-direction: column;
     justify-content: center;
@@ -389,7 +396,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     opacity: 0; 
     visibility: hidden;
     pointer-events: none; 
-    ul { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; margin: 0; align-items: center; padding: 0;} /* 重置 ul 默认 padding */
+    ul { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; margin: 0; align-items: center; padding: 0;}
     a { 
         font-weight: 500; padding: 0.8em 1.5em; 
         border-bottom: 2px solid transparent; 
@@ -439,8 +446,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
-    display: block; /* 确保为块级元素，使其可以占据一行 */
-    width: 100%; /* 允许占据全部父容器空间以居中文本 */
+    display: block; 
+    width: 100%; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -456,7 +463,6 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
     border-radius: 2px;
 }
-/* 对于 About Me 和 Comments 页面内部的副标题，确保其文本居中 */
 .comment-form-container h3, .comments-list-container h3 {
     text-align: center;
     width: 100%;
@@ -464,8 +470,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 
 /* --- Content Page Wrapper (for blog, about, comments, posts) --- */
-/* 包裹所有内页主要内容的容器，自身具有更强的背景模糊和颜色，使内容在动态背景上清晰可读 */
-main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
+main.container.content-page-wrapper { 
     background-color: var(--content-bg-color); 
     backdrop-filter: blur(var(--content-backdrop-blur)); 
     border-radius: var(--border-radius-lg);
@@ -480,7 +485,6 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
     justify-content: flex-start; 
     text-align: initial; 
     -webkit-backface-visibility: hidden; 
-    backface-backface: hidden;
     backface-visibility: hidden;
     transform: translateZ(0); 
 }
@@ -512,7 +516,7 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
     height: 200px; 
     object-fit: cover; 
     transition: transform 0.3s ease; 
-    font-size: 0; /* 隐藏img的alt文本，让其不会显示在无效图片位置 */
+    font-size: 0; 
     flex-shrink: 0; 
     &.is-loading-fallback {
         background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%);
@@ -523,6 +527,7 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
         color: white; 
         font-size: 0.9em;
         position: relative; 
+         text-align: center; /* 确保 fallback text 居中 */
     }
      &.is-loading-fallback::after {
         content: "封面加载失败 :("; 
@@ -543,7 +548,7 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
 .post-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; text-align: left; } 
 .post-info h3 { margin: 0 0 0.5rem; font-family: var(--font-display); font-size: 1.4rem; color: #fff; }
 .post-info h3:hover { color: var(--primary-color); } 
-.post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); flex-grow: 1;text-align: justify; z-index: 1;} /* 摘要两端对齐, 避免被其他元素遮挡 */
+.post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); flex-grow: 1; text-align: justify; z-index: 1;} 
 .post-info time { font-size: 0.8em; color: var(--meta-text-color); margin-top: auto;} 
 .post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
 .post-tags .tag {
@@ -686,7 +691,7 @@ textarea { resize: vertical; min-height: 120px; }
      margin-right: auto; 
 }
 .comment-card {
-    background-color: var(--card-bg-color);
+    background-color: var(--card-bg-color); 
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
     padding: 1.5em;
@@ -788,7 +793,7 @@ main .blog-post-detail {
      justify-content: center;
      align-items: center;
      position: relative;
-     color: transparent; /* 重要：隐藏可能已经加载损坏的图像显示图片 alt 文本 */
+    color: transparent; /* 为了隐藏 img 标签自身的错误 alt 文案 */
 }
 .post-detail-banner.is-loading-fallback::after {
     content: "图片加载失败 :("; 
@@ -874,7 +879,6 @@ main .blog-post-detail {
     text-align: center;
     margin-top: auto; 
      -webkit-backface-visibility: hidden; 
-     backface-backface: hidden;
     backface-visibility: hidden;
     transform: translateZ(0); 
 }
@@ -938,23 +942,23 @@ main .blog-post-detail {
     body.is-mobile #cursor-trail { 
         display: none !important; 
     }
-    .container {padding: 1rem;} /* 缩小容器的左右内边距 */
+    .container {padding: 1rem;} 
 
 
     /* 头部导航栏适配 */
-    .main-header { padding: 0.3rem 0.5rem; min-height: 45px;} /* 手机端头部更紧凑 */
-    .main-header .blog-title--animated.is-header-title > a { /* 缩小导航栏标题 */
+    .main-header { padding: 0.3rem 0.5rem; min-height: 45px;} 
+    .main-header .blog-title--animated.is-header-title > a { 
         font-size: 1.3rem; 
     }
-    .menu-toggle .icon-bar { width: 25px; margin: 4px 0;} /* 调整汉堡包条宽度和间距 */
+    .menu-toggle .icon-bar { width: 25px; margin: 4px 0;} 
     .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-5px, 5px); }
     .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-5px, -5px); }
-    .main-nav .menu-close { font-size: 2em; top: 10px; right: 15px; } /* 缩小关闭按钮 */
-    .main-nav ul { gap: 1rem; } /* 缩小列表间距 */
-    .main-nav a { font-size: 1.3em; padding: 0.6em 1em; } /* 调整菜单项 */
+    .main-nav .menu-close { font-size: 2em; top: 10px; right: 15px; } 
+    .main-nav ul { gap: 1rem; } 
+    .main-nav a { font-size: 1.3em; padding: 0.6em 1em; } 
     
     /* 英雄区域适配 */
-    .hiro-content { padding: 0.8rem; margin-top: -20px;} 
+    .hero-content { padding: 0.8rem; margin-top: -20px;} 
     .hero-subtitle { font-size: 0.85rem; margin: 0.5rem 0 1rem;} 
     .hero-nav .nav-link { margin: 0 0.3rem; padding: 0.25rem 0.6rem; font-size: 0.9em; }
     .scroll-down-arrow {bottom: 1rem; font-size: 0.8rem;}
@@ -964,7 +968,7 @@ main .blog-post-detail {
     .page-title, .section-title { font-size: 1.6rem; margin-bottom: 1.2rem; }
     .comments-list-container h3, .comment-form-container h3 { font-size: 1.3rem; margin-top: 0.8rem;}
     .posts-grid, #comments-list { 
-        gap: 15px; /* 调整卡片间距 */
+        gap: 15px; 
     }
     .post-card .post-info {padding: 1rem;}
     .post-detail-banner { height: 180px; margin-bottom: 1.5em; }
@@ -973,7 +977,7 @@ main .blog-post-detail {
     
     .post-content { 
          padding: 0; 
-         text-align: left; /* 移动端文章内容仍保持两端对齐 */
+         text-align: left; 
     }
     .post-content p, .post-content ul, .post-content ol { 
         padding: 0 0.5em; 
