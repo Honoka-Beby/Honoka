@@ -20,13 +20,13 @@
             <h1 class="blog-title blog-title--animated">
                 <a href="index.html">Honoka的小屋</a>
             </h1>
-            <!-- 手机端菜单切换按钮（汉堡包图标） -->
-            <button class="menu-toggle" aria-label="Toggle navigation">
+            <!-- 桌面端和手机端都使用汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-label="Toggle navigation" aria-controls="main-nav-menu">
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <nav class="main-nav" role="navigation" aria-expanded="false">
+            <nav id="main-nav-menu" class="main-nav" role="navigation" aria-expanded="false">
                 <!-- 手机端关闭菜单按钮 -->
                 <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
@@ -80,15 +80,15 @@
                         </div>
                     </a>
                 </div>
-                <!-- 更多文章可以像这样添加 -->
+                <!-- 更多文章可在此添加 -->
             </div>
         </section>
     </main>
 
-    <footer class="main-footer animate__fade-in">
+    <footer class="main-footer">
         <div class="container">
-            <p>&copy; 2025 Honoka的小屋. All rights reserved.</p>
-            <p>QQ: 3203418940</p>
+            <p>&copy; <span id="current-year"></span> Honoka的小屋. All rights reserved.</p>
+            <p>QQ: 3203418940 | 访问量: <span id="visitor-count">0</span></p>
         </div>
     </footer>
 

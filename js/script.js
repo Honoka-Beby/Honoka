@@ -70,27 +70,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const unsplashKeywords = (type === 'image' && preferLandscape) ? 'anime,manga,landscape,art,fantasy,wide' : 'anime,manga,wallpaper';
         // Ordered by perceived reliability and suitability for landscape anime
         const apiEndpoints = [
-            `https://source.unsplash.com/random/${width}x${height}/?${unsplashKeywords}`, /* Unsplash for diverse landscape possibility */
-            'https://dmoe.cc/random.php',       /* Random anime from DMoe, direct image. Usually landscape */
-            'https://api.adicw.cn/img/rand',          /* Random anime, direct image. Mixed portrait/landscape */
-            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' /* Random anime (JSON). Mixed portrait/landscape */
+            `https://source.unsplash.com/random/${width}x${height}/?${unsplashKeywords}`, // Unsplash for diverse landscape possibility 
+            'https://iw233.cn/api/Pure.php',               // Direct image API, often landscape anime. NEW!
+            'https://www.dmoe.cc/random.php',              // Direct image API, usually landscape anime
+            'https://api.adicw.cn/img/rand',               // Direct image API, mixed portrait/landscape
+            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' // JSON API, fallback for mixed orientation
         ];
         
         for (const api of apiEndpoints) {
             try {
-                // Try fetching from the API
+                // Try fetching from the API with a timeout
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout
+                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout for each API
                 const response = await fetch(api, { method: 'GET', redirect: 'follow', signal: controller.signal });
                 clearTimeout(timeoutId);
 
                 if (response.ok) {
-                    // Check if it's a direct image URL (dominant for most APIs here)
                     const contentType = response.headers.get('content-type');
-                    if (contentType && contentType.startsWith('image/')) {
-                        imageUrl = response.url;
-                        console.log(`Using Direct Image API (${api.split('?')[0]}): ${imageUrl.substring(0, 50)}...`);
-                        break;
+                    // Check if it's a direct image URL (most of the top APIs)
+                     if (contentType && contentType.startsWith('image/')) {
+                        // For iw233.cn, the URL might sometimes be redirect, sometimes direct image
+                        imageUrl = response.url.match(/\.(jpeg|jpg|gif|png|webp)$/i) ? response.url : 
+                                   (response.redirected ? response.url : ''); // Use redirected URL if available and is image
+                        if(!imageUrl && api.includes('iw233.cn') || api.includes('dmoe.cc') || api.includes('adicw.cn')){
+                             // For these, assume the response.url *is* the image if contentType matches.
+                             imageUrl = response.url;
+                        }
+                        console.log(`Using Direct Image API (${api.split('?')[0]}): ${imageUrl ? imageUrl.substring(0, 50) + '...' : 'Invalid URL'}`);
+                        if (imageUrl) break;
                     } 
                     // Handle JSON-based APIs specifically
                     else if (api.includes('btstu.cn')) {
@@ -99,12 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
                             imageUrl = data.imgurl;
                             console.log(`Using BTSTU API (${api}): ${imageUrl.substring(0, 50)}...`);
                             break;
+                            
                         }
                     }
                 }
             } catch (innerError) {
                 if (innerError.name === 'AbortError') {
-                    console.warn(`API ${api} timed out, trying next.`);
+                    console.warn(`API ${api} timed out after 6s, trying next.`);
                 } else {
                     console.warn(`API ${api} failed, trying next:`, innerError);
                 }
@@ -124,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 targetElement.classList.remove('is-loading-fallback'); 
             };
             imgToLoad.onerror = (e) => {
-                console.warn(`Image preloading failed for ${imageUrl}, attempting fallback. Reason:`, e);
+                console.warn(`Image preloading failed for ${imageUrl}, trying fallback. Reason:`, e);
                 applyFallbackImage(targetElement, type);
             };
         } else {
@@ -262,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 500); 
         });
 
-        document.querySelectorAll('a, button, input:not([type="submit"]), textarea, .post-card').forEach(el => {
+        document.querySelectorAll('a, button, input:not([type="submit"]), textarea, .post-card, .menu-toggle').forEach(el => {
             el.onmouseenter = () => { // Hover effects for cursor
                 cursorDot.style.transform = 'translate(-50%,-50%) scale(1.5)';
                 cursorDot.style.backgroundColor = 'var(--secondary-color)';
@@ -293,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             let scrolled = (scrollFromTop - contentOffsetTop);
             let scrollRange = contentHeight - windowHeight; // How much user typically needs to scroll
 
-            if (scrollRange < 0) scrollRange = 1; // Prevent division by zero if content is shorter than viewport
+            if (scrollRange <= 0) scrollRange = 1; // Prevent division by zero or negative if content is shorter than viewport or equal
 
             let progress = (scrolled / scrollRange) * 100;
             
@@ -302,31 +310,39 @@ document.addEventListener('DOMContentLoaded', () => {
 
             progressBar.style.width = progress + '%';
         });
+
+        // Ensure progress bar updates correctly on initial load
+        setTimeout(setupReadProgressBar, 100); 
     };
     
-    // --- Setup Mobile Menu (Hamburger) ---
-    const setupMobileMenu = () => {
-        if (!isMobile) return; 
-
+    // --- Setup Main Navigation Menu (Unified Hamburger for Desktop/Mobile) ---
+    const setupMainMenu = () => {
         const menuToggle = document.querySelector('.menu-toggle');
-        const mainNav = document.querySelector('.main-nav');
-        const menuClose = document.querySelector('.menu-close');
+        const mainNav = document.getElementById('main-nav-menu'); // Use ID for main navigation
+        const menuClose = document.querySelector('.main-nav .menu-close');
         
-        if (!menuToggle || !mainNav || !menuClose) return;
+        if (!menuToggle || !mainNav || !menuClose) {
+            console.warn('Menu elements not found, main menu features disabled.');
+            return;
+        }
 
-        // Open menu
+        // --- Open Menu ---
         menuToggle.addEventListener('click', () => {
             mainNav.classList.add('is-open');
-             mainNav.ariaExpanded = 'true';
-             document.body.classList.add('no-scroll'); // Disable body scroll
+            menuToggle.setAttribute('aria-expanded', 'true');
+            // Disable body scroll when menu is open
+            document.body.classList.add('no-scroll'); 
         });
 
-        // Close menu (from close button)
-        menuClose.addEventListener('click', () => {
+        // --- Close Menu ---
+        const closeMenu = () => {
             mainNav.classList.remove('is-open');
-            mainNav.ariaExpanded = 'false';
-            document.body.classList.remove('no-scroll'); // Enable body scroll
-        });
+            menuToggle.setAttribute('aria-expanded', 'false');
+            // Enable body scroll when menu is closed
+            document.body.classList.remove('no-scroll'); 
+        };
+
+        menuClose.addEventListener('click', closeMenu);
 
         // Close menu when a navigation link is clicked inside the menu
         mainNav.querySelectorAll('a').forEach(link => {
@@ -336,43 +352,53 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.addEventListener('click', () => {
                     // Slight delay to allow page transition to start visually before menu fully closes
                     setTimeout(() => {
-                        mainNav.classList.remove('is-open');
-                        mainNav.ariaExpanded = 'false';
-                        document.body.classList.remove('no-scroll');
-                    }, 400); // Match or slightly exceed page transition duration
+                        closeMenu(); // Call universal close menu function
+                    }, 400); // Match or slightly exceed page transition duration (0.3s nav + 0.4s page)
                 });
             } else { // Handle external links or hash links normally
-                link.addEventListener('click', () => {
-                    mainNav.classList.remove('is-open');
-                    mainNav.ariaExpanded = 'false';
-                    document.body.classList.remove('no-scroll');
-                });
+                link.addEventListener('click', closeMenu);
             }
         });
     };
 
+
     // --- Share buttons for article pages ---
     const setupShareButtons = () => {
-        // Collect all share buttons; if on non-post page, this won't find elements
         const shareButtons = document.querySelectorAll('.post-share-buttons a.weibo, .post-share-buttons a.qq');
-        if (shareButtons.length === 0) return; // Only run on post pages with share buttons
+        if (shareButtons.length === 0) return; 
 
         const currentUrl = encodeURIComponent(window.location.href);
         const pageTitle = document.title;
-        const articleTitle = encodeURIComponent(pageTitle.split(' - ')[0] || "Honoka的小屋"); // Use blog title as fallback
+        const articleTitle = encodeURIComponent(pageTitle.split(' - ')[0] || "Honoka的小屋"); 
 
         shareButtons.forEach(btn => {
             if (btn.classList.contains('weibo')) {
                 btn.href = `https://service.weibo.com/share/share.php?url=${currentUrl}&title=${articleTitle}`;
             } else if (btn.classList.contains('qq')) {
-                // QQ share also supports optional `pics` parameter
-                // We attempt to get the main article image for sharing
                 const imgElement = document.querySelector('.post-detail-banner');
                 const imgUrl = imgElement && imgElement.src && !imgElement.classList.contains('is-loading-fallback') ? encodeURIComponent(imgElement.src) : '';
                 btn.href = `https://connect.qq.com/widget/shareqq/index.html?url=${currentUrl}&title=${articleTitle}${imgUrl ? '&pics=' + imgUrl : ''}`;
             }
         });
     };
+    
+    // --- Footer dynamic details ---
+    const setupFooterDetails = () => {
+        /** Dynamic copyright year */
+        const currentYearSpan = document.getElementById('current-year');
+        if (currentYearSpan) {
+            currentYearSpan.textContent = new Date().getFullYear();
+        }
+
+        /** Simple visitor counter (LocalStorage) */
+        const visitorCountSpan = document.getElementById('visitor-count');
+        if (visitorCountSpan) {
+            let visitorCount = parseInt(localStorage.getItem('visitorCount')) || 0;
+            visitorCount++;
+            localStorage.setItem('visitorCount', visitorCount.toString());
+            visitorCountSpan.textContent = visitorCount;
+        }
+    }
 
 
     // --- Initialize all features on DOM Ready ---
@@ -382,7 +408,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupBackToTopButton();
     setupCursorTrail();
     setupReadProgressBar(); 
-    setupMobileMenu(); // Setup mobile menu logic
+    setupMainMenu(); // Setup of unified hamburger menu
     setupShareButtons();
+    setupFooterDetails(); // Setup footer dynamic content
 });
 
