@@ -37,39 +37,9 @@
         </section>
     </main>
 
-    <!-- 看板娘 Live2D -->
-    <div id="live2d-widget" class="live2d-widget-container animate__fade-in"></div>
-    
     <!-- 返回顶部按钮 -->
     <button id="back-to-top" title="返回顶部">↑</button>
 
     <script src="js/script.js"></script>
-    
-    <!-- 引入看板娘JS库，并初始化为白毛萝莉 "Wanko" -->
-    <script src="https://cdn.jsdelivr.net/npm/live2d-widget@3.1.4/lib/L2Dwidget.min.js"></script>
-    <script>
-        L2Dwidget.init({
-            "model": {
-                // 白毛萝莉 “Wanko” 模型路径 (你可以将其替换为任何你喜欢的模型)
-                "jsonPath": "https://cdn.jsdelivr.net/npm/live2d-widget-model-wanko@1.0.5/assets/wanko.model.json",
-                "scale": 1
-            },
-            "display": {
-                "position": "right", // 放置在右侧
-                "width": 150,        // 宽度
-                "height": 300,       // 高度
-                "hOffset": 10,       // 水平偏移
-                "vOffset": -20       // 垂直偏移
-            },
-            "mobile": {
-                "show": true,        // 手机端是否显示
-                "scale": 0.5         // 手机端显示大小比例
-            },
-            "react": {
-                "opacityDefault": 0.8, // 默认不透明度
-                "opacityOnHover": 1    // 鼠标悬停时完全不透明
-            }
-        });
-    </script>
 </body>
 </html>

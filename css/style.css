@@ -40,6 +40,8 @@ body::before {
     backdrop-filter: blur(var(--body-backdrop-blur)); /* 对下层内容（即body背景图）应用模糊 */
     z-index: -1; /* 位于正常内容之下，body背景图之上 */
     transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
+     -webkit-backface-visibility: hidden; /* Fix for backdrop-filter on some devices */
+    backface-visibility: hidden;
 }
 
 a { color: var(--link-color); text-decoration: none; transition: all 0.3s ease; }
@@ -178,6 +180,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
     background: var(--hero-overlay-bg); /* opaque or semi-opaque dark background */
     backdrop-filter: blur(5px); /* Moderate blur for the underlying body background image */
     z-index: 1; /* Above body overlay, below hero-content */
@@ -189,19 +193,22 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     animation: fadeIn 1.5s ease-out;
 }
 
-/* 主页标题 “Honoka的小屋” 的发光文字滑过动画 - 白字保留，粉色光影滑过 */
+/* 主页标题 “Honoka的小屋” 的白字保留+粉色发光光束划过动画 */
 .blog-title--animated.is-homepage-title > a { 
     color: var(--text-color); /* 基础文字颜色保持白色 */
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
-    text-shadow: 0 0 8px rgba(0, 0, 0, 0.5); /* 基础文字的轻微阴影，增加深度 */
+    text-shadow: 0 0 8px rgba(0, 0, 0, 0.4); /* 基础文字的轻微阴影，增加深度 */
     position: relative; /* 为伪元素提供定位上下文 */
     display: inline-block; 
     vertical-align: top;
     line-height: 1.2;
     padding: 0 10px; /* 标题边缘预留空间 */
     overflow: hidden; /* **关键点：裁剪滑过发光效果** */
+    -webkit-backface-visibility: hidden; /* Fix for some animations issues */
+    backface-visibility: hidden;
+    transform: translateZ(0); /* Force GPU acceleration */
 }
 
 /* 伪元素::before 实现粉色发光光束 */
@@ -215,37 +222,42 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     background: linear-gradient(
         90deg,
         transparent,        /* 光束左侧完全透明 */
-        rgba(var(--primary-color-rgb), 0.7) 50%, /* 中间最亮的粉色 */
+        rgba(var(--primary-color-rgb), 0.7) 30%, /* 中间偏左的亮粉色 */
+        rgba(var(--primary-color-rgb), 0.5) 75%, /* 中间偏右的粉色，透明度稍低 */
         transparent         /* 光束右侧完全透明 */
     );
-    filter: blur(5px) brightness(1.2); /* 柔和模糊和提亮 */
+     transform: skewX(-20deg); /* 倾斜光束 */
+    filter: blur(6px) brightness(1.7); /* 柔和模糊和提亮，更强的发光感 */
     mix-blend-mode: screen; /* **关键点：与白色文字叠加，产生粉色发光效果** */
-    animation: slide-pink-glow 4s ease-in-out infinite both 1s; /* `both` 保持动画初始和结束状态，`1s` 延迟开始动画 */
+    animation: slide-pink-glow 4s ease-in-out infinite both 0.8s; /* `both` 保持动画初始和结束状态，`0.8s` 延迟开始动画 */
     pointer-events: none; /* 防止遮挡鼠标事件 */
     z-index: 10; /* 确保在文字上方 */
     will-change: transform, opacity;
+    -webkit-backface-visibility: hidden; /* Fix for some animations issues */
+    backface-visibility: hidden;
+    transform: translateZ(0) skewX(-20deg); /* Force GPU acceleration & combine skew */
 }
 
 @keyframes slide-pink-glow {
-    0% { transform: translateX(0%); opacity: 0; }               /* 初始：在文本区域左侧之外，透明 */
-    5% { opacity: 1; }                                          /* 开始移动时透明度渐增 */
-    50% { transform: translateX(250%); opacity: 1; }             /* 滑过文本区域并超出右侧范围，保持高透明 */
-    55% { opacity: 0; }                                          /* 滑到右侧后快速透明化 */
-    100% { transform: translateX(0%); opacity: 0; }             /* 重设位置，透明，等待下次循环 */
+    0% { transform: translateX(0%) skewX(-20deg); opacity: 0; }               /* 初始：在文本区域左侧之外，透明 */
+    5% { opacity: 1; transform: translateX(0%) skewX(-20deg); }                                          /* 开始移动时透明度渐增 */
+    50% { opacity: 1; transform: translateX(250%) skewX(-20deg); }             /* 滑过文本区域并超出右侧范围，保持高透明 */
+    55% { opacity: 0; transform: translateX(250%) skewX(-20deg); }                                          /* 滑到右侧后，快速透明化并结束本次动画 */
+    100% { transform: translateX(0%) skewX(-20deg); opacity: 0; }             /* 从头开始，重设位置，透明，等待下次循环 */
 }
 
 
-/* 导航栏 "Honoka的小屋" 标题的粉色慢速光动画 (仅发光，不滑动消失) */
+/* 导航栏 "Honoka的小屋" 标题的粉色慢速呼吸式辉光动画 (仅发光，不滑动) */
 .main-header .blog-title--animated.is-header-title > a { /* 应用到导航栏标题 */
     font-size: 1.8rem; /* 导航栏标题字体较小 */
     color: var(--heading-color); /* 默认白色/标题颜色 */
-    /* text-shadow: none; */ /* 移除，使用下面的动画 text-shadow */
     position: relative; /* 提供定位上下文 */
     display: inline-block; 
     vertical-align: middle;
     line-height: 1.2;
     padding: 0 5px; /* 调整 padding */
     animation: header-text-pulse-glow 2s ease-in-out infinite alternate; /* 慢速的文字辉光动画 */
+    will-change: text-shadow; /* 动画优化 */
 }
 /* 导航栏标题不使用 ::before 伪元素滑动光束，而是通过 text-shadow 自身发光 */
 .main-header .blog-title--animated.is-header-title > a::before {
@@ -298,9 +310,9 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 @keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
 
 
-/* --- General Header and Mobile Navigation (Unified Hamburger Menu) --- */
+/* --- General Header and Navigation (Unified Hamburger Menu) --- */
 .main-header { 
-    padding: 0.5rem 0; /* 全局导航栏大幅缩小上下长度 */
+    padding: 0.5rem 0.5rem; /* 全局导航栏更薄，左右略微填充 */
     min-height: 55px; /* 保证最小高度 */
     display: flex; 
     align-items: center; 
@@ -313,6 +325,9 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     z-index: 100;
     box-shadow: 0 2px 15px rgba(0,0,0,0.3); 
     width: 100%; 
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 .main-header .container { 
     width: 100%; 
@@ -335,30 +350,29 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 }
 .menu-toggle .icon-bar {
     display: block;
-    width: 25px;
+    width: 30px; /* 稍宽一点的条 */
     height: 3px;
     background-color: var(--primary-color);
-    margin: 4px 0;
+    margin: 5px 0; /* 稍大间距 */
     transition: all 0.3s ease;
     border-radius: 2px;
 }
 /* 当菜单打开时，汉堡包图标的动画效果 */
-.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-7px, 7px); }
 .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(2) { opacity: 0; }
-.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-7px, -7px); }
 
 
 .main-nav {
-    display: block; /* 桌面端默认块级显示，以便js控制隐藏 */
+    display: block; /* For JS control */
     position: fixed;
     top: 0;
     right: -100%; /* 菜单初始状态：完全在屏幕右侧之外 */
-    width: 100%; /* PC端全屏，移动端也全屏 */
-    max-width: none; /* 取消最大宽度限制 */
+    width: 100%; 
     height: 100vh; /* 全屏高度 */
     background-color: var(--header-bg-color); 
     box-shadow: -5px 0 15px rgba(0,0,0,0.5); 
-    transition: right 0.3s ease-in-out; /* 滑动动画 */
+    transition: right 0.3s ease-in-out, opacity 0.3s ease; /* 滑动动画和淡入淡出 */
     z-index: 200; 
     flex-direction: column;
     justify-content: center;
@@ -380,19 +394,18 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 }
 .main-nav.is-open { /* 菜单打开状态 */
     right: 0; 
-    display: flex; 
+    display: flex; /* 确保可见 */
     opacity: 1; 
     visibility: visible;
-    pointer-events: auto; /* 响应鼠标事件 */
-     pointer-events: auto;
-     overflow-y: auto; /* Allow scrolling inside the menu if content exceeds viewport */
+    pointer-events: auto; /* 响应点击事件 */
+    overflow-y: auto; /* 允许菜单内容滚动 */
 }
  .main-nav .menu-close {
     display: block; 
     position: absolute;
     top: 15px; 
     right: 20px; 
-    font-size: 2.2em; /* 较大，易点击 */
+    font-size: 2.5em; /* 符号更大更易点击 */
     font-weight: normal; 
     color: var(--primary-color);
     background: none;
@@ -401,16 +414,16 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     padding: 5px;
     -webkit-tap-highlight-color: transparent;
     z-index: 202; /* 确保在菜单内容之上 */
-    transition: color 0.2s ease;
+    transition: color 0.2s ease, transform 0.2s ease;
 }
 .main-nav .menu-close:hover {
     color: var(--link-hover-color);
-    transform: scale(1.1);
+    transform: scale(1.1) rotate(5deg);
 }
 
 
 
-/* --- Page & Section Titles --- */
+/* --- Page & Section Titles for inner pages --- */
 .section-title, .page-title {
     font-family: var(--font-display); 
     font-weight: 700;
@@ -419,10 +432,11 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
-    /* 去除 `width: fit-content; margin-left: auto; margin-right: auto;` 等可能与 flex 父容器冲突的居中属性 */
-    /* 依靠父容器 .content-page-wrapper 的 `align-items: center;` 来实现块级子元素的居中 */
-     display: block; /* 确保为块级元素，使其可以占据一行 */
-     width: 100%; /* 允许占据全部父容器空间以居中文本 */
+    display: block; /* 确保为块级元素，使其可以占据一行 */
+    width: 100%; /* 允许占据全部父容器空间以居中文本 */
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 .section-title::after, .page-title::after {
     content: '';
@@ -460,6 +474,9 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
     align-items: center; /* **使内部的块级子元素（如 h2, div.sections）水平居中** */
     justify-content: flex-start; /* 内容从顶部开始 */
     text-align: initial; /* 防止继承的 text-align 冲突，让子元素自行管理 */
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 
 
@@ -470,7 +487,6 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
     gap: 30px; 
     width: 100%; /* 确保卡片网格占满可用宽度 */
     max-width: 900px; /* 限制网格的最大宽度 */
-    /* margin: 0 auto; */ /* 父容器已经是 flex 并居中，这里不需要重复 */
 }
 .post-card {
     background-color: var(--card-bg-color); 
@@ -492,19 +508,39 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
     transition: transform 0.3s ease; 
     font-size: 0; /* 隐藏img的alt文本，让其不会显示在无效图片位置 */
     flex-shrink: 0; /* 防止图片在flex容器中被压缩 */
+    /* 当图片加载失败时，添加额外样式 */
     &.is-loading-fallback {
         background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%);
-        object-fit: contain; /* 包含整个图片，而不是剪切 */
-        padding: 5px; /* 添加内边距 */
-        border: 1px dashed var(--border-color); /* 虚线边框更容易识别是占位 */
+        object-fit: cover; /* 包含整个图片，而不是剪切 */
+        /* padding: 5px; /* 添加内边距 */
+        /* border: 1px dashed var(--border-color); /* 虚线边框更容易识别是占位 */
+         display: flex; /* 为了居中可能的自定义图像或文本 */
+         justify-content: center;
+         align-items: center;
+         color: white; /* 确保文字可见 */
+         font-size: 0.9em;
+         position: relative; /* 确保可以在其上放置伪元素或文本 */
     }
+     &.is-loading-fallback::after {
+        content: "图片加载失败 :("; /* Fallback text if no image is rendered */
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 1rem;
+        color: rgba(255, 255, 255, 0.7);
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+        background: rgba(0,0,0,0.3); /* 确保文本可读 */
+     }
 }
 
 
 .post-info { padding: 1.5rem; flex-grow: 1; display: flex; flex-direction: column; text-align: left; } /* 文章信息左对齐 */
 .post-info h3 { margin: 0 0 0.5rem; font-family: var(--font-display); font-size: 1.4rem; color: #fff; }
 .post-info h3:hover { color: var(--primary-color); } 
-.post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); flex-grow: 1;}
+.post-excerpt { font-size: 0.9em; margin-bottom: 1rem; color: var(--text-color); flex-grow: 1;text-align: justify;} /* 摘要两端对齐 */
 .post-info time { font-size: 0.8em; color: var(--meta-text-color); margin-top: auto;} 
 .post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
 .post-tags .tag {
@@ -521,10 +557,10 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
 /* --- Layout for About, Comments pages --- */
 .about-me-section, .comment-section {
     width: 100%; /* 占据父容器的全部宽度 */
-    /* max-width is implicitly handled by .content-page-wrapper */
-    /* margin-left: auto; margin-right: auto; 这一段在 flex 父容器下不需要，align-items: center; 已经起到作用 */
-    text-align: center; /* **FIX:** Ensure text-align is explicitly center for generic text within these sections */
-    /* The `text-align: justify;` for p tags within will override this for content paragraphs */
+    text-align: center; /* **FIX:** Ensure text-align is explicitly center for direct text within these sections */
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 
 .about-me-section p, .comment-section p {
@@ -565,6 +601,9 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
     backdrop-filter: blur(5px);
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 .about-me-section .contact-info h3 { color: var(--secondary-color); font-family: var(--font-display); border-bottom: 1px dashed var(--border-color); padding-bottom: 0.5em;}
 .about-me-section .contact-info ul { list-style: none; padding: 0.5em 0;}
@@ -580,9 +619,11 @@ main.container.content-page-wrapper { /* 明确指定 `main` 元素 */
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     width: 100%; /* 确保占据全部宽度 */
     max-width: 700px;
-    /* margin: 2rem auto; */ /* 父容器 flex already centers this */
-     text-align: left; /* 表单内容左对齐 */
+    text-align: left; /* 表单内容左对齐 */
     backdrop-filter: blur(var(--card-backdrop-blur));
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 .comment-form-container h3 {
     text-align: center; /* 表单副标题居中 */
@@ -620,7 +661,6 @@ textarea { resize: vertical; min-height: 120px; }
     border-top: 1px dashed var(--border-color);
     width: 100%; /* 占据父容器全部宽度 */
     max-width: 900px; /* 限制最大宽度 */
-    /* margin-left: auto; margin-right: auto; */ /* 依然由父 flex 居中 */
     text-align: center; /* 确保子标题居中 */
 }
 .comments-list-container h3 {
@@ -651,6 +691,9 @@ textarea { resize: vertical; min-height: 120px; }
     position: relative;
     overflow: hidden;
     backdrop-filter: blur(var(--card-backdrop-blur));
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 .comment-card::before {
     content: '💬';
@@ -695,11 +738,13 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
     text-align: left; 
     width: 100%; /* 确保占据全部宽度 */
     max-width: 900px; 
-    /* margin: 3rem auto; */ /* **FIX**: 父容器 flex align-items:center 已经居中 */
     backdrop-filter: blur(var(--card-backdrop-blur));
     display: flex; /* **FIX**: ensure this article acts as flex container for internal centering */
     flex-direction: column;
     align-items: center; /* **FIX**: centers children horizontally */
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 .post-detail-title {
     font-size: 2.8em;
@@ -708,7 +753,6 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
     line-height: 1.3;
     display: block; /* 块级元素保证居中 */
     width: 100%; /* 适应父容器，让文本居中 */
-    /* margin-left: auto; margin-right: auto; */ /* 文本已经居中，无需额外块级居中 */
 }
 .post-detail-title::after {
     background: linear-gradient(90deg, transparent, var(--primary-color), var(--secondary-color), transparent);
@@ -736,9 +780,26 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
 /* 图片加载失败时的背景样式 */
 .post-detail-banner.is-loading-fallback {
     background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%); 
-    object-fit: contain; 
-    padding: 15px; 
-    border: 1px dashed var(--border-color); /* 添加虚线边框 */
+    object-fit: cover; 
+    /* padding: 15px; */ /* padding for gradient, not for local image */
+    /* border: 1px dashed var(--border-color); */ /* Add dashed border */
+     display: flex; /* 为内部内容居中 */
+     justify-content: center;
+     align-items: center;
+     position: relative;
+}
+.post-detail-banner.is-loading-fallback::after {
+    content: "图片加载失败 :("; /* Fallback text if no image is rendered */
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.7);
+    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
+    background: rgba(0,0,0,0.3); /* 确保文本可读 */
 }
 
 .post-content { /* 内容区块左对齐，但父容器是居中 */
@@ -761,7 +822,7 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
     font-size: 1.05em;
     margin-bottom: 1.5em;
     line-height: 1.8;
-    text-align: justify; /* **FIX**: 文章段落保持两端对齐 */
+    text-align: justify; /* 文章段落保持两端对齐 */
 }
 .post-content ul, .post-content ol { list-style-position: inside; padding-left: 1em; text-align: left;} /* 列表左对齐 */
 .post-content li { margin-bottom: 0.5em;}
@@ -810,6 +871,9 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
     font-size: 0.9em;
     text-align: center;
     margin-top: auto; /* Push footer to bottom */
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
 }
 
 
@@ -859,12 +923,10 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
 }
 
 
-/* --- Live2D Widget Container --- */
-.live2d-widget-container {
-    position: fixed;
-    z-index: 999;
+/* --- Live2D Widget Container (Removed as per request) --- */
+#live2d-widget {
+    display: none !important; /* 彻底隐藏 Live2D 容器 */
 }
-
 
 /* --- Responsive Adjustments - Mobile Specific --- */
 @media (max-width: 767px) {
@@ -878,7 +940,7 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
         display: none !important; /* 手机端禁用自定义鼠标指针 */
     }
 
-    .main-header { padding: 0.5rem 0; min-height: 50px;} /* 手机端头部更紧凑 */
+    .main-header { padding: 0.5rem 0.5rem; min-height: 50px;} /* 手机端头部更紧凑 */
     .main-header .container { padding: 0 1rem; } /* 缩小 container 缩进 */
     .main-header .blog-title--animated.is-header-title > a { /* 缩小导航栏标题 */
         font-size: 1.4rem; padding: 0 5px; 
@@ -902,16 +964,21 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
     .post-detail-banner { height: 200px; }
     main .blog-post-detail { padding: 1.5em; margin: 1.5rem auto;}
     .post-detail-title { font-size: 1.6em; }
-    .post-content { /* A content area */
-         padding: 0; /* Remove inner padding to prevent double padding effect */
-         width: unset; /* Let it shrink normally */
-         max-width: 100%; /* Only constrain by max-width */
+    
+    .post-content { /* 文章内容容器 */
+         padding: 0; /* 移除容器内边距 */
+         width: 100%; /* 确保占据全部空间 */
+         max-width: unset; /* 取消最大宽度限制 */
     }
+    /* 针对文章和列表内段落和列表项，添加左右内边距 */
     .post-content p, .post-content ul, .post-content ol { 
-        padding: 0 0.5em; /* Add some padding to content paragraphs for mobile */
-        text-align: left; /* 手机上段落内容也保持两端对齐 */
+        padding: 0 0.5em; /* 手机上段落内容也保持两端对齐，并添加一些内边距 */
+        text-align: justify;
     }
      .post-content h3 { font-size: 1.4em; padding-left: 0.5em;}
+    /* 分享按钮区域也适配 */
+    .post-share-buttons {max-width: 100%;}
+    .post-share-buttons .share-button { margin: 0.3em; padding: 0.5em 1em; font-size: 0.85em; }
 
 
     /* For comments/about contact info */
@@ -921,4 +988,5 @@ main .blog-post-detail { /* **FIX**: 明确指定main下的 article.blog-post-de
         width: 100%; /* Take full width */
     }
     .comments-list-container { padding: 1em 0.5em; margin-top: 2em; } 
+    #comments-list { margin: 0 auto; /* Grid 再次确保居中 */ }
 }

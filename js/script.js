@@ -122,6 +122,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetElement.src = imageUrl;
                 }
                 targetElement.classList.remove('is-loading-fallback'); 
+                 // Remove fallback text element if present
+                const fallbackText = targetElement.querySelector('.fallback-text-overlay');
+                if (fallbackText) fallbackText.remove();
             };
             imgToLoad.onerror = (e) => { // If preloading of the fetched image fails
                 console.warn(`Preloaded image (${imageUrl}) failed to load. Applying fallback.`);
@@ -148,13 +151,28 @@ document.addEventListener('DOMContentLoaded', () => {
             targetElement.classList.add('is-loading-fallback'); 
             console.log(`Using local fallback image: ${localFallbackSrc}`);
 
-            // Optionally, add a gradient background as a visual improvement if even the local image might fail/be transparent
-            if(window.getComputedStyle(targetElement).backgroundImage === 'none') { // Only add if no other background is present
-                targetElement.style.backgroundImage = getRandomGradient();
-                targetElement.style.backgroundRepeat = 'no-repeat';
-                targetElement.style.backgroundPosition = 'center';
-                targetElement.style.backgroundSize = 'cover';
-                console.log('Added gradient overlay for local fallback image.');
+            if (targetElement.tagName === 'IMG' && (!targetElement.src || targetElement.src.includes('data:image'))) {
+                // If the IMG src is empty or a transparent SVG (from previous fallback), create fallback text overlay
+                let fallbackText = targetElement.querySelector('.fallback-text-overlay');
+                if (!fallbackText) {
+                    fallbackText = document.createElement('div');
+                    fallbackText.classList.add('fallback-text-overlay');
+                    if (targetElement.isSameNode(document.querySelector('.post-thumbnail'))) { // For post thumbnails
+                        fallbackText.textContent = "封面加载失败 :(";
+                    } else if (targetElement.isSameNode(document.querySelector('.post-detail-banner'))) { // For detail banners
+                        fallbackText.textContent = "图片加载失败 :(";
+                    } else { // Generic
+                        fallbackText.textContent = "图像出错";
+                    }
+                    targetElement.parentNode.insertBefore(fallbackText, targetElement.nextSibling); // Insert after image
+                    targetElement.style.opacity = '0'; // Hide broken image if text overlay is used
+                }
+            } else {
+                targetElement.style.opacity = '1'; // Ensure image is visible if valid fallback is set
+                 const existingText = targetElement.nextElementSibling;
+                if (existingText && existingText.classList.contains('fallback-text-overlay')) {
+                    existingText.remove();
+                }
             }
         }
     };
@@ -171,7 +189,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Main Body Background (for all pages) ---
     fetchRandomAnimeImage(document.body, 'background', { preferLandscape: true, width: 1920, height: 1080 }); // Always set body background
 
-    // --- Homepage Hero Background (just placeholder on homepage init)---
     const setupHomepageBackground = () => {
          // This function now primarily just acts as a placeholder as body background is handled above for all pages.
     };
@@ -286,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         window.addEventListener('scroll', () => {
             const contentRect = content.getBoundingClientRect();
-            const documentHeight = Math.max(
+             const documentHeight = Math.max(
                 document.body.scrollHeight, 
                 document.documentElement.scrollHeight, 
                 document.body.offsetHeight, 
@@ -297,18 +314,12 @@ document.addEventListener('DOMContentLoaded', () => {
             const windowHeight = window.innerHeight;
             const scrollFromTop = window.scrollY;
 
-            // Calculate progress to fill bar as user scrolls through the entire content portion visually
-            // This version calculates progress relative to full document scrollable height
+            // Calculate progress to fill bar as user scrolls through the entire document's content area
             let totalScrollableHeight = documentHeight - windowHeight;
-            let currentReadProgress = Math.min(100, (scrollFromTop / totalScrollableHeight) * 100);
+            let currentReadProgress = (scrollFromTop / totalScrollableHeight) * 100;
             
-            // Or - if only within the article bounds:
-            // let articleStart = contentRect.top + window.scrollY;
-            // let articleEnd = contentRect.bottom + window.scrollY;
-            // let effectiveScroll = scrollFromTop - articleStart;
-            // let effectiveReach = articleEnd - articleStart - windowHeight;
-            // let progress = Math.min(100, Math.max(0, (effectiveScroll / effectiveReach) * 100));
-
+            if (currentReadProgress < 0) currentReadProgress = 0;
+            if (currentReadProgress > 100) currentReadProgress = 100;
 
             progressBar.style.width = currentReadProgress + '%';
         });
@@ -325,8 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!menuToggle || !mainNav || !menuClose) {
             console.warn('Menu elements not found, main menu features disabled.');
-            // Even if elements not found, might need to reset no-scroll if previous state was bad
-             document.body.classList.remove('no-scroll');
+            document.body.classList.remove('no-scroll');
             return;
         }
 
@@ -334,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle.addEventListener('click', () => {
             mainNav.classList.add('is-open');
             menuToggle.setAttribute('aria-expanded', 'true');
+            // Disable body scroll when menu is open
             document.body.classList.add('no-scroll'); 
         });
 
@@ -341,6 +352,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeMenu = () => {
             mainNav.classList.remove('is-open');
             menuToggle.setAttribute('aria-expanded', 'false');
+            // Enable body scroll when menu is closed
             document.body.classList.remove('no-scroll');
         };
 
@@ -407,8 +419,28 @@ document.addEventListener('DOMContentLoaded', () => {
     setupScrollAnimations();
     setupBackToTopButton();
     setupCursorTrail();
-    setupReadProgressBar(); 
+    setupReadProgressBar();
     setupMainMenu(); 
     setupShareButtons();
     setupFooterDetails(); 
+
+    // Initial check for mobile to apply correct blur value
+    const updateBodyBlur = () => {
+        const mobileBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim(); // Ensure getting correct value from CSS var
+        const desktopBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
+
+        if (isMobile) {
+            document.body.style.setProperty('--body-backdrop-blur', mobileBlur); // Apply mobile blur to body
+        } else {
+            document.body.style.setProperty('--body-backdrop-blur', desktopBlur); // Apply desktop blur to body
+        }
+    };
+    updateBodyBlur(); // Apply on load
+
+    window.addEventListener('resize', () => { // Update on resize
+        // Re-check `isMobile` on resize for responsive adjustments if breakpoint crosses, or rely on CSS media queries
+        // For dynamic blur value from var, simply re-run.
+        updateBodyBlur();
+    });
 });
+
