@@ -30,8 +30,8 @@
                 <!-- 手机端关闭菜单按钮 -->
                 <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
-                    <li><a href="index.html">主页</a></li>
-                    <li><a href="blog.html">文章</a></li>
+                    <li><a href="invarndex.html">主页</a></li>
+                    <li><a href="blog.html" class="active">文章</a></li>
                     <li><a href="about.html">关于我</a></li>
                     <li><a href="comments.html">留言板</a></li>
                 </ul>
@@ -42,11 +42,17 @@
     <main class="container content-page-wrapper">
         <section class="recent-posts" id="posts-section">
             <h2 class="section-title animate__slide-up">我的随笔</h2>
-            <div class="posts-grid">
+
+            <!-- 新增：文章分类（标签）筛选区域 -->
+            <div id="blog-category-filters" class="category-filters animate__fade-in">
+                <button class="filter-tag-button active" data-filter="all">全部文章</button>
+                <!-- 标签按钮会由 JavaScript (script.js) 动态生成 -->
+            </div>
+
+            <div class="posts-grid" id="all-posts-grid">
                 <!-- 第一篇文章卡片 -->
-                <div class="post-card animate__slide-up">
+                <div class="post-card animate__slide-up" data-tags="影评,治愈,新海诚">
                     <a href="posts/first-post.html">
-                        <!-- data-src-type="wallpaper" 标识此图片应由 js/script.js 动态替换为随机壁纸 -->
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="「你的名字」影评" class="post-thumbnail">
                         <div class="post-info">
                             <h3>我与《你的名字》的初次邂逅：情感的交织与时间的奇迹</h3>
@@ -57,7 +63,7 @@
                     </a>
                 </div>
                 <!-- 第二篇文章卡片 -->
-                <div class="post-card animate__slide-up" data-delay="100">
+                <div class="post-card animate__slide-up" data-delay="100" data-tags="手办,分享,waifu,收藏">
                     <a href="posts/second-post.html">
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="手办收藏" class="post-thumbnail">
                         <div class="post-info">
@@ -68,10 +74,10 @@
                         </div>
                     </a>
                 </div>
-                <!-- 范例文章卡片，你可以替换为自己的新文章 -->
-                <div class="post-card animate__slide-up" data-delay="200">
+                <!-- 新增第三篇文章卡片： 四月新番速览 -->
+                <div class="post-card animate__slide-up" data-delay="200" data-tags="新番,推荐,动画">
                     <a href="posts/article-template.html"> 
-                        <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="番剧推荐" class="post-thumbnail">
+                        <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="新番推荐" class="post-thumbnail">
                         <div class="post-info">
                             <h3>四月新番速览：不容错过的几部神作预定！</h3>
                             <p class="post-excerpt">又到了充满希望的四月，今年的新番竞争依然激烈，我已经帮大家筛选出了最值得关注的几部番剧。</p>
@@ -80,7 +86,19 @@
                         </div>
                     </a>
                 </div>
-                <!-- 更多文章可在此添加 -->
+                <!-- 新增第四篇文章卡片： 编程心情 -->
+                <div class="post-card animate__slide-up" data-delay="300" data-tags="编程,杂谈,日常,前端">
+                    <a href="posts/third-post.html"> 
+                        <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="代码与诗意" class="post-thumbnail">
+                        <div class="post-info">
+                            <h3>代码与我的诗和远方：一个关于前端开发的独白</h3>
+                            <p class="post-excerpt">写代码对我来说，不仅仅是逻辑和效率的追求，更是一场充满发现与创造的旅程...</p>
+                            <time datetime="2024-05-02">2024年5月2日</time>
+                            <div class="post-tags"><span class="tag">#编程</span><span class="tag">#前端</span></div>
+                        </div>
+                    </a>
+                </div>
+                <!-- 可在此添加更多文章卡片，记得为每张卡片添加 `data-tags` 属性 -->
             </div>
         </section>
     </main>

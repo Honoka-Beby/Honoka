@@ -13,11 +13,14 @@
     --content-backdrop-blur: 9px;  /* 内容区域更高模糊度 (更强的磨砂玻璃感) */
     --card-backdrop-blur: 6px;     /* 卡片更高模糊度 */
 
-    /* ------------- 动态控制的全局 Body 模糊值 ------------- */
+    /* ------------- 动态控制的全局 Body 模糊值变量 ------------- */
     /* 由 JS 根据设备宽度动态更新该变量，然后 body::before 使用此变量。 */
-    --body-global-blur-value: var(--body-backdrop-blur); /* 默认值同桌面 */
+    --body-global-blur-value: var(--body-backdrop-blur); /* 默认值同桌面端，JS会实时更新 */
     --body-backdrop-blur-mobile: 1px; /* 手机端 body 模糊度基准值 */
 
+    /* HEADER MIN HEIGHT VARIABLES */
+    --header-min-height: 50px; /* 桌面端Header最小高度 */
+    --header-min-height-mobile: 45px; /* 手机端Header最小高度 */
 
     --bg-secondary-color: #2a2438; /* 稍微浅一点的紫色，用于一些区块 */
     --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
@@ -26,7 +29,7 @@
     --content-bg-color: rgba(26, 22, 37, 0.72); /* 主要内容区的半透明背景 (e.g. blog, about, comments, post-detail wrapper) */
     
     --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
-    /* Secondary color RGB values for use in rgba(). Ensure these match the main secondary-color */
+    /* Secondary color RGB values for use in rgba(). */
     --secondary-color-rgb: 189, 147, 249; 
     --shadow-rgb: 0, 0, 0; /* 用于阴影 */
 
@@ -34,6 +37,7 @@
     --text-color: #dcd7e6; /* 主体文本颜色 */
     --text-color-rgb: 220, 215, 230; /* 新增 RGB 变量，用于颜色计算，特别是实现 homepage title 透明度效果 */
     --heading-color: #ffffff; /* 标题颜色 */
+    --heading-color-rgb: 255, 255, 255; /* 新增 RGB 变量 */
     --meta-text-color: #9e9aac; /* 元信息/辅助文本颜色 */
 
     /* Accent & Primary Colors - 亮眼的少女粉 */
