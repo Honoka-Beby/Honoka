@@ -63,36 +63,35 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const fetchRandomAnimeImage = async (targetElement, type = 'background', options = { preferLandscape: true, width: 1920, height: 1080 }) => {
         let imageUrl = '';
-        const { preferLandscape, width, height } = options; // Use width/height as hints for Unsplash
+        const { preferLandscape, width, height } = options; 
 
         // Aggressive image matching for different API response structures
         const extractImageUrl = async (response, api) => {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.startsWith('image/')) {
-                return response.url; // Direct image URL
-            } else if (contentType && contentType.includes('json')) { // Try to parse JSON response
+                return response.url; 
+            } else if (contentType && contentType.includes('json')) { 
                 const data = await response.json();
                 if (data && (data.imgurl || data.url) && typeof (data.imgurl || data.url) === 'string' && (data.imgurl || data.url).match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
                     return data.imgurl || data.url;
                 }
             }
-            return ''; // No image URL found
+            return ''; 
         };
         
         // Priority Ordered API Endpoints (prioritizing direct high-quality URLs)
         const apiEndpoints = [
-            `https://iw233.cn/api/Pure.php`,                             // Known good for direct anime images
-            `https://api.adicw.cn/img/rand`,                            // Known good for direct anime images
-            `https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json`, // JSON API with imgurl, good fallback
-            // Unsplash can be hit or miss for specific content, place lower priority
+            `https://iw233.cn/api/Pure.php`,                             
+             `https://api.adicw.cn/img/rand`,                            
+            `https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json`, 
             `https://source.unsplash.com/random/${width}x${height}/?anime,manga,${preferLandscape ? 'landscape,art,fantasy,wide' : 'portrait,art'}`,
-            `https://random.dog/${width}x${height}/?query=anime,manga,${preferLandscape ? 'landscape' : 'portrait'}`, // Proxy or alternative source random.dog
+            `https://random.dog/${width}x${height}/?query=anime,manga,${preferLandscape ? 'landscape' : 'portrait'}`, 
         ];
         
         for (const api of apiEndpoints) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 Secs Timeout per API
+                const timeoutId = setTimeout(() => controller.abort(), 6000); 
                 const response = await fetch(api, { method: 'GET', redirect: 'follow', signal: controller.signal, headers: {'accept': 'image/*,application/json'} });
                 clearTimeout(timeoutId);
 
@@ -100,10 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
                     imageUrl = await extractImageUrl(response, api);
                     if (imageUrl) {
                         console.log(`🖼️ API Success (${api.split('?')[0]}): ${imageUrl.substring(0, 50)}...`);
-                        break; // Found a valid image
+                        break; 
                     }
                 } else {
-                    console.warn(`⚠️ API ${api.split('?')[0]} responded with status ${response.status}.`);
+                    console.warn(`⚠️ API ${api.split('?')[0]} responded with status ${response.status}. Trying next.`);
                 }
             } catch (innerError) {
                 if (innerError.name === 'AbortError') {
@@ -126,21 +125,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (type === 'image') {
                     targetElement.src = imageUrl;
                     targetElement.style.opacity = '1';
-                    targetElement.style.objectFit = 'cover'; // Restore object-fit for good image
+                    targetElement.style.objectFit = 'cover'; 
                 }
                 targetElement.classList.remove('is-loading-fallback'); 
-                const fallbackText = targetElement.nextElementSibling;
+                const fallbackText = targetElement.nextElementSibling; // Might be a sibling div
                 if (fallbackText && fallbackText.classList.contains('fallback-text-overlay')) {
                     fallbackText.remove();
                 }
             };
             imgToLoad.onerror = () => { 
-                console.warn(`🚫 Image preload failed for URL (${imageUrl}). Manual fallback applied.`);
-                applyFallbackImage(targetElement, type);
+                console.warn(`🚫 Image preload failed for URL (${imageUrl}). Applying fallback.`);
+                 applyFallbackImage(targetElement, type); // Call fallback if preload fails
             };
         } else {
             console.error('❌ All APIs failed to provide a valid image URL. Manual fallback enforced.');
-            applyFallbackImage(targetElement, type); // Apply fallback directly if no URL was found
+            applyFallbackImage(targetElement, type); 
         }
     };
     
@@ -154,33 +153,43 @@ document.addEventListener('DOMContentLoaded', () => {
         if (type === 'background') {
             document.documentElement.style.setProperty('--bg-image', getRandomGradient());
         } else if (type === 'image') {
+            // Set the src to local fallback. Attempt to load local image.
             targetElement.src = localFallbackSrc; 
-            targetElement.style.objectFit = 'contain'; // Important for visual consistency for fallback
+            targetElement.style.objectFit = 'contain'; 
             targetElement.classList.add('is-loading-fallback'); 
-            targetElement.style.backgroundImage = getRandomGradient();
+            targetElement.style.opacity = '1'; 
+            targetElement.style.backgroundImage = getRandomGradient(); // As a base background
             targetElement.style.backgroundRepeat = 'no-repeat';
             targetElement.style.backgroundPosition = 'center';
             targetElement.style.backgroundSize = 'cover';
-            targetElement.style.opacity = '1'; // Ensure the IMG is visible by itself with fallback src
+            targetElement.style.filter = 'grayscale(100%) brightness(0.6) blur(1px)'; 
 
+            // Create or update text overlay
             let fallbackTextOverlay = targetElement.nextElementSibling;
-            if (targetElement.tagName === 'IMG') {
+            if (targetElement.tagName === 'IMG') { 
                 if (!fallbackTextOverlay || !fallbackTextOverlay.classList.contains('fallback-text-overlay')) {
                     fallbackTextOverlay = document.createElement('div');
                     fallbackTextOverlay.classList.add('fallback-text-overlay');
-                    fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                     // Ensure parent allows absolute positioning of overlay
                     if (targetElement.parentNode && getComputedStyle(targetElement.parentNode).position === 'static') {
                         targetElement.parentNode.style.position = 'relative'; 
                     }
                     targetElement.parentNode.insertBefore(fallbackTextOverlay, targetElement.nextSibling);
-                } else {
-                    fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                    fallbackTextOverlay.style.display = 'flex'; // Ensure it's showing
+
                 }
-                 targetElement.style.filter = 'grayscale(100%) brightness(0.6) blur(1px)'; // Add filter to fallback image
+                fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
+                fallbackTextOverlay.style.display = 'flex'; // Ensure visible
+
+                // Optional: Listen for local image load error, if it's broken too.
+                const localImgTest = new Image();
+                localImgTest.src = localFallbackSrc;
+                localImgTest.onerror = () => {
+                    console.warn(`Local fallback image ${localFallbackSrc} also failed to load. Displaying text overlay only.`);
+                    // If local image fails, make the img tag completely transparent
+                    targetElement.src = "data:image/svg+xml,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20%2F%3E"; // Transparent 1x1 GIF to prevent browser broken image icon
+                    targetElement.style.opacity = '0.01'; // make almost transparent, so fallback text is visible on gradient
+                };
             }
-            console.log(`⚡  Applied local fallback for ${targetElement.alt}`);
+            console.log(`⚡  Applied robust fallback for ${targetElement.alt}`);
         }
     };
     
@@ -192,16 +201,16 @@ document.addEventListener('DOMContentLoaded', () => {
         return `linear-gradient(135deg, hsla(${h1}, ${s}%, ${l}%, 0.7), hsla(${h2}, ${s}%, ${l}%, 0.7))`;
     }
 
-    // --- Main Body Background (for all pages) ---
-    fetchRandomAnimeImage(document.body, 'background', { preferLandscape: true, width: 1920, height: 1080 }); // Always set body background
 
-    const setupHomepageBackground = () => {}; // Placeholder
+    // --- Main Body Background (for all pages) ---
+    fetchRandomAnimeImage(document.body, 'background', { preferLandscape: true, width: 1920, height: 1080 }); 
+
+    const setupHomepageBackground = () => {}; 
 
     // --- Dynamic Article Thumbnail/Banner Images ---
     const setupDynamicPostImages = () => {
         document.querySelectorAll('.post-thumbnail[data-src-type="wallpaper"]').forEach(img => {
-            // Apply fallback upfront to minimize visual loading gaps
-            applyFallbackImage(img, 'image'); 
+            applyFallbackImage(img, 'image'); // Immediately apply fallback state
             fetchRandomAnimeImage(img, 'image', { preferLandscape: true, width: 500, height: 300 }); 
         });
 
@@ -309,24 +318,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.clientHeight, 
                 document.documentElement.clientHeight
             );
-            // Adjust calculation: windowHeight could be dynamic
             let windowHeight = window.innerHeight;
 
-            // This calculates scroll progress across the entire page, from top to bottom
-            // if you only want progress within the article, adjust `scrollRange`
-            // Current progress: how far user has scrolled in relation to total scrollable content
             let scrollRange = documentHeight - windowHeight;
-            let currentScrollPosition = window.scrollY; // How far down user is
+            let currentScrollPosition = window.scrollY; 
 
             let readProgress = (currentScrollPosition / scrollRange) * 100;
-            readProgress = Math.min(100, Math.max(0, readProgress)); // Clamp value
+            readProgress = Math.min(100, Math.max(0, readProgress)); 
 
             progressBar.style.width = readProgress + '%';
         }
 
         window.addEventListener('scroll', calculateProgress);
         window.addEventListener('resize', calculateProgress); 
-        setTimeout(calculateProgress, 500); // Initial call after slight delay for layout stability
+        setTimeout(calculateProgress, 500); 
     };
     
     // --- Setup Main Navigation Menu (Unified Hamburger for Desktop/Mobile) ---
@@ -341,25 +346,37 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // --- Open Menu ---
-        menuToggle.addEventListener('click', () => {
+        const positionMenu = () => {
+            const toggleRect = menuToggle.getBoundingClientRect();
+            // Align menu top right corner with the toggle's bottom left corner + some offset
+            mainNav.style.top = `${toggleRect.bottom + 10}px`; // 距离 toggle 底部 10px
+            mainNav.style.right = `${window.innerWidth - toggleRect.right}px`; // 保持右侧对齐，减去 toggle 的宽度
+            // 确保菜单不超出左侧屏幕
+            if (toggleRect.right - mainNav.offsetWidth < 0) {
+                 mainNav.style.left = '10px'; //距离左边10px
+                 mainNav.style.right = 'auto';
+            }
+        };
+
+        const openMenu = () => {
+            positionMenu(); // Position menu before opening
             mainNav.classList.add('is-open');
             menuToggle.setAttribute('aria-expanded', 'true');
-            // Disable body scroll when menu is open
             document.body.classList.add('no-scroll'); 
-        });
+        };
 
-        // --- Close Menu ---
         const closeMenu = () => {
             mainNav.classList.remove('is-open');
             menuToggle.setAttribute('aria-expanded', 'false');
-            // Enable body scroll when menu is closed
             document.body.classList.remove('no-scroll');
         };
 
+        menuToggle.addEventListener('click', () => {
+            mainNav.classList.contains('is-open') ? closeMenu() : openMenu();
+        });
+
         menuClose.addEventListener('click', closeMenu);
 
-        // Close menu when a navigation link is clicked inside the menu
         mainNav.querySelectorAll('a').forEach(link => {
             const href = link.getAttribute('href');
             if (href && !href.startsWith('http') && !href.startsWith('mailto:') && !href.includes('#')) {
@@ -372,6 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 link.addEventListener('click', closeMenu);
             }
         });
+        window.addEventListener('resize', positionMenu); // Reposition on resize
     };
 
 
@@ -425,19 +443,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Initial check for body blur based on state and responsive updates
     const updateBodyBlur = () => {
-        const desktopBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
-        const mobileBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim(); // Ensure it takes from mobile var
+        const bodyElement = document.body;
+        const bodyBeforePseudo = getComputedStyle(bodyElement, '::before');
+        // Ensure --body-global-blur-value is properly used to apply blur dynamically
+         const targetBlur = window.innerWidth <= 767 ? 
+                             getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim() :
+                             getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
+        
+        bodyElement.style.setProperty('--body-global-blur-value', targetBlur);
+        bodyElement.style.setProperty('--body-backdrop-blur', targetBlur); // Direct override of the CSS var
+        console.log("--body-backdrop-blur set to:", targetBlur);
 
-        if (window.innerWidth <= 767) { 
-            document.documentElement.style.setProperty('--body-global-blur-value', mobileBlur);
-        } else {
-            document.documentElement.style.setProperty('--body-global-blur-value', desktopBlur);
-        }
-         // Directly apply to body::before
-        document.body.style.setProperty('--body-global-blur-computed', getComputedStyle(document.documentElement).getPropertyValue('--body-global-blur-value'));
     };
     
     updateBodyBlur(); // Apply on load
     window.addEventListener('resize', updateBodyBlur); 
 });
-

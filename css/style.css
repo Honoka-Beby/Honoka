@@ -123,7 +123,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 #global-page-transition-overlay.visible {
     opacity: 1; 
     visibility: visible;
-    transition: opacit 0.4s ease-in, visibility 0s linear; 
+    transition: opacity 0.4s ease-in, visibility 0s linear; 
 }
 #global-page-transition-overlay .loader {
     position: relative; 
@@ -192,36 +192,34 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     animation: fadeIn 1.5s ease-out;
 }
 
-/* 主页标题 “Honoka的小屋” 的白字保留+粉色发光光束划过动画 */
+/* 主页标题 “Honoka的小屋” 的动画 (文字颜色渐变+发光，从左到右循环) */
 .blog-title--animated.is-homepage-title > a { 
     color: transparent; /* **关键：文字填充透明，让背景渐变透过** */
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
-    -webkit-text-fill-color: transparent; /* Webkit browsers - text is transparent */
-    background-color: var(--text-color); /* Fallback color for browsers not supporting `background-clip: text` */
+    -webkit-text-fill-color: transparent; /* Webkit browsers: text is transparent */
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.3); /* 基础白字发光，增强立体感 */
     
-    /* 核心动画：移动的背景渐变 + text-clip */
+    /* 核心动画：移动的背景渐变 (白色->粉色发光->白色) + text-clip */
     background-image: linear-gradient(90deg, 
-        rgba(var(--text-color-rgb), 0.1) 0%, /* 起始透明白 - 文字呈现白色 */
-        rgba(var(--text-color-rgb), 0.7) 15%, /* 逐渐变白，并准备被发光覆盖 */
-        var(--body-overlay-bg) 35%, /* 假装这里是空白，让粉色发光生效 */
-        var(--primary-color) 45%, /* 粉色发光最强点 */
-        var(--primary-color) 55%,
-        rgba(var(--text-color-rgb), 0.7) 75%, /* 粉色逐渐淡出为白色 */
-        rgba(var(--text-color-rgb), 0.1) 100% /* 结束透明白 - 文字呈现白色 */
+        var(--text-color) 0%,           /* 文字初始为白色 */
+        var(--text-color) 20%,          /* 保持白色 */
+        var(--primary-color) 40%,       /* 开始渐变为粉色 */
+        var(--primary-color) 60%,       /* 粉色最强，并发光 */
+        var(--text-color) 80%,          /* 逐渐变回白色 */
+        var(--text-color) 100%          /* 恢复白色 */
     );
-    background-size: 400% 100%; /* 确保渐变带宽度足以从左滑到右 */
+    background-size: 400% 100%; /* 确保渐变带比文字宽度大很多倍，以便移动和循环 */
     background-repeat: no-repeat;
     -webkit-background-clip: text; /* 将背景裁剪成文字形状 */
-    background-clip: text; /* 标准属性 */
+    background-clip: text;         /* 标准属性 */
 
-    animation: homepage-title-flow-glow 4s linear infinite; /* 绑定动画 */
+    animation: homepage-title-flow-glow 4s linear infinite; /* 确保循环平滑 */
 
-    /* 为整体文字添加发光滤镜，使其在粉色区域更显著 */
-    filter: drop-shadow(0 0 5px rgba(var(--text-color-rgb), 0.2)) /* 基础文字的淡淡白光 */
-            drop-shadow(0 0 10px rgba(var(--primary-color-rgb), 0.5)); /* 主要的粉色发光 */
-    will-change: background-position, filter; /* 优化动画性能 */
+    /* 为整体文字添加额外的发光滤镜，使其在粉色区域光芒更盛 */
+    filter: drop-shadow(0 0 10px rgba(var(--primary-color-rgb), 0.7)); 
+    will-change: background-position, filter; 
 
     position: relative;
     display: inline-block; 
@@ -253,15 +251,13 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     will-change: text-shadow, filter; 
 
     /* 禁用主页标题的 background-clip 等复杂效果 */
-    -webkit-box-shadow: none; /* 移除旧的浏览器前缀阴影 */
-    box-shadow: none; /* 移除 box-shadow */
     background-image: none; /* 移除背景图片动画 */
     background-color: transparent; /* 确保背景色透明 */
     background-clip: border-box; /* 恢复默认裁剪 */
     -webkit-background-clip: border-box;
     -webkit-text-fill-color: inherit; /* 恢复默认文本填充颜色 */
-    filter: none; /* 移除 filter 效果以免干扰 */
-    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); /* 给文字一个基础的柔和白光 */
+    filter: none; /* 移除总体的 drop-shadow 滤镜 */
+    text-shadow: 0 0 5px rgba(255, 255, 255, 0.4); /* 给文字一个基础的柔和白光 */
 }
 
 @keyframes header-text-pulse-glow {
@@ -294,20 +290,10 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     transform: translateY(-2px);
 }
 
-.scroll-down-arrow {
-    position: absolute;
-    bottom: 3rem;
-    z-index: 2;
-    color: #fff;
-    font-size: 0.9rem;
-    animation: bounce 2s infinite;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-}
-.scroll-down-arrow svg { display: block; margin: 0 auto 0.5rem; width: 30px; height: 30px;}
-
-@keyframes bounce { 0%, 20%, 50%, 80%, 100% { transform: translateY(0); } 40% { transform: translateY(-10px); } 60% { transform: translateY(-5px); } }
+/* "探索更多" 删除后，其样式不再需要。保留一些基础定位属性给其他元素*/
+/* .scroll-down-arrow {
+    display: none;
+} */
 
 
 /* --- General Header and Navigation (Unified Hamburger Menu) --- */
@@ -343,7 +329,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     background: none;
     border: none;
     cursor: pointer;
-    padding: 8px; /* 触摸友好的点击区域 */
+    padding: 8px; 
     position: relative;
     z-index: 210; 
     -webkit-tap-highlight-color: transparent;
@@ -365,70 +351,75 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* 圆润的导航菜单小框 */
 .main-nav {
-    display: block; /* 默认隐藏，由 JS 控制显示 */
-    position: fixed; /* 固定在视图中，覆盖其他内容 */
-    /* 计算菜单初始位置：在屏幕右侧可见区域之外 */
-    top: 20px; /* 距离顶部，可以根据 header 的实际高度和 menu-toggle 位置调整 */
-    right: calc(-300px - 20px); /* 菜单宽度+margin，确保完全隐藏 */
+    display: block; 
+    position: fixed; 
+        /* top 和 right 的值将根据实际 menu-toggle 的位置进行计算 */
+    /* top值应该与 .menu-toggle 的垂直中心对齐，或者与其底部对齐，以在屏幕上形成紧凑的弹出 */
+    top: 55px; /* 暂定一个初始值，稍后 JS 可能会精确调整此高度 */
+    right: 20px; /* 默认关闭状态下向右隐藏 */
+    transform: translateX(120%); /* 藏到屏幕外，略微宽一些 */
     
-    width: 280px; /* 菜单小框的固定宽度 */
-    max-height: calc(100vh - 40px); /* 最大高度，防止菜单过长超出屏幕 */
+    width: 250px; /* 菜单小框的固定宽度 */
+    max-height: calc(100vh - 80px); /* 最大高度 */
     background-color: var(--card-bg-color); /* 半透明背景 */
+    background-image: radial-gradient(circle at top right, rgba(var(--primary-color-rgb),0.05) 0%, transparent 80%); /* 顶部角落轻微的放射渐变，更细节感 */
     backdrop-filter: blur(var(--content-backdrop-blur)); /* 磨砂玻璃效果 */
     border-radius: var(--border-radius-lg); /* 圆润的边角 */
     border: 1px solid var(--border-color); /* 边框与主题色呼应 */
     box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); /* 柔和阴影 */
-    transition: right 0.3s ease-in-out, opacity 0.3s ease, visibility 0.3s ease; /* 动画过渡 */
-    z-index: 200; /* 确保在内容上方 */
+    transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.3s ease; /* 更流畅的动画曲线 */
+    transition-delay: 0.05s; /* 稍微延迟动画，更显精致 */
+    z-index: 200; 
     opacity: 0; 
-    visibility: hidden;
     pointer-events: none; /* 默认不响应鼠标事件 */
-    padding: 1.5rem; /* 菜单内容内边距 */
-    display: flex; /* Flexbox 布局使其内部内容居中 */
+    padding: 1.5rem; 
+    display: flex; 
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    justify-content: center; /* 垂直居中内部元素 */
+    align-items: center; /* 水平居中内部元素 */
     text-align: center; /* 确保文本例如关闭按钮的图标居中 */
-    overflow-y: auto; /* 超出内容可滚动 */
-
-    ul { 
-        list-style: none; display: flex; flex-direction: column; 
-        gap: 1.2rem; /* 菜单项间距 */
-        margin: 0; align-items: center; padding: 0.5rem 0; /* 调整内边距 */
-        width: 100%;
-    }
-    a { 
-        font-weight: 500; padding: 0.8em 1.5em; 
-        border-radius: var(--border-radius); /* 按钮圆角 */
-        transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; 
-        -webkit-tap-highlight-color: transparent;
-        font-size: 1.4em; /* 增大菜单文字 */
-        width: 90%; /* 菜单项宽度，给一些边距 */
-        max-width: 250px;
-        color: var(--primary-color); /* 初始文字颜色 */
-        background-color: rgba(var(--primary-color-rgb), 0.1); /* 轻微背景高亮 */
-    }
-    a:hover, a.active { 
-        color: #fff; /* 悬停文字白色 */
-        background-color: var(--primary-color); /* 悬停背景变实粉色 */
-        transform: translateY(-2px); 
-        box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.4); /* 增加悬停阴影 */
-    } 
+    overflow-y: auto; 
 }
 .main-nav.is-open { /* 菜单打开状态 */
-    right: 20px; /* 距离屏幕右侧的距离 */
+    transform: translateX(0%); /* 移动到可见位置 */
     opacity: 1; 
-    visibility: visible;
     pointer-events: auto; 
+    transition-delay: 0s; /* 打开时立即响应 */
 }
+
+ .main-nav ul { 
+    list-style: none; display: flex; flex-direction: column; 
+    gap: 1.2rem; 
+    margin: 0; align-items: center; padding: 0.5rem 0; 
+    width: 100%;
+}
+.main-nav a { 
+    font-weight: 500; padding: 0.8em 1.5em; 
+    border-radius: var(--border-radius); 
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; 
+    -webkit-tap-highlight-color: transparent;
+    font-size: 1.4em; 
+    width: 90%; 
+    max-width: 200px; /* 菜单项宽度，给一些边距 */
+    color: var(--primary-color); 
+    background-color: rgba(var(--primary-color-rgb), 0.1); /* 轻微背景高亮 */
+     text-shadow: none; /* 取消其他按钮的 text shadow */
+     border: 1px solid rgba(var(--primary-color-rgb), 0.3); /* 按钮也加边框 */
+}
+.main-nav a:hover, .main-nav a.active { 
+    color: #fff; 
+    background-color: var(--primary-color); 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.4); 
+} 
  .main-nav .menu-close {
     display: block; 
     position: absolute;
     top: 10px; 
     right: 10px; 
-    font-size: 1.8em; /* 关闭符号大小，更和谐 */
+    font-size: 1.8em; 
     font-weight: normal; 
-    color: var(--meta-text-color); /* 颜色调整 */
+    color: var(--meta-text-color); 
     background: none;
     border: none;
     cursor: pointer;
@@ -438,8 +429,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     transition: color 0.2s ease, transform 0.2s ease;
 }
 .main-nav .menu-close:hover {
-    color: var(--primary-color); /* 悬停变粉 */
-    transform: scale(1.1) rotate(90deg); /* 更显著旋转效果 */
+    color: var(--primary-color); 
+    transform: scale(1.1) rotate(90deg); 
 }
 
 
@@ -452,8 +443,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
-    display: block; /* 确保为块级元素，使其可以占据一行 */
-    width: 100%; /* 允许占据全部父容器空间以居中文本 */
+    display: block; 
+    width: 100%; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -524,35 +515,26 @@ main.container.content-page-wrapper {
     transition: transform 0.3s ease; 
     font-size: 0; 
     flex-shrink: 0; 
-    position: relative; /* 确保子集的 fallback-text-overlay 可以在其中定位 */
-    background-color: var(--bg-fallback-color); /* 在所有 fallbacks 之前提供纯色背景 */
-
-    &.is-loading-fallback {
-        background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%);
-        object-fit: contain; /* 改为 contain, 确保如果有一个fallback图片会完整显示 */
-        filter: saturate(0.5) blur(1px); /* 略微去饱和模糊，配合提示文字更突出 */
-        /* opacity: 0.5; /* 让图片稍微透明，突出文字提示 */ */
-    }
+    position: relative; 
+    background-color: var(--bg-fallback-color); 
 }
 /* 图片报错时的文本样式 */
 .fallback-text-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 100%;
-    height: 100%;
-    display: flex; /* 用于文本居中 */
+    top: 0; left: 0; right: 0; bottom: 0; /* 覆盖整个图片容器 */
+    display: flex; 
     justify-content: center;
     align-items: center;
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
     text-shadow: 0 0 5px rgba(0,0,0,0.7);
-    background: rgba(0,0,0,0.4); /* 半透明黑底，确保文字可读 */
-    pointer-events: none; /* 不阻止鼠标事件传递 */
+    background: rgba(0,0,0,0.5); /* 覆盖在图片之上，确保文字可读 */
+    pointer-events: none; 
     z-index: 5;
-     font-family: var(--font-primary); /* 使用主文本字体 */
-     padding: 0 10px; /* 左右内边距防止文字溢出 */
+     font-family: var(--font-primary); 
+     padding: 0 10px; 
+     border: 1px dashed var(--border-color); /* 增加虚线边框提示它是个占位符 */
+     box-sizing: border-box; /* 边框包含在尺寸内 */
 }
 
 
@@ -587,7 +569,7 @@ main.container.content-page-wrapper {
     max-width: 760px; 
     margin-left: auto; 
     margin-right: auto; 
-    text-align: justify; /* 段落内容两端对齐 (桌面端) */
+    text-align: justify; 
 }
 .content-page-wrapper ul, .content-page-wrapper ol { 
     max-width: 760px;
@@ -800,19 +782,13 @@ main .blog-post-detail {
     object-fit: cover;
     border-radius: var(--border-radius);
     margin-bottom: 2em;
-    box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
+    box-shadow: 0 5p 15px rgba(var(--shadow-rgb), 0.3);
     font-size: 0; 
     position: relative; /* For text overlay */
     background-color: var(--bg-fallback-color); /* Fallback */
-
-    &.is-loading-fallback {
-        background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%); 
-        object-fit: contain; 
-        filter: saturate(0.5) blur(1px); /* Visual cue */
-    }
 }
-/* For detail banner as well */
-.post-detail-banner + .fallback-text-overlay { /* 针对紧随其后的 .fallback-text-overlay */
+/* 图片加载失败时的文本样式 */
+.post-detail-banner + .fallback-text-overlay { 
     font-size: 1.2rem;
 }
 
@@ -887,7 +863,7 @@ main .blog-post-detail {
     text-align: center;
     margin-top: auto; 
      -webkit-backface-visibility: hidden; 
-    backface-visibility: hidden;
+     backface-visibility: hidden;
     transform: translateZ(0); 
 }
 
@@ -954,35 +930,37 @@ main .blog-post-detail {
 
     /* ------------- 头部导航栏适配 ------------- */
     .main-header { padding: 0.3rem 0.5rem; min-height: 45px;} 
-    .main-header .container { padding: 0 0.5rem; } /* 进一步缩小 container 缩进 */
+    .main-header .container { padding: 0 0.5rem; } 
     .main-header .blog-title--animated.is-header-title > a { 
-        font-size: 1.2rem; /* 手机端导航栏标题更小 */
+        font-size: 1.2rem; 
+        padding: 0 3px; /* 调整导航栏标题 padding */
     }
-    .menu-toggle .icon-bar { width: 22px; margin: 3px 0;} /* 调整汉堡包条宽度和间距 */
+    .menu-toggle .icon-bar { width: 22px; margin: 3px 0;} 
     .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-4px, 4px); }
     .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-4px, -4px); }
     
     /* 缩小菜单小框在手机端更紧凑 */
     .main-nav {
-        top: 10px; /* 距离顶部 */
-        right: -webkit-calc(-250px - 10px); /* 宽度略小 + margin */
-        right: calc(-250px - 10px);
+        top: 55px; /* 距离顶部 */
+        right: calc(10px - 200px); /* 动画开始隐藏位置，宽度 + margin 以精确隐藏 */
         width: 200px; /* 菜单宽度 */
         max-height: calc(100vh - 20px);
         padding: 1rem;
+        transform: translateX(120%); /* 藏到屏幕外 */
     }
     .main-nav.is-open { 
-        right: 10px; 
+        right: 10px; /* 移动到可见位置 */
+        transform: translateX(0%);
     }
-    .main-nav .menu-close { font-size: 1.5em; top: 5px; right: 8px; } /* 缩小关闭按钮 */
-    .main-nav ul { gap: 0.8rem; } /* 缩小列表间距 */
-    .main-nav a { font-size: 1.1em; padding: 0.5em 0.8em; width: 95%; max-width: 180px; } /* 调整菜单项 */
+    .main-nav .menu-close { font-size: 1.5em; top: 5px; right: 8px; } 
+    .main-nav ul { gap: 0.8rem; } 
+    .main-nav a { font-size: 1.1em; padding: 0.5em 0.8em; width: 95%; max-width: 180px; } 
     
     /* ------------- 英雄区域适配 ------------- */
     .hero-content { padding: 0.5rem; margin-top: -15px;} 
     .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem;} 
     .hero-nav .nav-link { margin: 0 0.2rem; padding: 0.2rem 0.5em; font-size: 0.85em; }
-    .scroll-down-arrow {bottom: 0.8rem; font-size: 0.75rem;}
+    /* "探索更多"删除，样式无用 */
 
     /* ------------- 内容区域适配 ------------- */
     main.container.content-page-wrapper { margin: 0.8rem auto; padding: 1rem 0.5rem; }
@@ -1001,7 +979,7 @@ main .blog-post-detail {
          text-align: left; 
     }
     .post-content p, .post-content ul, .post-content ol { 
-        padding: 0 0.3em; /* 手机上段落内容也保持两端对齐，并添加少量内边距 */
+        padding: 0 0.3em; 
         font-size: 0.9em;
         text-align: justify; 
     }
