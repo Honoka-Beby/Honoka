@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    const isMobile = window.innerWidth <= 767; // Use initial screen width to determine mobile
     if(isMobile) {
         document.body.classList.add('is-mobile');
     }
@@ -16,29 +16,27 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
         }
         // Initially hide overlay after page loads
-        // Using a slight delay to ensure the page is fully rendered before hiding
         setTimeout(() => {
             pageTransitionOverlay.classList.remove('visible');
             setTimeout(() => {
                 pageTransitionOverlay.style.display = 'none';
-                document.body.classList.remove('no-scroll'); // Re-enable body scroll if it was disabled
-            }, 500); // Match CSS transition duration
+                document.body.classList.remove('no-scroll'); 
+            }, 500); 
         }, 100); 
     }
 
     const activatePageTransition = (urlToNavigate) => {
         if (!pageTransitionOverlay) {
-            window.location.href = urlToNavigate; // Fallback if overlay is missing
+            window.location.href = urlToNavigate; 
             return;
         }
-        document.body.classList.add('no-scroll'); // 禁用滚动
-        pageTransitionOverlay.style.display = 'flex'; // Make sure overlay is ready to be shown
+        document.body.classList.add('no-scroll'); 
+        pageTransitionOverlay.style.display = 'flex'; 
         pageTransitionOverlay.classList.add('visible');
         
-        // After fade-in transition (0.4s CSS), navigate
         setTimeout(() => {
             window.location.href = urlToNavigate;
-        }, 400); // Matches CSS transition duration
+        }, 400); 
     };
 
     // Intercept all internal link clicks for smooth transitions
@@ -60,132 +58,129 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {string} type - 'background' or 'image'
      * @param {object} options - Configuration options.
      * @param {boolean} options.preferLandscape - Whether to prioritize landscape images.
-     * @param {number} options.width - Desired width for image (for Unsplash mostly).
-     * @param {number} options.height - Desired height for image (for for image dimension hints, not strict).
+     * @param {number} options.width - Desired width for image hint.
+     * @param {number} options.height - Desired height for image hint.
      */
     const fetchRandomAnimeImage = async (targetElement, type = 'background', options = { preferLandscape: true, width: 1920, height: 1080 }) => {
         let imageUrl = '';
-        const { preferLandscape, width, height } = options;
+        const { preferLandscape, width, height } = options; // Use width/height as hints for Unsplash
+
+        // Aggressive image matching for different API response structures
+        const extractImageUrl = async (response, api) => {
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.startsWith('image/')) {
+                return response.url; // Direct image URL
+            } else if (contentType && contentType.includes('json')) { // Try to parse JSON response
+                const data = await response.json();
+                if (data && (data.imgurl || data.url) && typeof (data.imgurl || data.url) === 'string' && (data.imgurl || data.url).match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
+                    return data.imgurl || data.url;
+                }
+            }
+            return ''; // No image URL found
+        };
         
-        const unsplashKeywords = (type === 'image' && preferLandscape) ? 'anime,manga,landscape,art,fantasy,wide' : 'anime,manga,wallpaper';
-        // Ordered by perceived reliability and suitability for landscape anime
+        // Priority Ordered API Endpoints (prioritizing direct high-quality URLs)
         const apiEndpoints = [
-            `https://random.dog/${width}x${height}/?query=${unsplashKeywords}`, // Unsplash proxy might be more reliable
-            `https://source.unsplash.com/random/${width}x${height}/?${unsplashKeywords}`, /* Unsplash for diverse landscape possibilities */
-            'https://iw233.cn/api/Pure.php',               /* Direct image API, often landscape anime. */
-            'https://api.adicw.cn/img/rand',               /* Direct image API, mixed portrait/landscape */
-            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json' /* JSON API by bts.tu.cn for anime images */
+            `https://iw233.cn/api/Pure.php`,                             // Known good for direct anime images
+            `https://api.adicw.cn/img/rand`,                            // Known good for direct anime images
+            `https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json`, // JSON API with imgurl, good fallback
+            // Unsplash can be hit or miss for specific content, place lower priority
+            `https://source.unsplash.com/random/${width}x${height}/?anime,manga,${preferLandscape ? 'landscape,art,fantasy,wide' : 'portrait,art'}`,
+            `https://random.dog/${width}x${height}/?query=anime,manga,${preferLandscape ? 'landscape' : 'portrait'}`, // Proxy or alternative source random.dog
         ];
         
         for (const api of apiEndpoints) {
             try {
-                // Try fetching from the API with a timeout
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 seconds timeout for each API
-                const response = await fetch(api, { method: 'GET', redirect: 'follow', signal: controller.signal });
+                const timeoutId = setTimeout(() => controller.abort(), 6000); // 6 Secs Timeout per API
+                const response = await fetch(api, { method: 'GET', redirect: 'follow', signal: controller.signal, headers: {'accept': 'image/*,application/json'} });
                 clearTimeout(timeoutId);
 
                 if (response.ok) {
-                    const contentType = response.headers.get('content-type');
-                    // Check for direct image content-type
-                     if (contentType && contentType.startsWith('image/')) {
-                        imageUrl = response.url; // The actual final image URL after redirects
-                        console.log(`Using Direct Image API (${api.split('?')[0]}): ${imageUrl ? imageUrl.substring(0, 50) + '...' : 'Invalid URL'}`);
-                        if (imageUrl) break;
-                    } 
-                    // Handle JSON-based APIs specifically
-                    else if (api.includes('btstu.cn')) { // If it's the btstu API, it returns JSON
-                        const data = await response.json();
-                        if (data && data.imgurl && typeof data.imgurl === 'string' && data.imgurl.match(/\.(jpeg|jpg|gif|png|webp)$/i)) {
-                            imageUrl = data.imgurl;
-                            console.log(`Using BTSTU API (${api}): ${imageUrl.substring(0, 50)}...`);
-                            break;
-                            
-                        }
-                    } else {
-                        console.warn(`API ${api} did not return expected image or JSON. Content-Type: ${contentType}`);
+                    imageUrl = await extractImageUrl(response, api);
+                    if (imageUrl) {
+                        console.log(`🖼️ API Success (${api.split('?')[0]}): ${imageUrl.substring(0, 50)}...`);
+                        break; // Found a valid image
                     }
                 } else {
-                    console.warn(`API ${api} responded with status ${response.status}. Trying next.`);
+                    console.warn(`⚠️ API ${api.split('?')[0]} responded with status ${response.status}.`);
                 }
             } catch (innerError) {
                 if (innerError.name === 'AbortError') {
-                    console.warn(`API ${api} timed out after 6s, trying next.`);
+                    console.warn(`⏱️ API ${api.split('?')[0]} timed out after 6s. Trying next.`);
+                } else if (innerError instanceof TypeError) {
+                   console.warn(`🚫 API ${api.split('?')[0]} network error:`, innerError.message);
                 } else {
-                    console.warn(`API ${api} fetch error:`, innerError);
+                    console.warn(`❌ API ${api.split('?')[0]} failed:`, innerError);
                 }
             }
         }
         
         // --- Image Loading and Application ---
         if (imageUrl) {
-            const imgToLoad = new Image(); // Use Image object for preloading
+            const imgToLoad = new Image();
             imgToLoad.src = imageUrl;
             imgToLoad.onload = () => {
                 if (type === 'background') {
                     document.documentElement.style.setProperty('--bg-image', `url(${imageUrl})`);
                 } else if (type === 'image') {
-                    targetElement.src = imageUrl; // Set current img's src
-                    targetElement.style.opacity = '1'; // Ensure visibility
+                    targetElement.src = imageUrl;
+                    targetElement.style.opacity = '1';
+                    targetElement.style.objectFit = 'cover'; // Restore object-fit for good image
                 }
                 targetElement.classList.remove('is-loading-fallback'); 
-                // Any fallback text/div that was added will be removed
                 const fallbackText = targetElement.nextElementSibling;
                 if (fallbackText && fallbackText.classList.contains('fallback-text-overlay')) {
                     fallbackText.remove();
                 }
             };
-            imgToLoad.onerror = (e) => { // If the preloaded image fails after getting URL
-                console.warn(`Preloaded image (${imageUrl}) failed to render. Applying fallback.`);
+            imgToLoad.onerror = () => { 
+                console.warn(`🚫 Image preload failed for URL (${imageUrl}). Manual fallback applied.`);
                 applyFallbackImage(targetElement, type);
             };
-        } else { // No image URL obtained from any API
-            console.error('Failed to obtain any image URL from APIs after all attempts. Applying fallback.');
-            applyFallbackImage(targetElement, type);
+        } else {
+            console.error('❌ All APIs failed to provide a valid image URL. Manual fallback enforced.');
+            applyFallbackImage(targetElement, type); // Apply fallback directly if no URL was found
         }
     };
     
     // --- Helper for fallback images (to avoid repetition) ---
     const applyFallbackImage = (targetElement, type) => {
+        const isThumbnail = targetElement.classList.contains('post-thumbnail');
+        const fallbackSuffix = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
+        const baseRelativePath = window.location.pathname.includes('/posts/') ? '../img/' : './img/';
+        const localFallbackSrc = `${baseRelativePath}${fallbackSuffix}`;
+        
         if (type === 'background') {
-             // For body background, apply a dynamic gradient
             document.documentElement.style.setProperty('--bg-image', getRandomGradient());
         } else if (type === 'image') {
-            const isThumbnail = targetElement.classList.contains('post-thumbnail');
-            const fallbackSuffix = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
-            // Determine the correct relative path based on current page URL
-            const baseRelativePath = window.location.pathname.includes('/posts/') ? '../img/' : './img/';
-            const localFallbackSrc = `${baseRelativePath}${fallbackSuffix}`;
-            
-            // Set the src to local fallback. Even if it's broken, it points locally.
             targetElement.src = localFallbackSrc; 
-            targetElement.style.objectFit = 'contain'; // Make sure the fallback image (if it exists) is fully visible
+            targetElement.style.objectFit = 'contain'; // Important for visual consistency for fallback
             targetElement.classList.add('is-loading-fallback'); 
-            targetElement.style.opacity = '1'; // Ensure the img element itself is visible
-            
-            // Add a text overlay for a clear user message, possibly overlaying the fallback image
-            let fallbackTextOverlay = targetElement.querySelector('.fallback-text-overlay');
-            if (targetElement.tagName === 'IMG') { // Only for actual <img> elements
-                if (!fallbackTextOverlay && targetElement.parentNode) {
+            targetElement.style.backgroundImage = getRandomGradient();
+            targetElement.style.backgroundRepeat = 'no-repeat';
+            targetElement.style.backgroundPosition = 'center';
+            targetElement.style.backgroundSize = 'cover';
+            targetElement.style.opacity = '1'; // Ensure the IMG is visible by itself with fallback src
+
+            let fallbackTextOverlay = targetElement.nextElementSibling;
+            if (targetElement.tagName === 'IMG') {
+                if (!fallbackTextOverlay || !fallbackTextOverlay.classList.contains('fallback-text-overlay')) {
                     fallbackTextOverlay = document.createElement('div');
                     fallbackTextOverlay.classList.add('fallback-text-overlay');
                     fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                    targetElement.parentNode.style.position = 'relative'; // Ensure parent allows absolute positioning
+                     // Ensure parent allows absolute positioning of overlay
+                    if (targetElement.parentNode && getComputedStyle(targetElement.parentNode).position === 'static') {
+                        targetElement.parentNode.style.position = 'relative'; 
+                    }
                     targetElement.parentNode.insertBefore(fallbackTextOverlay, targetElement.nextSibling);
-                } else if (fallbackTextOverlay) {
+                } else {
                     fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                    fallbackTextOverlay.style.display = 'flex'; // Ensure visible
+                    fallbackTextOverlay.style.display = 'flex'; // Ensure it's showing
                 }
-                // Also apply a background gradient on the image element itself, so even a missing local file gets color
-                targetElement.style.backgroundImage = getRandomGradient();
-                targetElement.style.backgroundRepeat = 'no-repeat';
-                targetElement.style.backgroundPosition = 'center';
-                targetElement.style.backgroundSize = 'cover';
-                console.log(`Applied fallback styling and text for: ${targetElement.alt}`);
-
-            } else {
-                 console.error('Fallback logic called on a non-IMG element with type image.');
+                 targetElement.style.filter = 'grayscale(100%) brightness(0.6) blur(1px)'; // Add filter to fallback image
             }
+            console.log(`⚡  Applied local fallback for ${targetElement.alt}`);
         }
     };
     
@@ -197,24 +192,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return `linear-gradient(135deg, hsla(${h1}, ${s}%, ${l}%, 0.7), hsla(${h2}, ${s}%, ${l}%, 0.7))`;
     }
 
-
     // --- Main Body Background (for all pages) ---
     fetchRandomAnimeImage(document.body, 'background', { preferLandscape: true, width: 1920, height: 1080 }); // Always set body background
 
-    const setupHomepageBackground = () => {
-         // Placeholder as body background is handled globally
-    };
+    const setupHomepageBackground = () => {}; // Placeholder
 
     // --- Dynamic Article Thumbnail/Banner Images ---
     const setupDynamicPostImages = () => {
         document.querySelectorAll('.post-thumbnail[data-src-type="wallpaper"]').forEach(img => {
-            applyFallbackImage(img, 'image'); // Immediately apply fallback state for instant UI feedback
+            // Apply fallback upfront to minimize visual loading gaps
+            applyFallbackImage(img, 'image'); 
             fetchRandomAnimeImage(img, 'image', { preferLandscape: true, width: 500, height: 300 }); 
         });
 
         const detailBanner = document.querySelector('.post-detail-banner[data-src-type="wallpaper"]');
         if (detailBanner) {
-            applyFallbackImage(detailBanner, 'image'); // Immediately apply fallback state
+            applyFallbackImage(detailBanner, 'image'); 
             fetchRandomAnimeImage(detailBanner, 'image', { preferLandscape: true, width: 1000, height: 400 }); 
         }
     };
@@ -226,7 +219,6 @@ document.addEventListener('DOMContentLoaded', () => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     entry.target.classList.add('is-visible');
-                    // Only unobserve non-homepage-title and non-header-title. These are CSS-animated indefinitely.
                     if (!entry.target.classList.contains('is-homepage-title') && !entry.target.classList.contains('is-header-title')) {
                          observer.unobserve(entry.target);
                     }
@@ -239,8 +231,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainHeader = document.querySelector('.main-header');
         if (mainHeader) {
             setTimeout(() => {
-                // To ensure header has visible animation
-                mainHeader.classList.add(isMobile ? 'animate__fade-in': 'is-visible'); 
+                mainHeader.classList.add('is-visible'); 
             }, 50); 
         }
     };
@@ -290,11 +281,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.querySelectorAll('a, button, input:not([type="submit"]), textarea, .post-card, .menu-toggle').forEach(el => {
-            el.onmouseenter = () => { // Hover effects for cursor
+            el.onmouseenter = () => { 
                 cursorDot.style.transform = 'translate(-50%,-50%) scale(1.5)';
                 cursorDot.style.backgroundColor = 'var(--secondary-color)';
             };
-            el.onmouseleave = () => { // Revert hover effects for cursor
+            el.onmouseleave = () => { 
                 cursorDot.style.transform = 'translate(-50%,-50%) scale(1)';
                 cursorDot.style.backgroundColor = 'var(--primary-color)';
             };
@@ -310,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!progressBar || !content) return; 
         const calculateProgress = () => {
-            const documentHeight = Math.max(
+           let documentHeight = Math.max(
                 document.body.scrollHeight, 
                 document.documentElement.scrollHeight, 
                 document.body.offsetHeight, 
@@ -318,21 +309,24 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.body.clientHeight, 
                 document.documentElement.clientHeight
             );
-            const windowHeight = window.innerHeight;
-            const scrollFromTop = window.scrollY;
+            // Adjust calculation: windowHeight could be dynamic
+            let windowHeight = window.innerHeight;
 
-            let totalScrollableHeight = documentHeight - windowHeight;
-            let currentReadProgress = (scrollFromTop / totalScrollableHeight) * 100;
-            
-            currentReadProgress = Math.min(100, Math.max(0, currentReadProgress)); // Clamp between 0 and 100
+            // This calculates scroll progress across the entire page, from top to bottom
+            // if you only want progress within the article, adjust `scrollRange`
+            // Current progress: how far user has scrolled in relation to total scrollable content
+            let scrollRange = documentHeight - windowHeight;
+            let currentScrollPosition = window.scrollY; // How far down user is
 
-            progressBar.style.width = currentReadProgress + '%';
+            let readProgress = (currentScrollPosition / scrollRange) * 100;
+            readProgress = Math.min(100, Math.max(0, readProgress)); // Clamp value
+
+            progressBar.style.width = readProgress + '%';
         }
 
         window.addEventListener('scroll', calculateProgress);
         window.addEventListener('resize', calculateProgress); 
-        calculateProgress(); // Initial call
-        setTimeout(calculateProgress, 500); // Small delay to calc after layout done
+        setTimeout(calculateProgress, 500); // Initial call after slight delay for layout stability
     };
     
     // --- Setup Main Navigation Menu (Unified Hamburger for Desktop/Mobile) ---
@@ -351,6 +345,7 @@ document.addEventListener('DOMContentLoaded', () => {
         menuToggle.addEventListener('click', () => {
             mainNav.classList.add('is-open');
             menuToggle.setAttribute('aria-expanded', 'true');
+            // Disable body scroll when menu is open
             document.body.classList.add('no-scroll'); 
         });
 
@@ -358,6 +353,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const closeMenu = () => {
             mainNav.classList.remove('is-open');
             menuToggle.setAttribute('aria-expanded', 'false');
+            // Enable body scroll when menu is closed
             document.body.classList.remove('no-scroll');
         };
 
@@ -427,18 +423,21 @@ document.addEventListener('DOMContentLoaded', () => {
     setupShareButtons();
     setupFooterDetails(); 
 
-    // Initial check for body blur based on mobile state and responsive updates
+    // Initial check for body blur based on state and responsive updates
     const updateBodyBlur = () => {
-        const mobileBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim();
         const desktopBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
+        const mobileBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim(); // Ensure it takes from mobile var
 
         if (window.innerWidth <= 767) { 
-            document.documentElement.style.setProperty('--body-global-blur-value', mobileBlur); // Use a global variable to store actual blur
+            document.documentElement.style.setProperty('--body-global-blur-value', mobileBlur);
         } else {
             document.documentElement.style.setProperty('--body-global-blur-value', desktopBlur);
         }
+         // Directly apply to body::before
+        document.body.style.setProperty('--body-global-blur-computed', getComputedStyle(document.documentElement).getPropertyValue('--body-global-blur-value'));
     };
-    document.documentElement.style.setProperty('--body-global-blur-value', '3px'); // Default
+    
     updateBodyBlur(); // Apply on load
     window.addEventListener('resize', updateBodyBlur); 
 });
+

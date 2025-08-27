@@ -39,7 +39,7 @@ body::before {
     backdrop-filter: blur(var(--body-backdrop-blur)); /* 对下层内容（即body背景图）应用模糊 */
     z-index: -1; /* 位于正常内容之下，body背景图之上 */
     transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
-     -webkit-backface-visibility: hidden; /* Fix for backdrop-filter on some devices */
+     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
 }
 
@@ -72,12 +72,12 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
 /* --- Custom Cursor Trail --- */
 #cursor-trail {
     position: fixed;
-    width: 0; height: 0; /* 控制初始隐藏 */
+    width: 0; height: 0; 
     background: var(--primary-color);
     border-radius: 50%;
-    pointer-events: none; /* 确保不影响鼠标交互 */
+    pointer-events: none; 
     z-index: 9999;
-    transform: translate(-50%, -50%); /* 居中定位 */
+    transform: translate(-50%, -50%); 
     transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.2s;
     opacity: 0;
     will-change: top, left, width, height, opacity, transform;
@@ -107,11 +107,11 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 #global-page-transition-overlay {
     position: fixed;
     top: 0; left: 0; width: 100vw; height: 100vh;
-    background-color: var(--bg-fallback-color); /* 过渡背景色 */
+    background-color: var(--bg-fallback-color); 
     z-index: 9999; 
     opacity: 0;
     visibility: hidden;
-    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; /* 视觉和可见性分步过渡 */
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; 
     display: flex;
     justify-content: center;
     align-items: center;
@@ -121,26 +121,26 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     font-family: var(--font-primary);
 }
 #global-page-transition-overlay.visible {
-    opacity: 1; /* 触发淡入 */
+    opacity: 1; 
     visibility: visible;
-    transition: opacity 0.4s ease-in, visibility 0s linear; 
+    transition: opacit 0.4s ease-in, visibility 0s linear; 
 }
 #global-page-transition-overlay .loader {
-    position: relative; /* 用于loader内部的glow伪元素 */
+    position: relative; 
     border: 4px solid rgba(var(--primary-color-rgb), 0.2);
     border-top: 4px solid var(--primary-color);
     border-radius: 50%;
     width: 30px;
     height: 30px;
-    animation: spin 1s linear infinite; /* 旋转动画 */
+    animation: spin 1s linear infinite; 
 }
-#global-page-transition-overlay .loader::before { /* Loader的圆环辉光 */
+#global-page-transition-overlay .loader::before { 
     content: '';
     position: absolute;
     top: -2px; left: -2px; right: -2px; bottom: -2px;
     border-radius: 50%;
     box-shadow: 0 0 10px 2px var(--primary-color), inset 0 0 10px 2px var(--primary-color);
-    animation: pulse-glow 1.5s infinite alternate; /* 辉光跳动动画 */
+    animation: pulse-glow 1.5s infinite alternate; 
 }
 @keyframes spin {
     0% { transform: rotate(0deg); }
@@ -150,7 +150,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin-top: 0.8em;
     font-family: var(--font-display);
     font-size: 2em;
-    animation: pulse 1.5s infinite alternate; /* 文字跳动动画 */
+    animation: pulse 1.5s infinite alternate; 
 }
 @keyframes pulse {
     0% { color: var(--primary-color); text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); }
@@ -181,101 +181,86 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     top: 0; left: 0; right: 0; bottom: 0;
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
-    background: var(--hero-overlay-bg); /* opaque or semi-opaque dark background */
-    backdrop-filter: blur(5px); /* Moderate blur for the underlying body background image */
-    z-index: 1; /* Above body overlay, below hero-content */
+    background: var(--hero-overlay-bg); 
+    backdrop-filter: blur(5px); 
+    z-index: 1; 
 }
 
 .hero-content {
     position: relative;
-    z-index: 2; /* 确保内容在叠加层之上 */
+    z-index: 2; 
     animation: fadeIn 1.5s ease-out;
 }
 
 /* 主页标题 “Honoka的小屋” 的白字保留+粉色发光光束划过动画 */
 .blog-title--animated.is-homepage-title > a { 
-    color: var(--text-color); /* Fallback/base text color if masking fails */
+    color: transparent; /* **关键：文字填充透明，让背景渐变透过** */
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
-    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); /* Base light shadow for the white text */
+    -webkit-text-fill-color: transparent; /* Webkit browsers - text is transparent */
+    background-color: var(--text-color); /* Fallback color for browsers not supporting `background-clip: text` */
+    
+    /* 核心动画：移动的背景渐变 + text-clip */
+    background-image: linear-gradient(90deg, 
+        rgba(var(--text-color-rgb), 0.1) 0%, /* 起始透明白 - 文字呈现白色 */
+        rgba(var(--text-color-rgb), 0.7) 15%, /* 逐渐变白，并准备被发光覆盖 */
+        var(--body-overlay-bg) 35%, /* 假装这里是空白，让粉色发光生效 */
+        var(--primary-color) 45%, /* 粉色发光最强点 */
+        var(--primary-color) 55%,
+        rgba(var(--text-color-rgb), 0.7) 75%, /* 粉色逐渐淡出为白色 */
+        rgba(var(--text-color-rgb), 0.1) 100% /* 结束透明白 - 文字呈现白色 */
+    );
+    background-size: 400% 100%; /* 确保渐变带宽度足以从左滑到右 */
+    background-repeat: no-repeat;
+    -webkit-background-clip: text; /* 将背景裁剪成文字形状 */
+    background-clip: text; /* 标准属性 */
+
+    animation: homepage-title-flow-glow 4s linear infinite; /* 绑定动画 */
+
+    /* 为整体文字添加发光滤镜，使其在粉色区域更显著 */
+    filter: drop-shadow(0 0 5px rgba(var(--text-color-rgb), 0.2)) /* 基础文字的淡淡白光 */
+            drop-shadow(0 0 10px rgba(var(--primary-color-rgb), 0.5)); /* 主要的粉色发光 */
+    will-change: background-position, filter; /* 优化动画性能 */
+
     position: relative;
     display: inline-block; 
     vertical-align: top;
     line-height: 1.2;
     padding: 0 10px; 
-    overflow: hidden; /* **关键点：裁剪 mask 效果** */
-    -webkit-backface-visibility: hidden; 
+    overflow: hidden; 
+     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
-
-    /* Mask magic for the flowing pink glow */
-    /* 背景色/渐变将成为 Mask 的内容 */
-    background-image: linear-gradient(90deg, 
-        rgba(var(--text-color-rgb), 1) 0%, /* Base White, strong enough not to dissolve visually too fast */
-        rgba(var(--text-color-rgb), 1) 40%, 
-        var(--body-overlay-bg) 50%, /* Make this spot darker so the glow below can punch through, acting as a "hole" */
-        rgba(var(--text-color-rgb), 1) 60%, 
-        rgba(var(--text-color-rgb), 1) 100%
-    );
-     -webkit-mask-image: var(--_mask);
-    mask-image: var(--_mask);
-     -webkit-mask-composite: source-out;
-    mask-composite: exclude; /* Subtracts the mask image from original content (white text) */
-    background-size: 300% 100%; /* Wider mask to animate across entire text area. Adjusted from 200% to 300% */
-     animation: homepage-title-mask-slide 4s linear infinite;
-
-     /* **Now, the actual glowing paint that fills the mask-defined holes** */
-     /* This background is what gets painted in the "subtracted" mask area */
-    background-color: var(--primary-color); /* The base color for the glow */
-    box-shadow: 0 0 10px var(--primary-color), /* Stronger central glow */
-                0 0 20px rgba(var(--primary-color-rgb), 0.7), /* Wider glow */
-                0 0 30px rgba(var(--primary-color-rgb), 0.5); /* Widest, softer glow */ 
 }
 
-@property --_mask {
-  syntax: '<image>';
-  inherits: true;
-  initial-value: linear-gradient(currentcolor, currentcolor);
-}
-
-
-@keyframes homepage-title-mask-slide {
-    0% { 
-        background-position: -200% 0; /* Start far left */
-        filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); /* Subtle white glow when no pink color */
-    } 
-    25% { /* pink coming in */ }
-    50% { 
-        background-position: 200% 0;  /* Pass through to far right */
-        filter: drop-shadow(0 0 10px rgba(var(--primary-color-rgb), 0.8)); /* Stronger pink glow at peak */
-    }
-    75% { /* pink going out */ }
-    100% { 
-        background-position: -200% 0; /* Reset for loop */
-        filter: drop-shadow(0 0 5px rgba(255,255,255,0.2)); /* Subtle white glow */
-    }
+@keyframes homepage-title-flow-glow {
+    0% { background-position: -100% 0; } /* 渐变从文字区域左侧外面开始 */
+    100% { background-position: 200% 0; } /* 渐变滑动到文字区域右侧外面结束 */
 }
 
 
 /* 导航栏 "Honoka的小屋" 标题的粉色慢速呼吸式辉光动画 (仅发光，不滑动) */
 .main-header .blog-title--animated.is-header-title > a { /* 应用到导航栏标题 */
-    font-size: 1.8rem; /* 导航栏标题字体较小 */
-    color: var(--heading-color); /* 默认白色/标题颜色 */
+    font-size: 1.8rem; 
+    color: var(--heading-color); 
     position: relative; 
     display: inline-block; 
     vertical-align: middle;
     line-height: 1.2;
     padding: 0 5px; 
-    animation: header-text-pulse-glow 2s ease-in-out infinite alternate; /* 慢速的文字辉光动画 */
-    will-change: text-shadow; 
-    /* 禁用主页标题的 Mask 相关的属性和背景 */
-    -webkit-mask-image: none;
-    mask-image: none;
+    animation: header-text-pulse-glow 2s ease-in-out infinite alternate; 
+    will-change: text-shadow, filter; 
+
+    /* 禁用主页标题的 background-clip 等复杂效果 */
+    -webkit-box-shadow: none; /* 移除旧的浏览器前缀阴影 */
+    box-shadow: none; /* 移除 box-shadow */
     background-image: none; /* 移除背景图片动画 */
     background-color: transparent; /* 确保背景色透明 */
-    box-shadow: none; /* 移除 box-shadow */
-    filter: none; /* 移除总体的 filter */
+    background-clip: border-box; /* 恢复默认裁剪 */
+    -webkit-background-clip: border-box;
+    -webkit-text-fill-color: inherit; /* 恢复默认文本填充颜色 */
+    filter: none; /* 移除 filter 效果以免干扰 */
     text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); /* 给文字一个基础的柔和白光 */
 }
 
@@ -327,8 +312,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* --- General Header and Navigation (Unified Hamburger Menu) --- */
 .main-header { 
-    padding: 0.3rem 0.5rem; /* 全局导航栏更薄，左右略微填充 */
-    min-height: 50px; /* 保证最小高度 */
+    padding: 0.3rem 0.5rem; 
+    min-height: 50px; 
     display: flex; 
     align-items: center; 
     justify-content: center; 
@@ -372,57 +357,78 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     transition: all 0.3s ease;
     border-radius: 2px;
 }
-/* 当菜单打开时，汉堡包图标的动画效果 */
+/* 当菜单打开或关闭时，汉堡包图标的动画效果 */
 .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-7px, 7px); }
 .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(2) { opacity: 0; }
 .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-7px, -7px); }
 
 
+/* 圆润的导航菜单小框 */
 .main-nav {
-    display: block; 
-    position: fixed;
-    top: 0;
-    right: -100%; /* 菜单初始状态：完全在屏幕右侧之外 */
-    width: 100%; 
-    height: 100vh; 
-    background-color: var(--header-bg-color); 
-    box-shadow: -5px 0 15px rgba(0,0,0,0.5); 
-    transition: right 0.3s ease-in-out, opacity 0.3s ease, visibility 0.3s ease; /* 调整过渡属性 */
-    z-index: 200; 
+    display: block; /* 默认隐藏，由 JS 控制显示 */
+    position: fixed; /* 固定在视图中，覆盖其他内容 */
+    /* 计算菜单初始位置：在屏幕右侧可见区域之外 */
+    top: 20px; /* 距离顶部，可以根据 header 的实际高度和 menu-toggle 位置调整 */
+    right: calc(-300px - 20px); /* 菜单宽度+margin，确保完全隐藏 */
+    
+    width: 280px; /* 菜单小框的固定宽度 */
+    max-height: calc(100vh - 40px); /* 最大高度，防止菜单过长超出屏幕 */
+    background-color: var(--card-bg-color); /* 半透明背景 */
+    backdrop-filter: blur(var(--content-backdrop-blur)); /* 磨砂玻璃效果 */
+    border-radius: var(--border-radius-lg); /* 圆润的边角 */
+    border: 1px solid var(--border-color); /* 边框与主题色呼应 */
+    box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); /* 柔和阴影 */
+    transition: right 0.3s ease-in-out, opacity 0.3s ease, visibility 0.3s ease; /* 动画过渡 */
+    z-index: 200; /* 确保在内容上方 */
+    opacity: 0; 
+    visibility: hidden;
+    pointer-events: none; /* 默认不响应鼠标事件 */
+    padding: 1.5rem; /* 菜单内容内边距 */
+    display: flex; /* Flexbox 布局使其内部内容居中 */
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 2rem;
-    opacity: 0; 
-    visibility: hidden;
-    pointer-events: none; 
-    ul { list-style: none; display: flex; flex-direction: column; gap: 1.5rem; margin: 0; align-items: center; padding: 0;}
+    text-align: center; /* 确保文本例如关闭按钮的图标居中 */
+    overflow-y: auto; /* 超出内容可滚动 */
+
+    ul { 
+        list-style: none; display: flex; flex-direction: column; 
+        gap: 1.2rem; /* 菜单项间距 */
+        margin: 0; align-items: center; padding: 0.5rem 0; /* 调整内边距 */
+        width: 100%;
+    }
     a { 
         font-weight: 500; padding: 0.8em 1.5em; 
-        border-bottom: 2px solid transparent; 
-        transition: border-color 0.3s ease, color 0.3s ease, transform 0.2s ease; 
+        border-radius: var(--border-radius); /* 按钮圆角 */
+        transition: background-color 0.3s ease, color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease; 
         -webkit-tap-highlight-color: transparent;
-         font-size: 1.5em; 
-         width: fit-content; 
+        font-size: 1.4em; /* 增大菜单文字 */
+        width: 90%; /* 菜单项宽度，给一些边距 */
+        max-width: 250px;
+        color: var(--primary-color); /* 初始文字颜色 */
+        background-color: rgba(var(--primary-color-rgb), 0.1); /* 轻微背景高亮 */
     }
-    a:hover, a.active { border-color: var(--primary-color); color: var(--primary-color); transform: translateX(5px); } 
+    a:hover, a.active { 
+        color: #fff; /* 悬停文字白色 */
+        background-color: var(--primary-color); /* 悬停背景变实粉色 */
+        transform: translateY(-2px); 
+        box-shadow: 0 4px 12px rgba(var(--primary-color-rgb), 0.4); /* 增加悬停阴影 */
+    } 
 }
-.main-nav.is-open { 
-    right: 0; 
-    display: flex; 
+.main-nav.is-open { /* 菜单打开状态 */
+    right: 20px; /* 距离屏幕右侧的距离 */
     opacity: 1; 
     visibility: visible;
     pointer-events: auto; 
-    overflow-y: auto; 
 }
  .main-nav .menu-close {
     display: block; 
     position: absolute;
-    top: 15px; 
-    right: 20px; 
-    font-size: 2.5em; 
+    top: 10px; 
+    right: 10px; 
+    font-size: 1.8em; /* 关闭符号大小，更和谐 */
     font-weight: normal; 
-    color: var(--primary-color);
+    color: var(--meta-text-color); /* 颜色调整 */
     background: none;
     border: none;
     cursor: pointer;
@@ -432,8 +438,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     transition: color 0.2s ease, transform 0.2s ease;
 }
 .main-nav .menu-close:hover {
-    color: var(--link-hover-color);
-    transform: scale(1.1) rotate(5deg);
+    color: var(--primary-color); /* 悬停变粉 */
+    transform: scale(1.1) rotate(90deg); /* 更显著旋转效果 */
 }
 
 
@@ -446,8 +452,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
-    display: block; 
-    width: 100%; 
+    display: block; /* 确保为块级元素，使其可以占据一行 */
+    width: 100%; /* 允许占据全部父容器空间以居中文本 */
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -518,30 +524,35 @@ main.container.content-page-wrapper {
     transition: transform 0.3s ease; 
     font-size: 0; 
     flex-shrink: 0; 
+    position: relative; /* 确保子集的 fallback-text-overlay 可以在其中定位 */
+    background-color: var(--bg-fallback-color); /* 在所有 fallbacks 之前提供纯色背景 */
+
     &.is-loading-fallback {
         background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%);
-        object-fit: cover; 
-        display: flex; 
-        justify-content: center;
-        align-items: center;
-        color: white; 
-        font-size: 0.9em;
-        position: relative; 
-         text-align: center; /* 确保 fallback text 居中 */
+        object-fit: contain; /* 改为 contain, 确保如果有一个fallback图片会完整显示 */
+        filter: saturate(0.5) blur(1px); /* 略微去饱和模糊，配合提示文字更突出 */
+        /* opacity: 0.5; /* 让图片稍微透明，突出文字提示 */ */
     }
-     &.is-loading-fallback::after {
-        content: "封面加载失败 :("; 
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        font-size: 1rem;
-        color: rgba(255, 255, 255, 0.7);
-        text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-        background: rgba(0,0,0,0.3); 
-     }
+}
+/* 图片报错时的文本样式 */
+.fallback-text-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    display: flex; /* 用于文本居中 */
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 5px rgba(0,0,0,0.7);
+    background: rgba(0,0,0,0.4); /* 半透明黑底，确保文字可读 */
+    pointer-events: none; /* 不阻止鼠标事件传递 */
+    z-index: 5;
+     font-family: var(--font-primary); /* 使用主文本字体 */
+     padding: 0 10px; /* 左右内边距防止文字溢出 */
 }
 
 
@@ -576,7 +587,7 @@ main.container.content-page-wrapper {
     max-width: 760px; 
     margin-left: auto; 
     margin-right: auto; 
-    text-align: justify; 
+    text-align: justify; /* 段落内容两端对齐 (桌面端) */
 }
 .content-page-wrapper ul, .content-page-wrapper ol { 
     max-width: 760px;
@@ -763,8 +774,15 @@ main .blog-post-detail {
     width: 100%; 
 }
 .post-detail-title::after {
+    content: '';
+    position: absolute; 
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 3px;
     background: linear-gradient(90deg, transparent, var(--primary-color), var(--secondary-color), transparent);
-    width: 80%;
+    border-radius: 2px;
 }
 .post-meta {
     color: var(--meta-text-color);
@@ -784,30 +802,20 @@ main .blog-post-detail {
     margin-bottom: 2em;
     box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
     font-size: 0; 
+    position: relative; /* For text overlay */
+    background-color: var(--bg-fallback-color); /* Fallback */
+
+    &.is-loading-fallback {
+        background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%); 
+        object-fit: contain; 
+        filter: saturate(0.5) blur(1px); /* Visual cue */
+    }
 }
-/* 图片加载失败时的背景样式 */
-.post-detail-banner.is-loading-fallback {
-    background: radial-gradient(circle at center, rgba(var(--primary-color-rgb), 0.7) 0%, rgba(var(--secondary-color-rgb), 0.5) 100%); 
-    object-fit: cover; 
-     display: flex; 
-     justify-content: center;
-     align-items: center;
-     position: relative;
-    color: transparent; /* 为了隐藏 img 标签自身的错误 alt 文案 */
-}
-.post-detail-banner.is-loading-fallback::after {
-    content: "图片加载失败 :("; 
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+/* For detail banner as well */
+.post-detail-banner + .fallback-text-overlay { /* 针对紧随其后的 .fallback-text-overlay */
     font-size: 1.2rem;
-    color: rgba(255, 255, 255, 0.7);
-    text-shadow: 1px 1px 3px rgba(0,0,0,0.5);
-    background: rgba(0,0,0,0.3); 
 }
+
 
 .post-content { 
     width: 100%; 
@@ -944,52 +952,69 @@ main .blog-post-detail {
     }
     .container {padding: 1rem;} 
 
-
-    /* 头部导航栏适配 */
+    /* ------------- 头部导航栏适配 ------------- */
     .main-header { padding: 0.3rem 0.5rem; min-height: 45px;} 
+    .main-header .container { padding: 0 0.5rem; } /* 进一步缩小 container 缩进 */
     .main-header .blog-title--animated.is-header-title > a { 
-        font-size: 1.3rem; 
+        font-size: 1.2rem; /* 手机端导航栏标题更小 */
     }
-    .menu-toggle .icon-bar { width: 25px; margin: 4px 0;} 
-    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-5px, 5px); }
-    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-5px, -5px); }
-    .main-nav .menu-close { font-size: 2em; top: 10px; right: 15px; } 
-    .main-nav ul { gap: 1rem; } 
-    .main-nav a { font-size: 1.3em; padding: 0.6em 1em; } 
+    .menu-toggle .icon-bar { width: 22px; margin: 3px 0;} /* 调整汉堡包条宽度和间距 */
+    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-4px, 4px); }
+    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-4px, -4px); }
     
-    /* 英雄区域适配 */
-    .hero-content { padding: 0.8rem; margin-top: -20px;} 
-    .hero-subtitle { font-size: 0.85rem; margin: 0.5rem 0 1rem;} 
-    .hero-nav .nav-link { margin: 0 0.3rem; padding: 0.25rem 0.6rem; font-size: 0.9em; }
-    .scroll-down-arrow {bottom: 1rem; font-size: 0.8rem;}
-
-    /* 内容区域适配 */
-    main.container.content-page-wrapper { margin: 1rem auto; padding: 1rem 0.8rem; }
-    .page-title, .section-title { font-size: 1.6rem; margin-bottom: 1.2rem; }
-    .comments-list-container h3, .comment-form-container h3 { font-size: 1.3rem; margin-top: 0.8rem;}
-    .posts-grid, #comments-list { 
-        gap: 15px; 
+    /* 缩小菜单小框在手机端更紧凑 */
+    .main-nav {
+        top: 10px; /* 距离顶部 */
+        right: -webkit-calc(-250px - 10px); /* 宽度略小 + margin */
+        right: calc(-250px - 10px);
+        width: 200px; /* 菜单宽度 */
+        max-height: calc(100vh - 20px);
+        padding: 1rem;
     }
-    .post-card .post-info {padding: 1rem;}
-    .post-detail-banner { height: 180px; margin-bottom: 1.5em; }
-    main .blog-post-detail { padding: 1.5em 1em; margin: 1rem auto;}
-    .post-detail-title { font-size: 1.5em; }
+    .main-nav.is-open { 
+        right: 10px; 
+    }
+    .main-nav .menu-close { font-size: 1.5em; top: 5px; right: 8px; } /* 缩小关闭按钮 */
+    .main-nav ul { gap: 0.8rem; } /* 缩小列表间距 */
+    .main-nav a { font-size: 1.1em; padding: 0.5em 0.8em; width: 95%; max-width: 180px; } /* 调整菜单项 */
+    
+    /* ------------- 英雄区域适配 ------------- */
+    .hero-content { padding: 0.5rem; margin-top: -15px;} 
+    .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem;} 
+    .hero-nav .nav-link { margin: 0 0.2rem; padding: 0.2rem 0.5em; font-size: 0.85em; }
+    .scroll-down-arrow {bottom: 0.8rem; font-size: 0.75rem;}
+
+    /* ------------- 内容区域适配 ------------- */
+    main.container.content-page-wrapper { margin: 0.8rem auto; padding: 1rem 0.5rem; }
+    .page-title, .section-title { font-size: 1.5rem; margin-bottom: 1rem; }
+    .comments-list-container h3, .comment-form-container h3 { font-size: 1.2rem; margin-top: 0.6rem;}
+    .posts-grid, #comments-list { 
+        gap: 12px; 
+    }
+    .post-card .post-info {padding: 0.8rem;}
+    .post-detail-banner { height: 160px; margin-bottom: 1em; }
+    main .blog-post-detail { padding: 1em 0.8em; margin: 0.8rem auto;}
+    .post-detail-title { font-size: 1.4em; }
     
     .post-content { 
          padding: 0; 
          text-align: left; 
     }
     .post-content p, .post-content ul, .post-content ol { 
-        padding: 0 0.5em; 
+        padding: 0 0.3em; /* 手机上段落内容也保持两端对齐，并添加少量内边距 */
+        font-size: 0.9em;
         text-align: justify; 
     }
-     .post-content h3 { font-size: 1.3em; padding-left: 0.5em;}
-    .post-share-buttons {margin-top: 2em; padding-top: 1.5em;}
-    .post-share-buttons .share-button { margin: 0.2em; padding: 0.4em 0.8em; font-size: 0.8em; }
+     .post-content h3 { font-size: 1.2em; padding-left: 0.3em;}
+    .post-share-buttons {margin-top: 1.5em; padding-top: 1em;}
+    .post-share-buttons .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; }
 
     /* 脚部适配 */
-    .main-footer { padding: 1rem 0.5rem;}
-    .main-footer p {font-size: 0.8em;}
+    .main-footer { padding: 0.8rem 0.5rem;}
+    .main-footer p {font-size: 0.75em;}
 
-    #back-to-top { bottom: 0.5rem; right: 0.5rem; width: 30px; height: 30px; font-size: 1em; }
+    #back-to-top { bottom: 0.4rem; right: 0.4rem; width: 28px; height: 28px; font-size: 0.9em; }
+
+    /* Fallback Text Adjustment for Mobile */
+    .fallback-text-overlay { font-size: 0.9rem;}
 }
