@@ -2,10 +2,8 @@
 const admin = require('firebase-admin');
 
 // IMPORTANT: Use environment variables for Firebase credentials
-// Netlify will automatically inject these at deployment
 const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
 
-// Initialize Firebase Admin only once
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
@@ -13,15 +11,17 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 
+// !!! IMPORTANT: Replace with your actual Netlify deployed frontend domain !!!
+const ALLOW_ORIGIN = process.env.VITE_FRONTEND_URL || "https://honoka1.netlify.app"; 
+// Best practice is to rely on environment variable, with a hardcoded fallback specific to prod.
+// Ensure VITE_FRONTEND_URL is set in your Netlify site settings.
+
 exports.handler = async (event, context) => {
-  // Pre-flight request for CORS.
-  // Note: CORS headers should also be handled in netlify.toml,
-  // but explicitly handling OPTIONS here ensures consistency.
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*', // Use env var for clarity, or explicitly your Netlify domain.
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '86400',
@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405, // Method Not Allowed
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
       },
       body: JSON.stringify({ message: 'Method Not Allowed' }),
     };
@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers: {
-          'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+          'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         },
         body: JSON.stringify({ message: 'Author and text are required.' }),
       };
@@ -58,7 +58,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers: {
-          'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+          'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         },
         body: JSON.stringify({ message: 'Author or text too long.' }),
       };
@@ -75,7 +75,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message: 'Comment added successfully!', comment: newComment }),
@@ -86,7 +86,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message: 'Failed to add comment.', error: error.message }),

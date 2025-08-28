@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
-    <!-- 全局页面过渡遮罩 -->
     <div id="global-page-transition-overlay"></div>
-    <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
     <header class="main-header">
@@ -20,21 +21,19 @@
             <h1 class="blog-title blog-title--animated is-header-title">
                 <a href="index.html">Honoka的小屋</a>
             </h1>
-            <!-- 桌面端和手机端都使用汉堡包菜单切换按钮 -->
             <button class="menu-toggle" aria-label="Toggle navigation" aria-controls="main-nav-menu">
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
             <nav id="main-nav-menu" class="main-nav" role="navigation" aria-expanded="false">
-                <!-- 手机端关闭菜单按钮 -->
                 <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
                     <li><a href="index.html">主页</a></li>
                     <li><a href="blog.html">文章</a></li>
                     <li><a href="about.html" class="active">关于我</a></li>
                     <li><a href="comments.html">留言板</a></li>
-                    <li><a href="categories.html">分类</a></li> <!-- 新增分类入口 -->
+                    <li><a href="categories.html">分类</a></li>
                 </ul>
             </nav>
         </div>
@@ -43,20 +42,20 @@
     <main class="container content-page-wrapper animate__fade-in">
         <section class="about-me-section">
             <img src="img/avatar.png" alt="我的二次元头像" class="my-avatar animate__slide-up">
-            <h2 class="page-title animate__slide-up" data-delay="100">你好，我是Honoka！🌌</h2>
-            <p class="animate__slide-up" data-delay="200">
+            <h2 class="page-title animate__slide-up animate__delay-100" data-delay="100">你好，我是Honoka！🌌</h2>
+            <p class="animate__slide-up animate__delay-200" data-delay="200">
                 各位二次元同好和代码探索者们，欢迎来到我的秘密基地——Honoka的小屋！我是一名热爱二次元的女孩，更是一位沉迷于前端代码世界的“肝帝”兼梦想家。这个独一无二的小屋，就是我将二次元的狂热与代码的严谨完美融合的试验田。
             </p>
-            <p class="animate__slide-up" data-delay="300">
+            <p class="animate__slide-up animate__delay-300" data-delay="300">
                 从小我就被动画、漫画和各种奇幻世界深深吸引，动漫对我来说不仅仅是故事，更是一种源源不断的灵感。我会沉浸在新番的剧情中，为角色的命运而心潮澎湃，也会钻研老番的每一句 台词，从中发掘永恒的经典。每一次的观影和阅读后，我都会有很多的想法和感触，希望在这里也能与你分享这些独特的心声。
             </p>
-            <p class="animate__slide-up" data-delay="400">
+            <p class="animate__slide-up animate__delay-400" data-delay="400">
                 除了虚拟世界，我同样也热爱探索代码中的无限可能。从布局设计到交互实现，每一个 `div`，每一行 `JavaScript`，都承载着我的创意和追求完美的欲望。也许你会发现，我的博客就像一场精心编织的动画，充满了细节和彩蛋！
             </p>
-            <p class="animate__slide-up" data-delay="500">
+            <p class="animate__slide-up animate__delay-500" data-delay="500">
                 在这里，我将分享我的动漫影评、手办收藏趣事、最新的技术思考、前端开发踩坑经验，甚至是对未来数字世界的奇妙幻想。如果你也对二次元的热情如我一般炽热，或对前端技术开发充满好奇，甚至想一起探索代码实现的二次元世界，那 Honoka 的小屋就是你理想的港湾！
             </p>
-            <div class="contact-info animate__slide-up" data-delay="500">
+            <div class="contact-info animate__slide-up animate__delay-500" data-delay="500">
                 <h3>联系我:</h3>
                 <ul>
                     <li><strong>QQ:</strong> 3203418940</li>
@@ -64,7 +63,7 @@
                     <li><strong>Bilibili:</strong> <a href="#" target="_blank" title="我的B站主页，未来将推出更多二次元内容！">我的B站主页</a></li>
                 </ul>
             </div>
-            <p class="animate__slide-up" data-delay="600">期待与你在屏幕两端相遇，共同绘制未来的二次元梦想画卷！✨</p>
+            <p class="animate__slide-up animate__delay-600" data-delay="600">期待与你在屏幕两端相遇，共同绘制未来的二次元梦想画卷！✨</p>
         </section>
     </main>
 

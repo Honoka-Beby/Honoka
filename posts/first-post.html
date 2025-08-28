@@ -4,42 +4,38 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>我与《你的名字》的初次邂逅 - Honoka的小屋</title>
-    <!-- 注意这里的相对路径 -->
     <link rel="icon" href="../img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="../css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 -->
+    <link rel="preload" href="../https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="../https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
-    <!-- 全局页面过渡遮罩 -->
     <div id="global-page-transition-overlay"></div>
-    <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
-    <!-- 阅读进度条容器 -->
     <div id="read-progress-bar"></div>
 
     <header class="main-header">
         <div class="container">
             <h1 class="blog-title blog-title--animated is-header-title">
-                <!-- 注意这里的相对路径 -->
                 <a href="../index.html">Honoka的小屋</a>
             </h1>
-            <!-- 桌面端和手机端都使用汉堡包菜单切换按钮 -->
             <button class="menu-toggle" aria-label="Toggle navigation" aria-controls="main-nav-menu">
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
             <nav id="main-nav-menu" class="main-nav" role="navigation" aria-expanded="false">
-                <!-- 手机端关闭菜单按钮 -->
                 <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
                     <li><a href="../index.html">主页</a></li>
                     <li><a href="../blog.html">文章</a></li>
                     <li><a href="../about.html">关于我</a></li>
                     <li><a href="../comments.html">留言板</a></li>
-                    <li><a href="../categories.html">分类</a></li> <!-- 新增分类入口 -->
+                    <li><a href="../categories.html">分类</a></li>
                 </ul>
             </nav>
         </div>
@@ -48,15 +44,14 @@
     <main class="container content-page-wrapper animate__fade-in">
         <article class="blog-post-detail">
             <h2 class="post-detail-title animate__slide-up">我与《你的名字》的初次邂逅：情感的交织与时间的奇迹 ✨</h2>
-            <div class="post-meta animate__slide-up animate__delay-100" data-delay="100"> <!-- added class + data-delay -->
+            <div class="post-meta animate__slide-up animate__delay-100">
                 <time datetime="2024-04-23">2024年4月23日</time> by <span class="author-name">Honoka</span>
                 <span class="post-tags"><span class="tag">#影评</span><span class="tag">#治愈</span><span class="tag">#新海诚</span></span>
             </div>
             
-            <!-- data-src-type="wallpaper" 标识此图片应由 js/script.js 动态替换为随机壁纸 -->
-            <img src="../img/post-detail-banner-fallback.png" data-src-type="wallpaper" alt="《你的名字》电影剧照" class="post-detail-banner animate__fade-in animate__delay-200" data-delay="200">
+            <img src="../img/post-detail-banner-fallback.png" data-src-type="wallpaper" alt="《你的名字》电影剧照" class="post-detail-banner animate__fade-in animate__delay-200">
 
-            <div class="post-content animate__slide-up animate__delay-300" data-delay="300">
+            <div class="post-content animate__slide-up animate__delay-300">
                 <p>
                     还记得第一次走进电影院观看《你的名字》时的震撼吗？对我来说，那不仅仅是一场视觉盛宴，更是一次灵魂的洗礼。新海诚导演的作品总是能将日常与奇幻无缝衔接，而《你的名字》无疑将这种风格推向了极致。
                 </p>
@@ -73,16 +68,14 @@
                 </p>
             </div>
            
-            <div class="post-share-buttons animate__slide-up animate__delay-400" data-delay="400">
+            <div class="post-share-buttons animate__slide-up animate__delay-400">
                 <span>分享此文章到:</span>
-                <!-- 注意这些链接通过 JS 动态填充当前的 URL 和标题，图片需自行替换 -->
                 <a href="#" target="_blank" class="share-button weibo">Weibo</a>
                 <a href="#" target="_blank" class="share-button qq">QQ</a>
-                <a href="#" onclick="alert('微信分享请使用手机截图或浏览器分享功能'); return false;" class="share-button wechat">WeChat</a> <!-- 微信分享通常需要服务器端或客户端JS，这里是占位和说明 -->
+                <a href="#" onclick="alert('微信分享请使用手机截图或浏览器分享功能'); return false;" class="share-button wechat">WeChat</a>
             </div>
 
-            <div class="read-more animate__slide-up animate__delay-500" data-delay="500">
-                <!-- 返回文章列表页的链接 -->
+            <div class="read-more animate__slide-up animate__delay-500">
                 <a href="../blog.html" class="button">← 返回文章列表</a>
             </div>
         </article>
@@ -97,7 +90,6 @@
 
     <button id="back-to-top" title="返回顶部">↑</button>
 
-    <!-- 注意js文件的路径 -->
     <script src="../js/script.js"></script>
 </body>
 </html>

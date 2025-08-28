@@ -10,13 +10,15 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 
+// !!! IMPORTANT: Replace with your actual Netlify deployed frontend domain !!!
+const ALLOW_ORIGIN = process.env.VITE_FRONTEND_URL || "https://honoka1.netlify.app"; 
+
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '86400',
@@ -29,7 +31,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405, // Method Not Allowed
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
       },
       body: JSON.stringify({ message: 'Method Not Allowed' }),
     };
@@ -38,20 +40,16 @@ exports.handler = async (event, context) => {
   let visitorCount = 0;
   try {
     const visitorRef = db.collection('siteMeta').doc('visits');
-    const doc = await visitorRef.get();
-
-    if (!doc.exists) {
-      // If document doesn't exist, create it with initial count (0)
-      await visitorRef.set({ count: 0 });
-      visitorCount = 0; // Initialize for response
-    } else {
-      visitorCount = doc.data().count; // Get current count
-    }
-    
-    // Increment count transactionally to prevent race conditions
+    // Run a transaction to ensure atomic increment, robust against race conditions
     const newCount = await db.runTransaction(async (t) => {
       const sfDoc = await t.get(visitorRef);
-      const currentCount = sfDoc.data().count || 0;
+      let currentCount = 0;
+      if (!sfDoc.exists) {
+        // Doc doesn't exist, create it with initial count (0)
+        t.set(visitorRef, { count: 0 }); 
+      } else {
+        currentCount = sfDoc.data().count || 0; // Get current count, default to 0 if field is missing
+      }
       t.update(visitorRef, { count: currentCount + 1 });
       return currentCount + 1; // Return the incremented count for the response
     });
@@ -59,7 +57,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ count: newCount }), // Return the *newly incremented* count
@@ -71,7 +69,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ error: error.message, count: 0 }), 

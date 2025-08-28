@@ -8,32 +8,31 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream is-homepage">
-    <!-- 全局页面过渡遮罩，在页面跳转时激活 -->
     <div id="global-page-transition-overlay"></div>
-    <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
     <main class="main-content">
-        <!-- 全屏封面区域 -->
         <section class="hero-section">
             <div class="hero-content">
                 <h1 class="blog-title blog-title--animated is-homepage-title">
                     <a href="index.html">Honoka的小屋</a>
                 </h1>
-                <p class="hero-subtitle animate__slide-up" data-delay="100">一个关于动画、梦想和代码的秘密基地 ✨</p>
+                <!-- 这里的 animate__delay-XXX 仅作视觉提示，实际由 JS 强制显示 -->
+                <p class="hero-subtitle animate__slide-up animate__delay-100" data-delay="100">一个关于动画、梦想和代码的秘密基地 ✨</p>
                 <nav class="hero-nav animate__slide-up animate__delay-200" data-delay="200">
                     <a href="blog.html" class="nav-link">文章</a>
                     <a href="about.html" class="nav-link">关于</a>
                     <a href="comments.html" class="nav-link">留言</a>
                 </nav>
             </div>
-            <!-- "探索更多"按钮已由你的指示删除 -->
         </section>
     </main>
 
-    <!-- 返回顶部按钮 -->
     <button id="back-to-top" title="返回顶部">↑</button>
 
     <script src="js/script.js"></script>

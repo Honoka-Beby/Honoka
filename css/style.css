@@ -200,7 +200,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 .hero-content {
     position: relative;
     z-index: 2; 
-    animation: fadeIn 1.5s ease-out;
+    /* removed animation: fadeIn 1.5s ease-out; for .hero-content directly from CSS, as its children will animate now */
 }
 
 /* 核心：主页标题 “Honoka的小屋” 的文字渐变发光走马灯动画 */
@@ -249,9 +249,31 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
      filter: drop-shadow(0 0 5px rgba(var(--primary-color-rgb), 0.8)) /* 较紧致的粉色光 */
              drop-shadow(0 0 15px rgba(var(--primary-color-rgb), 0.5)); /* 更宽、柔和的粉色光 */
     
-    /* !Important: 避免 filter 可能在某些浏览器上中断 background-clip 应用 */
     will-change: background-position, filter; 
+    opacity: 0; /* Add opacity: 0 and animation to explicitly reveal if needed */
+    animation: homepage-title-flow-gradient 4s linear infinite, fadeInAnimation 1s ease-out forwards;
+    animation-delay: 0s, 0.5s; /* Global fadeIn for the title */
 }
+/* Manual reveal animation for elements controlled by JS `data-delay` */
+.animate__slide-up, .animate__fade-in {
+    opacity: 0;
+    visibility: hidden; /* Default to hidden if not explicitly visible */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.animate__slide-up.is-visible {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.animate__fade-in.is-visible {
+    opacity: 1;
+    visibility: visible;
+}
+@keyframes fadeInAnimation {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
 
 /* 核心动画：让背景渐变从左到右滑动 */
 @keyframes homepage-title-flow-gradient {
@@ -381,7 +403,6 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     top: calc(var(--header-min-height, 50px) + 15px); /* 位于 header 下方，并留出一些顶部边距，通过 CSS 变量 */
     right: 20px; /* 距离屏幕右侧的悬停区域或固定距离 */
     width: 250px; /* 菜单小框的固定宽度 */
-    /* max-height: calc(100vh - (var(--header-min-height, 50px) + 15px + 10px)); (header-border-top-button_margin-bottom)*/
     max-height: calc(100vh - 85px); /* 基于新计算结果 */
     box-sizing: border-box; /* 边框和内边距包含在宽度内 */
 
@@ -390,17 +411,15 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     backdrop-filter: blur(var(--content-backdrop-blur));
     border-radius: var(--border-radius-lg); /* 圆润的边角 */
     border: 1px solid var(--border-color); /* 边框与主题色呼应 */
-    box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); /* 柔和阴影 */
+    box-shadow: 0 5x 20px rgba(var(--shadow-rgb), 0.4); /* 柔和阴影 */
     
-    /* 初始隐藏状态：完全在视口右侧外部 */
-    transform: translateX(110%); /* 比 100% 多一点，确保没有缝隙露出来 */
+    transform: translateX(110%); /* 初始隐藏状态：完全在视口右侧外部 */
     opacity: 0; 
     visibility: hidden;
     pointer-events: none; /* 默认不响应鼠标事件 */
     
-     /* 动画过渡 */
     transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out; 
-    /* 动画强制 GPU 加速，确保流畅 */
+    
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -491,7 +510,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
-    display: block; 
+    display: block; /* Ensures width: 100% applies properly for centering */
     width: 100%; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
@@ -542,7 +561,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 .filter-tag-button:hover, .filter-tag-button.active {
     background-color: var(--secondary-color);
     color: var(--heading-color);
-    box-shadow: 0 2px 8px rgba(var(--secondary-color-rgb), 0.5);
+    box-shadow: 0 2x 8px rgba(var(--secondary-color-rgb), 0.5);
     border-color: var(--secondary-color);
     transform: translateY(-2px);
 }
@@ -552,6 +571,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     padding-bottom: 2rem; /* 底部与按钮组间隔 */
     width: 100%;
     justify-items: center; /* 网格项居中 */
+    /* Mobile-First approach ensures grid adapts. Desktop defined from this. */
 }
 /* 分类归档页的分类项按钮样式(基于 filter-tag-button 稍微调整) */
 .category-grid .filter-tag-button {
@@ -585,7 +605,7 @@ main.container.content-page-wrapper {
     flex-grow: 1; 
     display: flex;
     flex-direction: column;
-    align-items: center; /* **FIX**: 使内部的块级子元素（如 h2, div.sections）水平居中 */
+    align-items: center; /* Ensures central alignment for block children */
     justify-content: flex-start; 
     text-align: initial; 
     -webkit-backface-visibility: hidden; 
@@ -594,13 +614,13 @@ main.container.content-page-wrapper {
 }
 
 
-/* --- Posts Grid (Blog Page) --- */
+/* --- Posts Grid (Blog Page & Comments List) --- */
 .posts-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* **FIX**: 改进为更灵活的响应式列 */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* Adaptive grid columns */
     gap: 30px; 
     width: 100%; 
-    max-width: 900px; 
+    max-width: 900px; /* max-width applied here instead of hardcoding on individual components */
 }
 .post-card {
     background-color: var(--card-bg-color); 
@@ -616,55 +636,61 @@ main.container.content-page-wrapper {
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+    opacity: 0;           /* Default hidden, controlled by JS and data-delay */
+    transform: translateY(20px); /* Default slide up state */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s ease; /* Ensure transition for reveal */
+}
+.post-card.is-visible { /* Class added by JS to reveal with animation */
+    opacity: 1;
+    transform: translateY(0);
 }
 .post-card a { 
     color: inherit; 
     display: flex; 
     flex-direction: column; 
     height: 100%;
-    position: relative; /* **重要：让图片和文本叠加层能定位** */
+    position: relative; 
 } 
 .post-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(var(--primary-color-rgb), 0.3); }
 .post-thumbnail { 
     width: 100%; 
     height: 200px; 
     object-fit: cover; 
-    /* 滤镜过渡，当图片加载成功时移除此滤镜 */
     transition: filter 0.3s ease, transform 0.3s ease; 
     font-size: 0; 
     flex-shrink: 0; 
-    background-color: var(--bg-fallback-color); /* 在所有 fallbacks 之前提供纯色背景 */
-    filter: none; /* 默认无滤镜 */
+    background-color: var(--bg-fallback-color); /* Fallback solid color */
+    filter: none; /* Default no filter */
 }
 
-/* 图片正在加载或加载失败（未替换 API 图片）的样式 */
+/* Image loading/fallback states */
 .post-thumbnail.is-loading-fallback {
-    object-fit: contain; /* Scale fallback image to fit without cropping */
-    filter: saturate(0) brightness(0.5) blur(1px); /* 将图片灰度+变暗+模糊，突出文字提示 */
-    /* 添加过渡，使得从模糊 -> 清晰有一个动画效果，提升渐进式加载体验。 */
-    /* 当 JS 将 src 替换为真实图片时，会移除 is-loading-fallback 类，filter 自动恢复 none */
+    /* object-fit: contain ensures entire fallback image is seen, even if it leaves bars */
+    object-fit: contain; 
+    filter: saturate(0) brightness(0.5) blur(1px); /* Visually transform fallback image to indicate processing/failure */
 } 
-/* 全局 fallback-text-overlay 样式，同时用于文章卡片和详情页横幅 */
+
+/* Global fallback-text-overlay for all images */
 .fallback-text-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); /* Centered both horizontally and vertically */
     width: 100%;
-    height: 100%; /* 让叠加层覆盖整个图片容器 */
-    display: flex; /* 用于文本居中 */
+    height: 100%; 
+    display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
     text-shadow: 0 0 5px rgba(0,0,0,0.8);
-    background: rgba(0,0,0,0.5); /* 半透明黑底，确保文字可读 */
-    pointer-events: none; 
+    background: rgba(0,0,0,0.5); /* Semi-transparent dark background for text legibility */
+    pointer-events: none; /* Allow events to pass through to underlying content */
     z-index: 5;
     font-family: var(--font-primary); 
-    padding: 0 10px; /* 左右内边距防止文字溢出 */
+    padding: 0 10px; 
     text-align: center;
-    border-radius: inherit; /* 继承父元素的圆角，或根据需要设置 */
+    border-radius: inherit; /* Inherit roundness from parent */
 }
 
 
@@ -674,7 +700,7 @@ main.container.content-page-wrapper {
     display: flex; 
     flex-direction: column; 
     text-align: left; 
-    align-self:stretch; /* 确保 post-info 占据整个宽度 */
+    align-self:stretch; 
 } 
 .post-info h3 { 
     margin: 0 0 0.5rem; 
@@ -682,9 +708,8 @@ main.container.content-page-wrapper {
     font-size: 1.4rem; 
     color: #fff; 
     
-    /* 限制标题行数并显示省略号，以防过长挤压布局 */
     display: -webkit-box;
-    -webkit-line-clamp: 2; /* 最多显示2行 */
+    -webkit-line-clamp: 2; /* Truncate to 2 lines */
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -698,9 +723,8 @@ main.container.content-page-wrapper {
     text-align: justify; 
     z-index: 1;
     
-    /* 限制摘要行数并显示省略号 */
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* 最多显示3行 */
+    -webkit-line-clamp: 3; /* Truncate to 3 lines */
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -709,14 +733,14 @@ main.container.content-page-wrapper {
 .post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
 .post-tags .tag {
     display: inline-block;
-    background-color: rgba(var(--secondary-color-rgb), 0.15); /* 调整透明度使其更淡 */
+    background-color: rgba(var(--secondary-color-rgb), 0.15); 
     color: var(--secondary-color);
-    padding: 0.25em 0.8em; /* 调整 padding */
+    padding: 0.25em 0.8em; 
     border-radius: 5px;
     font-size: 0.75em;
-    opacity: 0.9; /* 略微提高不透明度 */
+    opacity: 0.9; 
     border: 1px solid rgba(var(--secondary-color-rgb), 0.2);
-    cursor: pointer; /* 提示可点击 */
+    cursor: pointer; 
     transition: all 0.2s ease;
 }
 .post-tags .tag:hover {
@@ -734,7 +758,16 @@ main.container.content-page-wrapper {
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+    
+     opacity: 0; /* Default hidden, controlled by JS entrance for smoother load */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
+.about-me-section.is-visible, .comment-section.is-visible, .categories-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
 .about-me-section p, .comment-section p, .categories-section p { 
     font-size: 1.05em;
@@ -742,7 +775,7 @@ main.container.content-page-wrapper {
     margin-left: auto; 
     margin-right: auto; 
     text-align: justify; 
-    padding: 0 0.5rem; /* **修复**: 增加左右内边距，防止在手机端文本顶头 */
+    padding: 0 0.5rem; /* Ensures text is not flush against screen edges on mobile */
 }
 /* 对列表也应用max-width和margin auto */
 .content-page-wrapper ul, .content-page-wrapper ol { 
@@ -771,7 +804,7 @@ main.container.content-page-wrapper {
     box-shadow: 0 0 0 12px rgba(var(--primary-color-rgb), 0.3);
 }
 .about-me-section .contact-info {
-    text-align: left; /* **修复**，確保內部文本左對齊 */
+    text-align: left; 
     max-width: 480px;
     margin: 2em auto;
     padding: 1.5em; 
@@ -798,12 +831,19 @@ main.container.content-page-wrapper {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     width: 100%; 
     max-width: 700px;
-    text-align: left; /* **修复：确保表单内容保持左对齐** */
+    text-align: left; 
     -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
     backdrop-filter: blur(var(--card-backdrop-blur));
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+     opacity: 0; /* Default hidden, controlled by JS and data-delay */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.comment-form-container.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .comment-form-container h3 {
     text-align: center; 
@@ -845,6 +885,11 @@ textarea { resize: vertical; min-height: 120px; }
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+     opacity: 0; /* Default hidden, controlled by JS data-delay */
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.comments-list-container.is-visible {
+    opacity: 1;
 }
 .comments-list-container h3 {
     text-align: center; 
@@ -855,31 +900,30 @@ textarea { resize: vertical; min-height: 120px; }
 }
 
 #comments-list {
-    margin-top: 1em;
+    margin-top: 1em; /* margin only on top, as `posts-grid` will handle gap */
     text-align: left; 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 桌面端仍然保持多列 */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 20px; 
     width: 100%; 
-    max-width: 900px; 
+     max-width: 100%; /* Important for mobile adaption in `comments-list-container` */
      margin-left: auto; 
-     margin-right: auto; 
+     margin-right: auto;
 }
-.comment-card {
-    background-color: var(--card-bg-color); 
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1.5em;
-    box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.1);
-    position: relative;
-    overflow: hidden;
-    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
-    backdrop-filter: blur(var(--card-backdrop-blur));
-     -webkit-backface-visibility: hidden; 
-    backface-visibility: hidden;
-    transform: translateZ(0); 
+/* Re-style post-card specific to comment list */
+#comments-list .post-card.comment-card {
+    padding: 1.5em; 
+    height: auto; /* Allow height to adapt to content */
+    font-size: 1em;
+    opacity: 0;
+    transform: translateY(20px);
 }
-.comment-card::before {
+#comments-list .post-card.comment-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.comment-card::before { /* Icon specific to comment card, placed from inner content */
     content: '💬';
     position: absolute;
     top: 10px;
@@ -888,20 +932,27 @@ textarea { resize: vertical; min-height: 120px; }
     opacity: 0.1;
     color: var(--primary-color);
 }
-.comment-card p {
-    margin-bottom: 0.5em;
-    font-size: 1.em;
+#comments-list .post-info { /* Re-purposing .post-info for comment-card content */
+    padding: 0; /* No extra padding here */
+    display: block; /* Simpler display */
+}
+#comments-list .comment-text {
+    margin-bottom: 0.5em; /* Specific for comments text */
+    font-size: 1em;
     color: var(--text-color);
     max-width: 100%;
+    text-align: left; /* Ensure comment text is left-aligned */
 }
-.comment-card .comment-meta {
+#comments-list .comment-meta {
     font-size: 0.85em;
     color: var(--meta-text-color);
     border-top: 1px dashed var(--border-color);
     padding-top: 0.8em;
     margin-top: 1em;
+    text-align: left; /* Ensure meta text is left-aligned */
 }
-.comment-card .comment-meta strong { color: var(--primary-color); }
+#comments-list .comment-meta strong { color: var(--primary-color); }
+
 .no-comments-message { 
     text-align: center;
     color: var(--meta-text-color); 
@@ -926,11 +977,17 @@ main .blog-post-detail {
     backdrop-filter: blur(var(--card-backdrop-blur));
     display: flex; 
     flex-direction: column;
-    align-items: center; /* **修复**: 使内部的块级子元素水平居中 */
+    align-items: center; /* সেন্টर्स block children */
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+     opacity: 0; /* Default hidden, controlled by JS for Entrance animation */
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Add transition for reveal */
 }
+main .blog-post-detail.is-visible {
+    opacity: 1;
+}
+
 .post-detail-title {
     font-size: 2.8em;
     text-align: center; 
@@ -967,22 +1024,26 @@ main .blog-post-detail {
     border-radius: var(--border-radius);
     margin-bottom: 2em;
     box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
-    font-size: 0; /* 隐藏 img 标签自身的 alt 文本 */
+    font-size: 0; 
     position: relative; 
     background-color: var(--bg-fallback-color); 
-    /* 滤镜过渡，当图片加载成功时移除此滤镜 */
     transition: filter 0.3s ease; 
-    filter: none; /* 默认无滤镜 */
+    filter: none; /* Default no filter */
+    opacity: 0; /* Hidden by default, controlled by JS and data-delay */
+    transition: opacity 0.5s ease-out, filter 0.3s ease, transform 0.3s ease;
+}
+.post-detail-banner.is-visible {
+    opacity: 1;
 }
 .post-detail-banner.is-loading-fallback {
-    filter: saturate(0) brightness(0.6) blur(1px); /* 应用滤镜 */
-    object-fit: contain; /* 回退时确保图片全部显示 */
+    filter: saturate(0) brightness(0.6) blur(1px); 
+    object-fit: contain; 
 }
-/* Post detail banner fallback text 调整 */
+/* Post detail banner fallback text style, matching img height */
 .post-detail-banner + .fallback-text-overlay { 
-    height: 380px; /* 覆盖整个 banner 的高度 */
-    border-radius: var(--border-radius); /* 圆角也匹配 */
-    font-size: 1.4rem; /* 字体增大 */
+    height: 380px; 
+    border-radius: var(--border-radius); 
+    font-size: 1.4rem; 
 }
 
 
@@ -999,18 +1060,18 @@ main .blog-post-detail {
     color: var(--heading-color);
     font-family: var(--font-display);
     font-size: 1.8em;
-    text-align: left; /* **修复**: 确保标题内部文本左对齐 */
+    text-align: left; 
     width: 100%; 
 }
 .post-content p, .post-content ul, .post-content ol { 
     font-size: 1.05em;
     margin-bottom: 1.5em;
     line-height: 1.8;
-    text-align: justify; /* **FIX**: 文章段落保持两端对齐 */
-    padding: 0 0.5rem; /* **FIX**: 增加左右内边距，手机端避免顶头 */
+    text-align: justify; 
+    padding: 0 0.5rem; /* For article content on small screens */
 
 }
-.post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} /* 列表左对齐 */
+.post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} 
 .post-content ul li, .post-content ot li {margin-bottom: 0.5em;}
 
 
@@ -1022,6 +1083,13 @@ main .blog-post-detail {
     border-top: 1px dashed var(--border-color);
     width: 100%; 
     max-width: 700px; 
+     opacity: 0; /* Default hidden, controlled by JS data-delay */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.post-share-buttons.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .post-share-buttons span {
     color: var(--meta-text-color);
@@ -1059,7 +1127,7 @@ main .blog-post-detail {
     transform: translateZ(0); 
 }
 .main-footer .container {
-    padding: 0 1.5rem; /* 消除一些小屏幕上页脚内容顶满的风险 */
+    padding: 0 1.5rem; 
 }
 
 
@@ -1090,7 +1158,7 @@ main .blog-post-detail {
 }
 #back-to-top:hover {
     background-color: var(--primary-hover-color);
-    box-shadow: 0 5x 15px rgba(var(--primary-color-rgb), 0.5);
+    box-shadow: 0 5px 15px rgba(var(--primary-color-rgb), 0.5);
     transform: translateY(-5px) scale(1.05); 
 }
 
@@ -1114,9 +1182,12 @@ main .blog-post-detail {
     /* 通用移动端样式覆盖 */
     body {
         cursor: auto; 
+        /* Ensure that opacity/transform on body is clear for homepage background fade-in */
+        opacity: 1; 
+        transform: none; 
     }
     body::before { 
-        backdrop-filter: blur(var(--body-global-blur-value)); /* 使用动态变量 */
+        backdrop-filter: blur(var(--body-global-blur-value)); 
         -webkit-backdrop-filter: blur(var(--body-global-blur-value));
     }
     body.is-mobile #cursor-trail { 
@@ -1136,23 +1207,23 @@ main .blog-post-detail {
     
     /* 缩小菜单小框在手机端更紧凑 */
     .main-nav {
-        top: calc(var(--header-min-height-mobile, 45px) + 10px); /* 适应手机端头部高度，保持间距 */
-        right: 1rem; /* 距离右侧的固定值，而非 padding */
+        top: calc(var(--header-min-height-mobile, 45px) + 10px); 
+        right: 1rem; 
         width: 180px; 
-        max-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 10px + 10px)); /* 更小的高度 */
+        max-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 10px + 10px)); 
         padding: 0.8rem;
     }
     .main-nav.is-open { 
-        transform: translateX(0); /* 菜单移入视图 */
+        transform: translateX(0); 
     }
-    .main-nav .menu-close { font-size: 1.5em; top: 5px; right: 0.8rem; } /* 缩小关闭按钮 */
+    .main-nav .menu-close { font-size: 1.5em; top: 5px; right: 0.8rem; } 
     .main-nav ul { gap: 0.7rem; padding: 0.3rem 0;} 
     .main-nav a { font-size: 1em; padding: 0.4em 0.7em; width: 95%; max-width: 160px;}
     
     /* ------------- 英雄区域适配 ------------- */
     .hero-content { padding: 0.5rem; margin-top: -15px;} 
     .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem;} 
-    .hero-nav .nav-link { margin: 0; padding: 0.5rem 0.8em; font-size: 0.9em; width: unset; flex-grow: 1;} /* 手机首页按钮自适应宽度 */
+    .hero-nav .nav-link { margin: 0; padding: 0.5rem 0.8em; font-size: 0.9em; width: unset; flex-grow: 1;} 
     .hero-nav { gap: 0.5rem;}
 
 
@@ -1160,9 +1231,9 @@ main .blog-post-detail {
     main.container.content-page-wrapper { 
         margin: 0.8rem auto; 
         padding: 1rem 0.5rem; 
-        display: flex; /* 确保 internal content wrap/align */
+        display: flex; 
         flex-direction: column; 
-        align-items: center; /* Centers internal _block_ elements like section-title, comment-form-container */
+        align-items: center; 
     }
 
     .page-title, .section-title { font-size: 1.5rem; margin-bottom: 1rem; }
@@ -1177,8 +1248,8 @@ main .blog-post-detail {
     
     .category-filters {
         gap: 0.6rem; 
-        padding: 0 0.5rem;
-        margin-bottom: 1.5rem;
+        padding: 0 0.5rem; /* Increase padding in the center for the filtering tags in blog */
+         margin-bottom: 1.5rem;
     }
     .filter-tag-button {
         font-size: 0.85em;
@@ -1192,66 +1263,66 @@ main .blog-post-detail {
          max-width: 100%; 
     }
     .category-grid .filter-tag-button {
-        padding: 0.6em 1em; /* 手机端分类按钮 padding 也调整 */
-        min-width: unset; /* 适应内容 */
+        padding: 0.6em 1em; 
+        min-width: unset; 
         width: 100%;
     }
 
 
     /* **FIX: 博客文章列表网格强制单列且内容自适应** */
     .posts-grid, #comments-list { 
-        grid-template-columns: 1fr; /* 手机端强制单列，解决截断问题 */
+        grid-template-columns: 1fr; 
         gap: 15px; 
-        margin-left: 0; /* 消除可能的多余 margin */
+        margin-left: 0; 
         margin-right: 0;
         max-width: 100%;
     }
     /* **FIX: 文章卡片内容自适应** */
     .post-card .post-info {
         padding: 0.8rem;
-        width: 100%; /* 确保占据100%宽度 */
-        align-items: flex-start; /* 内容左对齐 */
+        width: 100%; 
+        align-items: flex-start; 
     }
-    .post-card .post-thumbnail { /* 封面确保能显示本地图 */
+    .post-card .post-thumbnail { 
         height: 160px;
     }
 
-    .post-info h3 { font-size: 1.3rem; -webkit-line-clamp: 2; /* 限制标题行数 */ text-align: left;} 
-    .post-excerpt { font-size: 0.85em; -webkit-line-clamp: 3; /* 限制摘要行数 */ text-align: justify; }
+    .post-info h3 { font-size: 1.3rem; -webkit-line-clamp: 2; text-align: left;} 
+    .post-excerpt { font-size: 0.85em; -webkit-line-clamp: 3; text-align: justify; }
 
     /* **FIX: 详情页和留言板段落/表单内容适配** */
     .about-me-section p, 
     .comment-section p, 
     .content-page-wrapper .form-group input, 
     .content-page-wrapper .form-group textarea,
-    .post-content h3 strong, /* Fix internal strong title */
+    .post-content h3, /* Also align h3 */
     .post-content p, .post-content ul, .post-content ol { 
-        padding: 0; /* 清除了 internal padding, 外部容器已经控制好 */
-        font-size: 0.95em; /* 调整字体大小 */
-        text-align: justify; /* 手机端也保持段落两端对齐 */
+        padding: 0 0.5em; /* Ensure some content padding inside modules */
+        font-size: 0.95em; 
+        text-align: justify; 
     }
-     .post-content h3 { font-size: 1.3em; padding-left: 0.5em; text-align: left;}
+     .post-content h3 { font-size: 1.3em; padding-left: 0.5em; text-align: left; border-left: 3px solid var(--secondary-color);} /* Adjust border for H3 on mobile */
     .post-share-buttons {margin-top: 1.5em; padding-top: 1em;}
-    .post-share-buttons .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; }
+    .post-share-buttons .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; border-radius: 4px; } /* Smaller rounded share buttons on mobile */
 
-    .comment-form-container, .about-me-section .contact-info, /* **修复**：联系信息卡片尺寸 */
-    .categories-section .button-container { /* **修复**：分类按钮容器尺寸 */
-        padding: 1.2rem 1em; 
+    .comment-form-container, .about-me-section .contact-info, 
+    .categories-section .button-container { 
+        padding: 1.2rem 1em; /* Further adjustment for small-screens for input area */
         margin: 1rem auto; 
     }
-    /* FIX: 确保留言板的表单组自适应 */
+    /* FIX: 确保留言板的表单组完全自适应 */
     .comment-form-container .form-group { padding: 0;}
     .comment-form-container label, .comment-form-container .form-hint { text-align: left; padding: 0.2rem;}
 
     .comments-list-container { padding: 1em 0.5em; margin-top: 2em;}
     
      .post-detail-banner { height: 160px; margin-bottom: 1em; }
-    .post-detail-banner + .fallback-text-overlay { height: 160px; font-size: 1.1rem;} /* 适配图片高度 */
+    .post-detail-banner + .fallback-text-overlay { height: 160px; font-size: 1.1rem;} 
 
 
-    /* 脚部适配 */
+    /* Footer on mobile */
     .main-footer { padding: 0.8rem 0.5rem;}
-    .main-footer .container { padding: 0 0.5rem; flex-direction: column; gap: 0.5rem;} /* 消除页脚内边距，内容垂直居中 */
+    .main-footer .container { padding: 0 0.5rem; flex-direction: column; gap: 0.5rem;} 
     .main-footer p {font-size: 0.75em;}
 
     #back-to-top { bottom: 0.4rem; right: 0.4rem; width: 28px; height: 28px; font-size: 0.9em; }

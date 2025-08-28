@@ -10,12 +10,15 @@ if (!admin.apps.length) {
 }
 const db = admin.firestore();
 
+// !!! IMPORTANT: Replace with your actual Netlify deployed frontend domain !!!
+const ALLOW_ORIGIN = process.env.VITE_FRONTEND_URL || "https://honoka1.netlify.app"; 
+
 exports.handler = async (event, context) => {
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Access-Control-Allow-Methods': 'GET, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '86400',
@@ -28,7 +31,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405, // Method Not Allowed
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
       },
       body: JSON.stringify({ message: 'Method Not Allowed' }),
     };
@@ -36,14 +39,13 @@ exports.handler = async (event, context) => {
 
   try {
     const commentsRef = db.collection('comments');
-    // Order comments by timestamp in descending order (newest first)
     const snapshot = await commentsRef.orderBy('timestamp', 'desc').get(); 
 
     if (snapshot.empty) {
       return {
         statusCode: 200,
         headers: {
-          'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+          'Access-Control-Allow-Origin': ALLOW_ORIGIN,
           'Content-Type': 'application/json',
         },
         body: JSON.stringify([]), // Return empty array if no comments
@@ -56,7 +58,6 @@ exports.handler = async (event, context) => {
         id: doc.id,
         author: data.author,
         text: data.text,
-        // Convert Firestore Timestamp object to ISO string for frontend consumption
         timestamp: data.timestamp ? data.timestamp.toDate().toISOString() : null, 
       };
     });
@@ -64,7 +65,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(comments),
@@ -75,7 +76,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': https://honoka1.netlify.app || '*',
+        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message: 'Failed to retrieve comments.', error: error.message }),

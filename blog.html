@@ -8,11 +8,12 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
-    <!-- 全局页面过渡遮罩 -->
     <div id="global-page-transition-overlay"></div>
-    <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
     <header class="main-header">
@@ -20,21 +21,19 @@
             <h1 class="blog-title blog-title--animated is-header-title">
                 <a href="index.html">Honoka的小屋</a>
             </h1>
-            <!-- 桌面端和手机端都使用汉堡包菜单切换按钮 -->
             <button class="menu-toggle" aria-label="Toggle navigation" aria-controls="main-nav-menu">
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
             <nav id="main-nav-menu" class="main-nav" role="navigation" aria-expanded="false">
-                <!-- 手机端关闭菜单按钮 -->
                 <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
                     <li><a href="index.html">主页</a></li>
                     <li><a href="blog.html" class="active">文章</a></li>
                     <li><a href="about.html">关于我</a></li>
                     <li><a href="comments.html">留言板</a></li>
-                    <li><a href="categories.html">分类</a></li> <!-- 新增分类入口 -->
+                    <li><a href="categories.html">分类</a></li>
                 </ul>
             </nav>
         </div>
@@ -44,14 +43,11 @@
         <section class="recent-posts" id="posts-section">
             <h2 class="section-title animate__slide-up">我的随笔</h2>
 
-            <!-- 新增：文章分类（标签）筛选区域 -->
             <div id="blog-category-filters" class="category-filters animate__fade-in">
                 <button class="filter-tag-button active" data-filter="all">全部文章</button>
-                <!-- 标签按钮会由 JavaScript (script.js) 动态生成 -->
             </div>
 
             <div class="posts-grid" id="all-posts-grid">
-                <!-- 第一篇文章卡片 -->
                 <div class="post-card animate__slide-up" data-tags="影评,治愈,新海诚">
                     <a href="posts/first-post.html">
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="「你的名字」影评" class="post-thumbnail">
@@ -63,7 +59,6 @@
                         </div>
                     </a>
                 </div>
-                <!-- 第二篇文章卡片 -->
                 <div class="post-card animate__slide-up" data-delay="100" data-tags="手办,分享,waifu,收藏">
                     <a href="posts/second-post.html">
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="手办收藏" class="post-thumbnail">
@@ -75,7 +70,6 @@
                         </div>
                     </a>
                 </div>
-                <!-- 新增第三篇文章卡片： 四月新番速览 (使用 article-template.html) -->
                 <div class="post-card animate__slide-up" data-delay="200" data-tags="新番,推荐,动画">
                     <a href="posts/article-template.html"> 
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="新番推荐" class="post-thumbnail">
@@ -87,7 +81,6 @@
                         </div>
                     </a>
                 </div>
-                <!-- 新增第四篇文章卡片： 编程心情 -->
                 <div class="post-card animate__slide-up" data-delay="300" data-tags="编程,杂谈,日常,前端">
                     <a href="posts/third-post.html"> 
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="代码与诗意" class="post-thumbnail">
@@ -99,7 +92,6 @@
                         </div>
                     </a>
                 </div>
-                <!-- 可在此添加更多文章卡片，记得为每张卡片添加 `data-tags` 属性 -->
             </div>
         </section>
     </main>
