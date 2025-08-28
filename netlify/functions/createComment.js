@@ -21,7 +21,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
+        'Access-Control-Allow-Origin': https://honoka1.netlify.app,
         'Access-Control-Allow-Methods': 'POST, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type',
         'Access-Control-Max-Age': '86400',
@@ -34,7 +34,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 405, // Method Not Allowed
       headers: {
-        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
+        'Access-Control-Allow-Origin': https://honoka1.netlify.app,
       },
       body: JSON.stringify({ message: 'Method Not Allowed' }),
     };
@@ -49,7 +49,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers: {
-          'Access-Control-Allow-Origin': ALLOW_ORIGIN,
+          'Access-Control-Allow-Origin': https://honoka1.netlify.app,
         },
         body: JSON.stringify({ message: 'Author and text are required.' }),
       };
@@ -58,7 +58,7 @@ exports.handler = async (event, context) => {
       return {
         statusCode: 400,
         headers: {
-          'Access-Control-Allow-Origin': ALLOW_ORIGIN,
+          'Access-Control-Allow-Origin': https://honoka1.netlify.app,
         },
         body: JSON.stringify({ message: 'Author or text too long.' }),
       };
@@ -75,7 +75,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 200,
       headers: {
-        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
+        'Access-Control-Allow-Origin': https://honoka1.netlify.app,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message: 'Comment added successfully!', comment: newComment }),
@@ -86,7 +86,7 @@ exports.handler = async (event, context) => {
     return {
       statusCode: 500,
       headers: {
-        'Access-Control-Allow-Origin': ALLOW_ORIGIN,
+        'Access-Control-Allow-Origin': https://honoka1.netlify.app,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message: 'Failed to add comment.', error: error.message }),
