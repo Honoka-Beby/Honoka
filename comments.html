@@ -8,12 +8,11 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-    <!-- 优化字体加载速度：预加载主要中文字体 -->
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
+    <!-- 全局页面过渡遮罩 -->
     <div id="global-page-transition-overlay"></div>
+    <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
     <header class="main-header">
@@ -21,19 +20,21 @@
             <h1 class="blog-title blog-title--animated is-header-title">
                 <a href="index.html">Honoka的小屋</a>
             </h1>
+            <!-- 桌面端和手机端都使用汉堡包菜单切换按钮 -->
             <button class="menu-toggle" aria-label="Toggle navigation" aria-controls="main-nav-menu">
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
             <nav id="main-nav-menu" class="main-nav" role="navigation" aria-expanded="false">
+                <!-- 手机端关闭菜单按钮 -->
                 <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
                     <li><a href="index.html">主页</a></li>
                     <li><a href="blog.html">文章</a></li>
                     <li><a href="about.html">关于我</a></li>
-                    <li><a href="comments.html" class="active">留言板</a></li>
-                    <li><a href="categories.html">分类</a></li>
+                    <li><a href="comments.html" class="active">留言板</a></li> <!-- 设为活跃状态 -->
+                    <li><a href="categories.html">分类</a></li> <!-- 新增分类入口 -->
                 </ul>
             </nav>
         </div>
@@ -55,13 +56,14 @@
                         <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！" aria-required="true"></textarea>
                     </div>
                     <button type="submit" class="button">提交留言</button>
-                    <p class="form-hint">你的留言将保存在后端数据库中，大家都能看到哦！</p> <!-- 提示已修正 -->
+                    <p class="form-hint">你的留言将保存在后端数据库中，大家都能看到哦！</p> <!-- 提示更新为后端 -->
                 </form>
             </div>
 
             <div class="comments-list-container animate__fade-in animate__delay-300" data-delay="300">
                 <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
                 <div id="comments-list" class="posts-grid">
+                     <!-- 留言内容将由js/comments.js动态加载 -->
                      <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
                 </div>
             </div>
@@ -77,6 +79,7 @@
 
     <button id="back-to-top" title="返回顶部">↑</button>
 
+    <!-- 注意: 留言板需要同时加载 script.js (全局功能) 和 comments.js (留言板功能) -->
     <script src="js/script.js"></script>
     <script src="js/comments.js"></script>
 </body>
