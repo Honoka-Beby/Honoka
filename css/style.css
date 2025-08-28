@@ -223,13 +223,13 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     /* 核心渐变动画背景：包含从透明白色 --> 粉色发光 --> 透明白色的光带 */
     background-image: linear-gradient(90deg, 
         /* 渐变带从透明白（显示底层白色文字）到亮粉色再回到透明白 */
-        white 0%, /* 文字原始白色区域的颜色 */
-        white 10%, 
-        rgba(var(--primary-color-rgb), 0.7) 30%, /* 粉色发光开始强烈的区域，这里可以更柔和，或者更亮 */
+        #ffffff 0%, /* 文字原始白色区域的颜色 */
+        rgba(255, 255, 255, 0.9) 10%, /* 稍微透明的白色，平滑过渡 */
+        rgba(var(--primary-color-rgb), 0.7) 30%, /* 粉色发光开始强烈的区域 */
         rgba(var(--primary-color-rgb), 1) 50%, /* 粉色发光中心最纯净最亮，与主色一致 */
         rgba(var(--primary-color-rgb), 0.7) 70%, /* 粉色逐渐淡出 */
-        white 90%, /* 逐渐恢复白色 */
-        white 100% /* 结束时恢复白色文字颜色 */
+        rgba(255, 255, 255, 0.9) 90%, /* 逐渐恢复透明白色 */
+        #ffffff 100% /* 结束时恢复白色文字颜色 */
     );
      background-size: 300% 100%; /* 确保渐变带远宽于文字，以实现完整的滑动效果 */
      background-position: -150% 0; /* 调整起始位置，让光带从左侧的外面开始 */
@@ -239,7 +239,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     -webkit-background-clip: text; /* Webkit browsers */
     background-clip: text; /* 标准 */
     -webkit-text-fill-color: transparent; /* Webkit browsers */
-    /* color 作为 fallback，在 background-clip:text 未生效时确保文字可见 */
+    /* !Important: color 作为 fallback 或在 background-clip:text 未生效时确保文字可见 */
     
     /* 动画定义：仅仅移动背景位置，实现走马灯效果 */
     animation: homepage-title-flow-gradient 4s linear infinite; 
@@ -295,8 +295,14 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     color: var(--text-color);
     text-shadow: 0 0 10px rgba(0,0,0,0.5);
 }
+.hero-nav {
+    display: flex; /* Ensure these are flex children for proper row layout */
+    justify-content: center; /* Center buttons horizontally */
+    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
+    gap: 1rem; /* Spacing between buttons */
+}
 .hero-nav .nav-link {
-    margin: 0 1rem;
+    margin: 0; /* Remove individual margins to use gap */
     font-size: 1.1rem;
     font-weight: 500;
     padding: 0.5rem 1.2rem;
@@ -445,7 +451,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     color: var(--heading-color); /* 悬停文字白色 */
     background-color: var(--primary-color); /* 悬停背景填充鲜艳粉色 */
     transform: translateY(-2px); /* 稍微上浮 */
-    box-shadow: 0 4px 15px rgba(var(--primary-color-rgb), 0.6), inset 0 0 10px rgba(var(--heading-color-rgb), 0.4); /* 强烈粉色外阴影 + 亮白内阴影形成发光 */
+    box-shadow: 0 4px 15px rgba(var(--primary-color-rgb), 0.6), 
+                inset 0 0 10px rgba(var(--heading-color-rgb), 0.7); /* 强烈粉色外阴影 + 亮白内阴影形成发光 */
     border-color: var(--primary-color); /* 悬停时边框也变粉色 */
      text-shadow: 0 0 10px rgba(var(--heading-color-rgb), 0.8), 0 0 20px rgba(var(--primary-color-rgb), 0.5); /* 悬停时文字加强白光和粉光 */
 } 
@@ -485,7 +492,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     font-size: 2.5rem;
     position: relative;
     display: block; 
-    width: 100%; /* **FIX**: 确保百分百宽度使其能居中文本 */
+    width: 100%; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -503,7 +510,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     border-radius: 2px;
 }
 /* 模块内的子标题 */
-.comment-form-container h3, .comments-list-container h3, .contact-info h3 { /* **新增 .contact-info h3 的居中** */
+.comment-form-container h3, .comments-list-container h3, .contact-info h3 { 
     text-align: center;
     width: 100%;
 }
@@ -632,10 +639,8 @@ main.container.content-page-wrapper {
 
 /* 图片正在加载或加载失败（未替换 API 图片）的样式 */
 .post-thumbnail.is-loading-fallback {
-    /* 目的将本地 fallback.png contain 进来，同时让下面的滤镜生效 */
-    object-fit: contain; 
+    object-fit: contain; /* Scale fallback image to fit without cropping */
     filter: saturate(0) brightness(0.5) blur(1px); /* 将图片灰度+变暗+模糊，突出文字提示 */
-    
     /* 添加过渡，使得从模糊 -> 清晰有一个动画效果，提升渐进式加载体验。 */
     /* 当 JS 将 src 替换为真实图片时，会移除 is-loading-fallback 类，filter 自动恢复 none */
 } 
@@ -654,7 +659,7 @@ main.container.content-page-wrapper {
     color: rgba(255, 255, 255, 0.8);
     text-shadow: 0 0 5px rgba(0,0,0,0.8);
     background: rgba(0,0,0,0.5); /* 半透明黑底，确保文字可读 */
-    pointer-events: none; /* 不阻止鼠标事件传递 */
+    pointer-events: none; 
     z-index: 5;
     font-family: var(--font-primary); 
     padding: 0 10px; /* 左右内边距防止文字溢出 */
@@ -723,7 +728,7 @@ main.container.content-page-wrapper {
 
 
 /* --- Layout for About, Comments, Categories pages --- */
-.about-me-section, .comment-section, .categories-section { /* **FIX**: 新增 .categories-section*/
+.about-me-section, .comment-section, .categories-section { 
     width: 100%; 
     text-align: center; 
     -webkit-backface-visibility: hidden; 
@@ -731,13 +736,13 @@ main.container.content-page-wrapper {
     transform: translateZ(0); 
 }
 
-.about-me-section p, .comment-section p, .categories-section p { /* **FIX**: 新增 .categories-section p */
+.about-me-section p, .comment-section p, .categories-section p { 
     font-size: 1.05em;
     max-width: 760px; 
     margin-left: auto; 
     margin-right: auto; 
     text-align: justify; 
-    padding: 0 0.5rem; /* **FIX**: 增加左右内边距，防止在手机端文本顶头 */
+    padding: 0 0.5rem; /* **修复**: 增加左右内边距，防止在手机端文本顶头 */
 }
 /* 对列表也应用max-width和margin auto */
 .content-page-wrapper ul, .content-page-wrapper ol { 
@@ -766,10 +771,10 @@ main.container.content-page-wrapper {
     box-shadow: 0 0 0 12px rgba(var(--primary-color-rgb), 0.3);
 }
 .about-me-section .contact-info {
-    text-align: left; 
+    text-align: left; /* **修复**，確保內部文本左對齊 */
     max-width: 480px;
     margin: 2em auto;
-    padding: 1.5em; /* **FIX**: 确保内边距 */
+    padding: 1.5em; 
     background: rgba(var(--bg-secondary-color-rgb), 0.6); 
     border-radius: var(--border-radius);
     border: 1px solid var(--border-color);
@@ -781,7 +786,7 @@ main.container.content-page-wrapper {
 }
 .about-me-section .contact-info h3 { color: var(--secondary-color); font-family: var(--font-display); border-bottom: 1px dashed var(--border-color); padding-bottom: 0.5em;}
 .about-me-section .contact-info ul { list-style: none; padding: 0.5em 0;}
-.about-me-section .contact-info li { margin-bottom: 0.7em;}
+.about-me-section .contact-info ul li { margin-bottom: 0.7em;}
 
 
 /* Comments Form */
@@ -793,7 +798,7 @@ main.container.content-page-wrapper {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     width: 100%; 
     max-width: 700px;
-    text-align: left; /* **FIX**: 表单内容左对齐 */
+    text-align: left; /* **修复：确保表单内容保持左对齐** */
     -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
     backdrop-filter: blur(var(--card-backdrop-blur));
      -webkit-backface-visibility: hidden; 
@@ -829,7 +834,7 @@ textarea { resize: vertical; min-height: 120px; }
 .form-hint { font-size: 0.85em; color: var(--meta-text-color); margin-top: 1em; text-align: center; width: 100%;}
 
 
-/* Comments List (使用 posts-grid 的 flex 效果) */
+/* Comments List (基于 posts-grid 的 flex 或 grid 效果) */
 .comments-list-container {
     margin-top: 3em;
     padding-top: 2em;
@@ -853,7 +858,7 @@ textarea { resize: vertical; min-height: 120px; }
     margin-top: 1em;
     text-align: left; 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* **FIX**: 改为 flex 布局 或在 media query 切换为 1fr */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 桌面端仍然保持多列 */
     gap: 20px; 
     width: 100%; 
     max-width: 900px; 
@@ -921,7 +926,7 @@ main .blog-post-detail {
     backdrop-filter: blur(var(--card-backdrop-blur));
     display: flex; 
     flex-direction: column;
-    align-items: center; 
+    align-items: center; /* **修复**: 使内部的块级子元素水平居中 */
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -961,7 +966,7 @@ main .blog-post-detail {
     object-fit: cover;
     border-radius: var(--border-radius);
     margin-bottom: 2em;
-    box-shadow: 0 5p 15px rgba(var(--shadow-rgb), 0.3);
+    box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
     font-size: 0; /* 隐藏 img 标签自身的 alt 文本 */
     position: relative; 
     background-color: var(--bg-fallback-color); 
@@ -994,7 +999,7 @@ main .blog-post-detail {
     color: var(--heading-color);
     font-family: var(--font-display);
     font-size: 1.8em;
-    text-align: left; 
+    text-align: left; /* **修复**: 确保标题内部文本左对齐 */
     width: 100%; 
 }
 .post-content p, .post-content ul, .post-content ol { 
@@ -1006,7 +1011,7 @@ main .blog-post-detail {
 
 }
 .post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} /* 列表左对齐 */
-.post-content ul li, .post-content ol li {margin-bottom: 0.5em;}
+.post-content ul li, .post-content ot li {margin-bottom: 0.5em;}
 
 
 /* --- Post Share Buttons --- */
@@ -1054,7 +1059,7 @@ main .blog-post-detail {
     transform: translateZ(0); 
 }
 .main-footer .container {
-    padding: 0 1.5rem; /* 避免一些小屏幕上页脚内容顶满 */
+    padding: 0 1.5rem; /* 消除一些小屏幕上页脚内容顶满的风险 */
 }
 
 
@@ -1085,8 +1090,22 @@ main .blog-post-detail {
 }
 #back-to-top:hover {
     background-color: var(--primary-hover-color);
-    box-shadow: 0 5px 15px rgba(var(--primary-color-rgb), 0.5);
+    box-shadow: 0 5x 15px rgba(var(--primary-color-rgb), 0.5);
     transform: translateY(-5px) scale(1.05); 
+}
+
+
+/* --- Read Progress Bar --- */
+#read-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%; 
+    height: 4px; 
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    box-shadow: 0 0 10px var(--primary-color);
+    transition: width 0.1s linear; 
+    z-index: 1001; 
 }
 
 
@@ -1118,14 +1137,13 @@ main .blog-post-detail {
     /* 缩小菜单小框在手机端更紧凑 */
     .main-nav {
         top: calc(var(--header-min-height-mobile, 45px) + 10px); /* 适应手机端头部高度，保持间距 */
-        right: 10px; /* 距离右侧 */
-        width: 180px; /* 菜单宽度 */
+        right: 1rem; /* 距离右侧的固定值，而非 padding */
+        width: 180px; 
         max-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 10px + 10px)); /* 更小的高度 */
         padding: 0.8rem;
     }
     .main-nav.is-open { 
         transform: translateX(0); /* 菜单移入视图 */
-        right: 10px; /* 保证距离右边框 */
     }
     .main-nav .menu-close { font-size: 1.5em; top: 5px; right: 0.8rem; } /* 缩小关闭按钮 */
     .main-nav ul { gap: 0.7rem; padding: 0.3rem 0;} 
@@ -1134,57 +1152,72 @@ main .blog-post-detail {
     /* ------------- 英雄区域适配 ------------- */
     .hero-content { padding: 0.5rem; margin-top: -15px;} 
     .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem;} 
-    .hero-nav .nav-link { margin: 0 0.2rem; padding: 0.2rem 0.5em; font-size: 0.85em; }
+    .hero-nav .nav-link { margin: 0; padding: 0.5rem 0.8em; font-size: 0.9em; width: unset; flex-grow: 1;} /* 手机首页按钮自适应宽度 */
+    .hero-nav { gap: 0.5rem;}
+
 
     /* ------------- 内容区域适配 （包括博客列表和留言板！）------------- */
     main.container.content-page-wrapper { 
         margin: 0.8rem auto; 
         padding: 1rem 0.5rem; 
-        display: flex; /* **FIX**: ensure this allows internal content to wrap/align */
+        display: flex; /* 确保 internal content wrap/align */
         flex-direction: column; 
-        align-items: center; /* **FIX**: Centers internal _block_ elements like section-title, comment-form-container */
+        align-items: center; /* Centers internal _block_ elements like section-title, comment-form-container */
     }
 
     .page-title, .section-title { font-size: 1.5rem; margin-bottom: 1rem; }
      .section-title::after, .page-title::after {
-        bottom: -0.3rem; /* 再次调整下划线位置 */
-        width: 60%; /* 手机端宽度可以增大一点 */
+        bottom: -0.3rem; 
+        width: 60%; 
      }
     .comment-form-container h3, 
     .comments-list-container h3,
-    .categories-section h3 { font-size: 1.2rem; margin-top: 0.6rem;}
+    .categories-section h3,
+    .about-me-section .contact-info h3 { font-size: 1.2rem; margin-top: 0.6rem;}
     
     .category-filters {
-        gap: 0.6rem; /* 缩小标签间距 */
+        gap: 0.6rem; 
         padding: 0 0.5rem;
         margin-bottom: 1.5rem;
     }
     .filter-tag-button {
         font-size: 0.85em;
-        padding: 0.5em 1em; /* 调整 padding */
-        border-radius: 15px; /* 调整圆角 */
-         white-space: nowrap; /* 不换行 */
+        padding: 0.5em 1em; 
+        border-radius: 15px; 
+         white-space: nowrap; 
     }
     .category-grid {
-        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); /* **FIX**: 手机端分类网格可以多列，但宽度适配 */
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
         gap: 12px;
-         max-width: 100%; /* 确保在手机端不超过 container */
+         max-width: 100%; 
     }
     .category-grid .filter-tag-button {
+        padding: 0.6em 1em; /* 手机端分类按钮 padding 也调整 */
         min-width: unset; /* 适应内容 */
         width: 100%;
     }
 
 
-    /* **FIX: 文章列表网格强制单列** */
+    /* **FIX: 博客文章列表网格强制单列且内容自适应** */
     .posts-grid, #comments-list { 
         grid-template-columns: 1fr; /* 手机端强制单列，解决截断问题 */
         gap: 15px; 
+        margin-left: 0; /* 消除可能的多余 margin */
+        margin-right: 0;
+        max-width: 100%;
     }
     /* **FIX: 文章卡片内容自适应** */
-    .post-card .post-info {padding: 0.8rem;}
-    .post-info h3 { font-size: 1.3rem; -webkit-line-clamp: 2;} /* 限制标题行数 */
-    .post-excerpt { font-size: 0.85em; -webkit-line-clamp: 3;} /* 限制摘要行数 */
+    .post-card .post-info {
+        padding: 0.8rem;
+        width: 100%; /* 确保占据100%宽度 */
+        align-items: flex-start; /* 内容左对齐 */
+    }
+    .post-card .post-thumbnail { /* 封面确保能显示本地图 */
+        height: 160px;
+    }
+
+    .post-info h3 { font-size: 1.3rem; -webkit-line-clamp: 2; /* 限制标题行数 */ text-align: left;} 
+    .post-excerpt { font-size: 0.85em; -webkit-line-clamp: 3; /* 限制摘要行数 */ text-align: justify; }
 
     /* **FIX: 详情页和留言板段落/表单内容适配** */
     .about-me-section p, 
@@ -1193,27 +1226,32 @@ main .blog-post-detail {
     .content-page-wrapper .form-group textarea,
     .post-content h3 strong, /* Fix internal strong title */
     .post-content p, .post-content ul, .post-content ol { 
-        padding: 0; /* 再次清除 internal padding, 由容器控制 */
+        padding: 0; /* 清除了 internal padding, 外部容器已经控制好 */
         font-size: 0.95em; /* 调整字体大小 */
-        text-align: justify; /* 手机端也保持两端对齐 */
+        text-align: justify; /* 手机端也保持段落两端对齐 */
     }
-     .post-content h3 { font-size: 1.3em; padding-left: 0.5em;}
+     .post-content h3 { font-size: 1.3em; padding-left: 0.5em; text-align: left;}
     .post-share-buttons {margin-top: 1.5em; padding-top: 1em;}
     .post-share-buttons .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; }
 
-    .comment-form-container, .contact-info { 
+    .comment-form-container, .about-me-section .contact-info, /* **修复**：联系信息卡片尺寸 */
+    .categories-section .button-container { /* **修复**：分类按钮容器尺寸 */
         padding: 1.2rem 1em; 
         margin: 1rem auto; 
     }
-    .comments-list-container { padding: 1em 0.5em; margin-top: 2em;}
-    #comments-list.posts-grid { margin-left: 0; margin-right: 0; max-width: 100%;} /* 确保评论列表在手机上完全适应 */
+    /* FIX: 确保留言板的表单组自适应 */
+    .comment-form-container .form-group { padding: 0;}
+    .comment-form-container label, .comment-form-container .form-hint { text-align: left; padding: 0.2rem;}
 
+    .comments-list-container { padding: 1em 0.5em; margin-top: 2em;}
+    
      .post-detail-banner { height: 160px; margin-bottom: 1em; }
-    .post-detail-banner + .fallback-text-overlay { height: 160px; font-size: 1.1rem;}
+    .post-detail-banner + .fallback-text-overlay { height: 160px; font-size: 1.1rem;} /* 适配图片高度 */
+
 
     /* 脚部适配 */
     .main-footer { padding: 0.8rem 0.5rem;}
-    .main-footer .container { padding: 0 0.5rem; } /* 消除页脚内边距 */
+    .main-footer .container { padding: 0 0.5rem; flex-direction: column; gap: 0.5rem;} /* 消除页脚内边距，内容垂直居中 */
     .main-footer p {font-size: 0.75em;}
 
     #back-to-top { bottom: 0.4rem; right: 0.4rem; width: 28px; height: 28px; font-size: 0.9em; }

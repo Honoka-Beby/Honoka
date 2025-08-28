@@ -33,8 +33,8 @@
                     <li><a href="index.html">主页</a></li>
                     <li><a href="blog.html">文章</a></li>
                     <li><a href="about.html">关于我</a></li>
-                    <li><a href="comments.html" class="active">留言板</a></li>
-                     <li><a href="categories.html">分类</a></li> <!-- 新增分类入口 -->
+                    <li><a href="comments.html" class="active">留言板</a></li> <!-- 设为活跃状态 -->
+                    <li><a href="categories.html">分类</a></li> <!-- 新增分类入口 -->
                 </ul>
             </nav>
         </div>
@@ -44,7 +44,7 @@
         <section class="comment-section">
             <h2 class="page-title animate__slide-up">说点什么吧！给我留言</h2>
 
-            <div class="comment-form-container animate__slide-up" data-delay="100">
+            <div class="comment-form-container animate__slide-up animate__delay-100" data-delay="100">
                 <h3>留下你的足迹~</h3>
                 <form id="comment-form">
                     <div class="form-group">
@@ -56,11 +56,11 @@
                         <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！" aria-required="true"></textarea>
                     </div>
                     <button type="submit" class="button">提交留言</button>
-                    <p class="form-hint">你的留言将保存在当前浏览器中，换个浏览器或清除缓存就看不到了哦</p>
+                    <p class="form-hint">你的留言将保存在后端数据库中，大家都能看到哦！</p> <!-- 提示更新为后端 -->
                 </form>
             </div>
 
-            <div class="comments-list-container animate__fade-in" data-delay="300">
+            <div class="comments-list-container animate__fade-in animate__delay-300" data-delay="300">
                 <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
                 <div id="comments-list" class="posts-grid">
                      <!-- 留言内容将由js/comments.js动态加载 -->
