@@ -1,76 +1,127 @@
+// js/comments.js
 document.addEventListener('DOMContentLoaded', () => {
     const commentForm = document.getElementById('comment-form');
     const commentsList = document.getElementById('comments-list');
+    const noCommentsMessage = commentsList.querySelector('.no-comments-message'); // 获取“暂无留言”提示
 
-    function loadComments() {
-        if (!commentsList) return; 
+    // !!! IMPORTANT: Replace with your actual Netlify Functions URLs !!!
+    // Make sure your Netlify Functions URLs are correct. 
+    // They will typically be: https://YOUR_NETLIFY_SITE_NAME.netlify.app/.netlify/functions/FUNCTION_NAME
+    // Honoka's current Netlify domain from screenshot is honoka1.netlify.app
+    const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; // Replace with your base function URL
 
-        commentsList.innerHTML = '';
-        const comments = JSON.parse(localStorage.getItem('blogComments')) || [];
+    const getAllComments = async () => {
+        try {
+            const response = await fetch(`${backendBaseUrl}getComments`);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const comments = await response.json();
+            return comments;
+        } catch (error) {
+            console.error('Failed to fetch comments from backend:', error);
+            // Fallback: If backend fails, show no comments message
+            return null; 
+        }
+    };
 
-        if (comments.length === 0) {
-            // Updated class for the 'no comments' message with animation
-            const noCommentMessage = document.createElement('p');
-            noCommentMessage.classList.add('no-comments-message', 'animate__slide-up');
-            noCommentMessage.textContent = '还没有留言呢，成为第一个留下足迹的人吧！';
-            commentsList.appendChild(noCommentMessage);
-            // Manually make it visible, as Intersection Observer might not be set up for this dynamic element
-            setTimeout(() => { noCommentMessage.classList.add('is-visible'); }, 50); 
+    const postNewComment = async (author, text) => {
+        try {
+            const response = await fetch(`${backendBaseUrl}createComment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    // 'Access-Control-Allow-Origin': 'https://honoka1.netlify.app', // Usually, browser infers this from response headers
+                },
+                body: JSON.stringify({ author, text }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`HTTP error! status: ${response.status}, message: ${errorData.message}`);
+            }
+            const result = await response.json();
+            console.log('Comment posted successfully:', result);
+            return true; // Successfully posted
+        } catch (error) {
+            console.error('Failed to post comment to backend:', error);
+            alert(`提交留言失败: ${error.message}. 请稍后再试！`);
+            return false; // Failed to post
+        }
+    };
+
+
+    const displayComments = (comments) => {
+        commentsList.innerHTML = ''; // 清空现有留言
+
+        if (!comments || comments.length === 0) {
+            commentsList.innerHTML = `<p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>`;
+            if (noCommentsMessage) noCommentsMessage.style.display = 'block'; // Ensure original message is hidden or updated
             return;
+        } else if (noCommentsMessage) {
+            // If comments exist but the default "no comments" message persists from initial load, hide it.
+             noCommentsMessage.style.display = 'none'; 
         }
 
-        // Show newest comments first, applying staggering animation
-        comments.reverse().forEach((comment, index) => { 
+        comments.forEach(comment => {
             const commentCard = document.createElement('div');
-            commentCard.classList.add('comment-card', 'animate__slide-up');
-            commentCard.setAttribute('data-delay', (index * 50).toString());
+            commentCard.classList.add('comment-card');
+
+            const date = comment.timestamp ? new Date(comment.timestamp) : new Date(); // Use new date if timestamp is null
+            const formattedDate = date.toLocaleString('zh-CN', { 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric', 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
 
             commentCard.innerHTML = `
                 <p>${comment.text}</p>
                 <div class="comment-meta">
-                    <strong>${comment.author}</strong> 于 ${new Date(comment.timestamp).toLocaleString()} 留言
+                    留言于 <strong>${formattedDate}</strong> by <strong>${comment.author}</strong>
                 </div>
             `;
             commentsList.appendChild(commentCard);
-
-            // Trigger animation for dynamically added elements
-            setTimeout(() => {
-                commentCard.classList.add('is-visible');
-            }, (index * 50) + 100); 
         });
-    }
+    };
 
-    function saveComment(author, text) {
-        const comments = JSON.parse(localStorage.getItem('blogComments')) || [];
-        const newComment = {
-            author: author,
-            text: text,
-            timestamp: new Date().toISOString()
-        };
-        comments.push(newComment);
-        localStorage.setItem('blogComments', JSON.stringify(comments));
-        loadComments(); 
-    }
-
-    if (commentForm) { 
-        commentForm.addEventListener('submit', (e) => {
-            e.preventDefault();
+    // Handle form submission
+    if (commentForm) {
+        commentForm.addEventListener('submit', async (event) => {
+            event.preventDefault(); // 阻止表单默认提交行为
 
             const authorInput = document.getElementById('comment-author');
-            const textInput = document.getElementById('comment-text');
+            const commentTextInput = document.getElementById('comment-text');
 
-            const author = authorInput.value.trim();
-            const text = textInput.value.trim();
+            const author = authorInput.value;
+            const text = commentTextInput.value;
 
-            if (author && text) {
-                saveComment(author, text);
-                authorInput.value = '';
-                textInput.value = '';
+            const success = await postNewComment(author, text);
+
+            if (success) {
+                authorInput.value = ''; // 清空作者输入框
+                commentTextInput.value = ''; // 清空留言内容
+                await loadAndDisplayComments(); // 重新加载并显示最新留言
+                alert('留言提交成功，感谢您的来访！');
             } else {
-                alert('请填写你的名字和留言内容哦！');
+                 // Error handled by postNewComment, alert already displayed
             }
         });
     }
 
-    loadComments();
+    // Initial load of comments when page loads
+    const loadAndDisplayComments = async () => {
+        const comments = await getAllComments();
+        if (comments) {
+            displayComments(comments);
+        } else {
+            // Even if empty array from successful fetch, it comes here
+            displayComments([]); // Display empty list if fetch error or no comments
+        }
+    };
+
+    loadAndDisplayComments();
+
 });
+
