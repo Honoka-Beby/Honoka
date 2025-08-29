@@ -1,64 +1,84 @@
 // netlify/functions/createComment.js
 const admin = require('firebase-admin');
 
-// IMPORTANT: Use environment variables for Firebase credentials
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
-
-// Initialize Firebase Admin only once
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount)
-  });
-}
-const db = admin.firestore();
+let isFirebaseInitialized = false;
+let db;
 
 // !!! IMPORTANT: Replace with YOUR ACTUAL NETLIFY DEPLOYED FRONTEND DOMAIN !!!
-// This variable will be used in Access-Control-Allow-Origin headers.
+// This value is used in Access-Control-Allow-Origin headers.
+// Must match your live Netlify site URL exactly, for example: "https://honoka1.netlify.app"
 const ALLOW_ORIGIN = process.env.VITE_FRONTEND_URL || "https://honoka1.netlify.app"; 
-// Example fallback if env var is empty locally: "https://honoka1.netlify.app"
+
+
+// Initialize Firebase Admin SDK only once for reuse across invocations.
+function initializeFirebase() {
+  if (isFirebaseInitialized) {
+    return; // Already initialized, do nothing
+  }
+  
+  try {
+    // CRITICAL: Ensure FIREBASE_SERVICE_ACCOUNT_KEY exists and is valid JSON
+    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY);
+
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount)
+    });
+    db = admin.firestore();
+    isFirebaseInitialized = true;
+    console.log("Firebase Admin SDK initialized successfully.");
+  } catch (err) {
+    console.error("Firebase Admin SDK Initialization Error:", err);
+    // Do NOT set isFirebaseInitialized = true; allow retry on next invocation if needed.
+    throw new Error("Failed to initialize Firebase Admin SDK. Check FIREBASE_SERVICE_ACCOUNT_KEY.");
+  }
+}
 
 exports.handler = async (event, context) => {
-  // Common Headers for all responses, including OPTIONS
-  const defaultHeaders = {
-    'Access-Control-Allow-Origin': ALLOW_ORIGIN, // Correctly use the variable here
-    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS', // Be explicit with allowed methods
+  // Define common headers with dynamic Access-Control-Allow-Origin
+  const commonHeaders = {
+    'Access-Control-Allow-Origin': ALLOW_ORIGIN,
+    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400', // Cache pre-flight response for 24 hours
   };
 
-  // Pre-flight request for CORS.
+  // Pre-flight request for CORS (responds without hitting main logic)
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 200,
-      headers: defaultHeaders,
-      body: 'OK', // A simple body for OPTIONS requests
+      headers: commonHeaders,
+      body: 'OK',
     };
   }
 
-  if (event.httpMethod !== 'POST') {
-    return {
-      statusCode: 405, // Method Not Allowed
-      headers: defaultHeaders,
-      body: JSON.stringify({ message: 'Method Not Allowed' }),
-    };
-  }
-
+  // --- Main handler logic starts here ---
   try {
+    // Try to ensure Firebase is initialized. This will throw if key is bad.
+    initializeFirebase(); 
+
+    if (event.httpMethod !== 'POST') {
+      return {
+        statusCode: 405, // Method Not Allowed
+        headers: { ...commonHeaders, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: 'Method Not Allowed' }),
+      };
+    }
+
     const data = JSON.parse(event.body);
     const { author, text } = data;
 
-    // Basic server-side validation
+    // Server-side validation
     if (!author || author.trim() === '' || !text || text.trim() === '') {
       return {
         statusCode: 400,
-        headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
+        headers: { ...commonHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: 'Author and text are required.' }),
       };
     }
     if (author.length > 50 || text.length > 500) {
       return {
         statusCode: 400,
-        headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
+        headers: { ...commonHeaders, 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: 'Author or text too long. Max: 50 for author, 500 for text.' }),
       };
     }
@@ -66,23 +86,24 @@ exports.handler = async (event, context) => {
     const newComment = {
       author: author.trim(),
       text: text.trim(),
-      timestamp: admin.firestore.FieldValue.serverTimestamp(), // Use server timestamp for accuracy
+      timestamp: admin.firestore.FieldValue.serverTimestamp(), // Firestore server timestamp
     };
 
     await db.collection('comments').add(newComment);
 
     return {
       statusCode: 200,
-      headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Comment added successfully!', comment: newComment }),
+      headers: { ...commonHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Comment added successfully!', commentId: newComment.id, timestamp: new Date().toISOString() }), // Return more useful info
     };
 
   } catch (error) {
-    console.error('Error adding comment:', error);
+    console.error('Error in createComment function:', error);
+    // Explicitly return a 500 with detailed error message
     return {
       statusCode: 500,
-      headers: { ...defaultHeaders, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message: 'Failed to add comment. Please try again.', error: error.message }),
+      headers: { ...commonHeaders, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'Failed to add comment. Internal server error. ' + error.message }),
     };
   }
 };
