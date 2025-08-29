@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>留言板 - Honoka的小屋</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="theme-cosmic-dream">
+    <!-- 全局页面过渡遮罩 -->
+    <div id="global-page-transition-overlay"></div>
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
+    <!-- 顶部导航栏结构 - 统一每个 HTML 文件 -->
+    <header class="main-header">
+        <div class="container">
+            <!-- 网站标题，点击返回主页 -->
+            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
+            <!-- 汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
+            <nav id="main-nav-menu" class="main-nav">
+                <button class="menu-close" title="关闭">✕</button>
+                <ul>
+                    <li><a href="index.html">主页</a></li>
+                    <li><a href="blog.html">文章</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="comments.html" class="active">留言板</a></li>
+                    <li><a href="categories.html">分类</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container content-page-wrapper animate__fade-in">
+        <section class="comment-section">
+            <h2 class="page-title animate__slide-up">说点什么吧！给我留言</h2>
+
+            <div class="comment-form-container animate__slide-up" data-delay="100">
+                <h3>留下你的足迹~</h3>
+                <form id="comment-form">
+                    <div class="form-group">
+                        <label for="comment-author">你的名字:</label>
+                        <input type="text" id="comment-author" required placeholder="例如：次元游客" aria-required="true">
+                    </div>
+                    <div class="form-group">
+                        <label for="comment-text">留言内容:</label>
+                        <textarea id="comment-text" rows="6" required placeholder="想对我说点什么呢？比如你最近追的番、想推荐的漫画，或者对博客的建议！" aria-required="true"></textarea>
+                    </div>
+                    <button type="submit" class="button">提交留言</button>
+                    <p class="form-hint">你的留言将保存在后端数据库中，大家都能看到哦！</p>
+                </form>
+            </div>
+
+            <div class="comments-list-container animate__fade-in" data-delay="300">
+                <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
+                <div id="comments-list" class="posts-grid comments-list">
+                     <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; <span id="current-year"></span> Honoka的小屋. All rights reserved.</p>
+            <p>QQ: 3203418940 | 访问量: <span id="visitor-count">0</span></p>
+        </div>
+    </footer>
+
+    <button id="back-to-top" title="返回顶部">↑</button>
+
+    <script src="js/script.js"></script>
+    <script src="js/comments.js"></script>
+</body>
+</html>

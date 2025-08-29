@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文章列表 - Honoka的小屋</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="theme-cosmic-dream">
+    <!-- 全局页面过渡遮罩 -->
+    <div id="global-page-transition-overlay"></div>
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
+    <!-- 顶部导航栏结构 - 统一每个 HTML 文件 -->
+    <header class="main-header">
+        <div class="container">
+            <!-- 网站标题，点击返回主页 -->
+            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
+            <!-- 汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
+            <nav id="main-nav-menu" class="main-nav">
+                <button class="menu-close" title="关闭">✕</button>
+                <ul>
+                    <li><a href="index.html">主页</a></li>
+                    <li><a href="blog.html" class="active">文章</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="comments.html">留言板</a></li>
+                    <li><a href="categories.html">分类</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container content-page-wrapper">
+        <section class="recent-posts" id="posts-section">
+            <h2 class="section-title animate__slide-up">我的随笔</h2>
+
+            <!-- 新增：文章分类（标签）筛选区域 -->
+            <div id="blog-category-filters" class="category-filters animate__fade-in">
+                <!-- 标签按钮会由 JavaScript (script.js) 动态生成 -->
+                <button class="filter-tag-button active" data-filter="all">全部文章</button>
+            </div>
+
+            <div class="posts-grid" id="all-posts-grid">
+                <!-- 第一篇文章卡片 -->
+                <div class="post-card animate__slide-up" data-tags="影评,治愈,新海诚">
+                    <a href="posts/first-post.html" data-delay="0">
+                        <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="「你的名字」影评" class="post-thumbnail">
+                        <div class="post-info">
+                            <h3>我与《你的名字》的初次邂逅：情感的交织与时间的奇迹</h3>
+                            <p class="post-excerpt">还记得第一次走进电影院观看《你的名字》时的震撼吗？那不仅仅是一个关于“交换身体”的奇幻故事...</p>
+                            <time datetime="2024-04-23">2024年4月23日</time>
+                            <div class="post-tags"><span class="tag">#影评</span><span class="tag">#治愈</span></div>
+                        </div>
+                    </a>
+                </div>
+                <!-- 第二篇文章卡片 -->
+                <div class="post-card animate__slide-up" data-tags="手办,分享,waifu,收藏">
+                    <a href="posts/second-post.html" data-delay="100">
+                        <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="手办收藏" class="post-thumbnail">
+                        <div class="post-info">
+                            <h3>手办坑里的那些趣事和我最爱的waifu：我的次元收藏之旅</h3>
+                            <p class="post-excerpt">从一无所知的小白到拥有几十个手办的“资深”玩家，这些年我在手办坑里掉过多少把眼泪？...</p>
+                            <time datetime="2024-04-18">2024年4月18日</time>
+                            <div class="post-tags"><span class="tag">#手办</span><span class="tag">#分享</span></div>
+                        </div>
+                    </a>
+                </div>
+                <!-- 新增第三篇文章卡片： 四月新番速览 (使用 article-template.html) -->
+                <div class="post-card animate__slide-up" data-tags="新番,推荐,动画">
+                    <a href="posts/article-template.html" data-delay="200"> 
+                        <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="新番推荐" class="post-thumbnail">
+                        <div class="post-info">
+                            <h3>四月新番速览：不容错过的几部神作预定！</h3>
+                            <p class="post-excerpt">又到了充满希望的四月，今年的新番竞争依然激烈，我已经帮大家筛选出了最值得关注的几部番剧。</p>
+                            <time datetime="2024-04-10">2024年4月10日</time>
+                            <div class="post-tags"><span class="tag">#新番</span><span class="tag">#推荐</span></div>
+                        </div>
+                    </a>
+                </div>
+                <!-- 新增第四篇文章卡片： 编程心情 -->
+                <div class="post-card animate__slide-up" data-tags="编程,杂谈,日常,前端">
+                    <a href="posts/third-post.html" data-delay="300"> 
+                        <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="代码与诗意" class="post-thumbnail">
+                        <div class="post-info">
+                            <h3>代码与我的诗和远方：一个关于前端开发的独白</h3>
+                            <p class="post-excerpt">写代码对我来说，不仅仅是逻辑和效率的追求，更是一场充满发现与创造的旅程...</p>
+                            <time datetime="2024-05-02">2024年5月2日</time>
+                            <div class="post-tags"><span class="tag">#编程</span><span class="tag">#前端</span></div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; <span id="current-year"></span> Honoka的小屋. All rights reserved.</p>
+            <p>QQ: 3203418940 | 访问量: <span id="visitor-count">0</span></p>
+        </div>
+    </footer>
+
+    <button id="back-to-top" title="返回顶部">↑</button>
+
+    <script src="js/script.js"></script>
+</body>
+</html>

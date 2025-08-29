@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honoka的小屋 - 欢迎来到我的二次元世界</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="theme-cosmic-dream is-homepage">
+
+    <!-- 全局页面过渡遮罩，在页面跳转时激活 -->
+    <div id="global-page-transition-overlay"></div>
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
+    <!-- 顶部导航栏结构 - 统一每个 HTML 文件 -->
+    <header class="main-header">
+        <div class="container">
+            <!-- 网站标题，点击返回主页 -->
+            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
+            <!-- 汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
+            <nav id="main-nav-menu" class="main-nav">
+                <button class="menu-close" title="关闭">✕</button>
+                <ul>
+                    <li><a href="index.html" class="active">主页</a></li>
+                    <li><a href="blog.html">文章</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="comments.html">留言板</a></li>
+                    <li><a href="categories.html">分类</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="main-content">
+        <!-- 全屏封面区域 -->
+        <section class="hero-section">
+            <div class="hero-content">
+                <h1 class="blog-title blog-title--animated is-homepage-title">
+                    <a href="index.html">Honoka的小屋</a>
+                </h1>
+                <p class="hero-subtitle animate__slide-up" data-delay="100">一个关于动画、梦想和代码的秘密基地 ✨</p>
+                <nav class="hero-nav animate__slide-up" data-delay="200">
+                    <a href="blog.html" class="nav-link">文章</a>
+                    <a href="about.html" class="nav-link">关于</a>
+                    <a href="comments.html" class="nav-link">留言</a>
+                </nav>
+            </div>
+        </section>
+    </main>
+
+    <!-- 返回顶部按钮 -->
+    <button id="back-to-top" title="返回顶部">↑</button>
+
+    <!-- 网站主脚本 -->
+    <script src="js/script.js"></script>
+</body>
+</html>

@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>分类归档 - Honoka的小屋</title>
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/themes.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
+</head>
+<body class="theme-cosmic-dream">
+    <!-- 全局页面过渡遮罩 -->
+    <div id="global-page-transition-overlay"></div>
+    <!-- 动态鼠标指针容器 -->
+    <div id="cursor-trail"></div>
+
+    <!-- 顶部导航栏结构 - 统一每个 HTML 文件 -->
+    <header class="main-header">
+        <div class="container">
+            <!-- 网站标题，点击返回主页 -->
+            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
+            <!-- 汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
+            <nav id="main-nav-menu" class="main-nav">
+                <button class="menu-close" title="关闭">✕</button>
+                <ul>
+                    <li><a href="index.html">主页</a></li>
+                    <li><a href="blog.html">文章</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="comments.html">留言板</a></li>
+                    <li><a href="categories.html" class="active">分类</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container content-page-wrapper animate__fade-in">
+        <section class="categories-section">
+            <h2 class="page-title animate__slide-up">文章分类归档 🏷️</h2>
+            <p class="animate__slide-up" data-delay="100">
+                在这里你可以找到所有文章的分类，点击标签即可跳转到文章列表并查看该分类下的所有文章。
+            </p>
+            <div id="dynamic-category-list" class="posts-grid category-grid animate__fade-in" data-delay="200">
+                <!-- 分类标签将由 JavaScript (script.js) 在页面加载时动态生成 -->
+            </div>
+            <p class="animate__slide-up button-container" data-delay="300">
+                <p>
+                  <a href="blog.html" class="button">← 返回所有文章</a>
+                </p>
+            </p>
+        </section>
+    </main>
+
+    <footer class="main-footer">
+        <div class="container">
+            <p>&copy; <span id="current-year"></span> Honoka的小屋. All rights reserved.</p>
+            <p>QQ: 3203418940 | 访问量: <span id="visitor-count">0</span></p>
+        </div>
+    </footer>
+
+    <button id="back-to-top" title="返回顶部">↑</button>
+
+    <script src="js/script.js"></script>
+</body>
+</html>
