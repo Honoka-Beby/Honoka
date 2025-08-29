@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // --- CRITICAL FIX PART 1: Correctly define containsAny on DOMTokenList.prototype ---
+    // 之前修复的 containsAny 方法，保持不变
     if (typeof DOMTokenList !== 'undefined' && !DOMTokenList.prototype.containsAny) {
         DOMTokenList.prototype.containsAny = function(classNames) {
             for (let i = 0; i < classNames.length; i++) {
@@ -15,21 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let isMobile = window.innerWidth <= 767;
 
-    // --- CRITICAL FIX PART 2: Moved updateBodyBlur function definition here to resolve ReferenceError ---
-    // This function must be defined BEFORE it is called by updateIsMobileClass.
     const updateBodyBlur = () => {
         const desktopBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
         const mobileBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim();
         const currentIsMobile = window.innerWidth <= 767;
         document.documentElement.style.setProperty('--body-global-blur-value', currentIsMobile ? mobileBlur : desktopBlur);
-        document.body.classList.toggle('is-mobile', currentIsMobile); // Ensure is-mobile class is always in sync
+        document.body.classList.toggle('is-mobile', currentIsMobile);
     };
 
-    // This function can now safely call updateBodyBlur.
     const updateIsMobileClass = () => {
         isMobile = window.innerWidth <= 767;
         document.body.classList.toggle('is-mobile', isMobile);
-        updateBodyBlur(); // Now this call will work perfectly.
+        updateBodyBlur();
     };
 
     updateIsMobileClass();
@@ -88,21 +85,27 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/';
-    
+
     // --- Random Anime Wallpaper API ---
     const fetchRandomAnimeImage = async (targetElement, type = 'background') => {
         let imageUrl = '';
-        const apiEndpoints = [`https://iw233.cn/api/Pure.php`, `https://api.adicw.cn/img/rand.php`];
+        // 最终修复：增加一个更稳定的API，并调整顺序
+        const apiEndpoints = [
+            `https://api.yujn.cn/api/acg.php?type=image`, // 新增的、更稳定的API
+            `https://iw233.cn/api/Pure.php`,
+            `https://api.adicw.cn/img/rand.php`
+        ];
 
         const extractImageUrl = async (response) => {
+            if (!response || !response.url) return '';
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.startsWith('image/')) {
                 return response.url;
             }
-            if (contentType && contentType.includes('json')) {
-                const data = await response.json();
-                return data.imgurl || data.url;
-            }
+             // Forcing no-cors means we can't inspect the body, so we rely on the final response URL being the image.
+             if(response.type === 'opaque') {
+                return response.url;
+             }
             return '';
         };
 
@@ -110,14 +113,15 @@ document.addEventListener('DOMContentLoaded', () => {
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), 4000);
-                const response = await fetch(api, { signal: controller.signal });
+                // 最终修复：添加 mode: 'no-cors' 来解决CORS跨域问题
+                const response = await fetch(api, { signal: controller.signal, mode: 'no-cors' });
                 clearTimeout(timeoutId);
-                if (response.ok) {
-                    imageUrl = await extractImageUrl(response);
-                    if (imageUrl) break;
-                }
+
+                // 对于 'no-cors' 请求, response.ok is always false, so we check response.type
+                imageUrl = await extractImageUrl(response);
+                if (imageUrl) break;
             } catch (error) {
-                console.warn(`[ImageLoader] API error: ${error.message}`);
+                console.warn(`[ImageLoader] API error for ${api}: ${error.message}`);
             }
         }
 
@@ -129,6 +133,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.documentElement.style.setProperty('--bg-image', `url("${imageUrl}")`);
                 } else {
                     targetElement.src = imageUrl;
+                    targetElement.style.objectFit = 'cover';
                     targetElement.classList.remove('is-loading-fallback');
                     targetElement.style.opacity = '1';
                     const fallbackText = targetElement.nextElementSibling;
@@ -142,21 +147,23 @@ document.addEventListener('DOMContentLoaded', () => {
             applyFallbackImage(targetElement, type);
         }
     };
-    
+
     const applyFallbackImage = (targetElement, type) => {
         const isThumbnail = targetElement.classList.contains('post-thumbnail');
         const fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
-        const baseRelativePath = window.location.pathname.includes('/posts/') ? '../img/' : './img/';
+        // 最终修复：使用绝对路径，确保在任何页面都能正确找到图片
+        const baseRelativePath = '/img/';
         const localFallbackSrc = `${baseRelativePath}${fallbackFilename}`;
 
         if (type === 'background') {
             document.documentElement.style.setProperty('--bg-image', getRandomGradient());
         } else {
             targetElement.src = localFallbackSrc;
+            targetElement.style.objectFit = 'contain';
             targetElement.classList.add('is-loading-fallback');
             targetElement.style.opacity = '1';
             targetElement.style.backgroundImage = getRandomGradient();
-            
+
             let fallbackText = targetElement.nextElementSibling;
             if (!fallbackText || !fallbackText.classList.contains('fallback-text-overlay')) {
                 fallbackText = document.createElement('div');
@@ -178,10 +185,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     fetchRandomAnimeImage(document.body, 'background');
 
-    document.querySelectorAll('.post-thumbnail, .post-detail-banner').forEach(img => {
-        applyFallbackImage(img, 'image');
-        fetchRandomAnimeImage(img, 'image');
-    });
+    const initializeDynamicImages = () => {
+        document.querySelectorAll('.post-thumbnail, .post-detail-banner').forEach(img => {
+            if (img.dataset.initialized) return; // 防止重复初始化
+            img.dataset.initialized = 'true';
+            applyFallbackImage(img, 'image');
+            fetchRandomAnimeImage(img, 'image');
+        });
+    }
 
     // --- Animations and Interactions ---
     const setupAnimationsAndInteractions = () => {
@@ -198,10 +209,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }, { threshold: 0.1 });
 
         document.querySelectorAll('.animate__fade-in, .animate__slide-up').forEach(el => observer.observe(el));
-        
-        // Manual triggers for critical elements for immediate feedback
-        const header = document.querySelector('.main-header');
-        if (header) setTimeout(() => header.classList.add('is-visible'), 50);
 
         const mainContent = document.querySelector('.hero-content, .content-page-wrapper');
         if (mainContent) {
@@ -213,7 +220,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             }, 100);
         }
-        
+
         const footer = document.querySelector('.main-footer');
         if (footer) setTimeout(() => footer.classList.add('is-visible'), 500);
     };
@@ -221,34 +228,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const setupBackToTopButton = () => {
         const btn = document.getElementById('back-to-top');
         if (!btn) return;
-        window.addEventListener('scroll', () => {
-            btn.classList.toggle('show', window.scrollY > 300);
-        });
-        btn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
+        window.addEventListener('scroll', () => { btn.classList.toggle('show', window.scrollY > 300); });
+        btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        btn.classList.toggle('show', window.scrollY > 300);
     };
 
     const setupCursorTrail = () => {
         const cursorDot = document.getElementById('cursor-trail');
-        if (!cursorDot || isMobile) {
-            if (cursorDot) cursorDot.style.display = 'none';
-            document.body.style.cursor = 'auto';
-            return;
-        }
-        window.addEventListener('mousemove', e => {
-            cursorDot.style.left = `${e.clientX}px`;
-            cursorDot.style.top = `${e.clientY}px`;
-        });
+        if (!cursorDot || isMobile) { if (cursorDot) cursorDot.style.display = 'none'; document.body.style.cursor = 'auto'; return; }
+        window.addEventListener('mousemove', e => { cursorDot.style.left = `${e.clientX}px`; cursorDot.style.top = `${e.clientY}px`; });
         document.querySelectorAll('a, button, input, textarea, .post-card').forEach(el => {
-            el.addEventListener('mouseenter', () => {
-                cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                cursorDot.style.backgroundColor = 'var(--secondary-color)';
-            });
-            el.addEventListener('mouseleave', () => {
-                cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
-                cursorDot.style.backgroundColor = 'var(--primary-color)';
-            });
+            el.addEventListener('mouseenter', () => { cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)'; cursorDot.style.backgroundColor = 'var(--secondary-color)'; });
+            el.addEventListener('mouseleave', () => { cursorDot.style.transform = 'translate(-50%, -50%) scale(1)'; cursorDot.style.backgroundColor = 'var(--primary-color)'; });
         });
     };
 
@@ -257,104 +248,69 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!bar) return;
         window.addEventListener('scroll', () => {
             const scrollableHeight = document.documentElement.scrollHeight - window.innerHeight;
+            if (scrollableHeight <= 0) return;
             const progress = (window.scrollY / scrollableHeight) * 100;
-            bar.style.width = `${Math.min(100, progress)}%`;
+            bar.style.width = `${Math.min(100, Math.max(0,progress))}%`;
         });
     };
 
     const setupMainMenu = () => {
         const toggle = document.querySelector('.menu-toggle');
         const nav = document.getElementById('main-nav-menu');
-        const closeBtn = nav ? nav.querySelector('.menu-close') : null;
-
-        if (!toggle || !nav || !closeBtn) return;
-
-        const closeMenu = () => {
-            nav.classList.remove('is-open');
-            toggle.setAttribute('aria-expanded', 'false');
-            document.body.classList.remove('no-scroll');
-        };
-        
-        toggle.addEventListener('click', e => {
-            e.stopPropagation();
-            nav.classList.toggle('is-open');
-            toggle.setAttribute('aria-expanded', nav.classList.contains('is-open'));
-            document.body.classList.toggle('no-scroll', nav.classList.contains('is-open'));
-        });
-        
-        closeBtn.addEventListener('click', closeMenu);
-        document.addEventListener('click', e => {
-            if (nav.classList.contains('is-open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
-                closeMenu();
-            }
-        });
+        if (!toggle || !nav) return;
+        const closeMenu = () => { nav.classList.remove('is-open'); toggle.setAttribute('aria-expanded', 'false'); document.body.classList.remove('no-scroll'); };
+        toggle.addEventListener('click', e => { e.stopPropagation(); nav.classList.toggle('is-open'); toggle.setAttribute('aria-expanded', nav.classList.contains('is-open')); document.body.classList.toggle('no-scroll', nav.classList.contains('is-open')); });
+        document.addEventListener('click', e => { if (nav.classList.contains('is-open') && !nav.contains(e.target) && !toggle.contains(e.target)) closeMenu(); });
     };
 
     const setupPostCategoryFilters = () => {
-        const allTags = new Set([...document.querySelectorAll('.post-card[data-tags]')].flatMap(p => p.dataset.tags.split(',')));
-        const sortedTags = [...allTags].map(t => t.trim()).filter(Boolean).sort();
-
+        const allTags = new Set([...document.querySelectorAll('.post-card[data-tags]')].flatMap(p => p.dataset.tags.split(',').map(tag => tag.trim()).filter(Boolean)));
+        const sortedTags = [...allTags].sort((a,b) => a.localeCompare(b, 'zh-CN'));
         const filtersContainer = document.getElementById('blog-category-filters');
+        
         if (filtersContainer) {
-            sortedTags.forEach(tag => {
-                const btn = document.createElement('button');
-                btn.className = 'filter-tag-button';
-                btn.dataset.filter = tag;
-                btn.textContent = `#${tag}`;
-                filtersContainer.appendChild(btn);
-            });
+            filtersContainer.innerHTML = `<button class="filter-tag-button active" data-filter="all">全部文章</button>`;
+            sortedTags.forEach(tag => { filtersContainer.innerHTML += `<button class="filter-tag-button" data-filter="${tag}">#${tag}</button>`; });
+
             filtersContainer.addEventListener('click', e => {
                 if (e.target.matches('.filter-tag-button')) {
                     const filter = e.target.dataset.filter;
-                    document.querySelectorAll('#all-posts-grid .post-card').forEach(post => {
-                        const tags = post.dataset.tags ? post.dataset.tags.split(',').map(t => t.trim()) : [];
-                        post.style.display = (filter === 'all' || tags.includes(filter)) ? '' : 'none';
-                    });
+                    document.querySelectorAll('#all-posts-grid .post-card').forEach(post => post.style.display = (filter === 'all' || (post.dataset.tags && post.dataset.tags.split(',').map(t => t.trim()).includes(filter))) ? '' : 'none');
                     [...filtersContainer.children].forEach(b => b.classList.toggle('active', b === e.target));
                 }
             });
-            // Initial filter
+
             const initialTag = new URLSearchParams(window.location.search).get('tag');
             const initialBtn = filtersContainer.querySelector(`[data-filter="${initialTag || 'all'}"]`);
             if (initialBtn) initialBtn.click();
         }
 
         const dynamicListContainer = document.getElementById('dynamic-category-list');
-        if (dynamicListContainer) {
-            dynamicListContainer.innerHTML = sortedTags.map((tag, i) =>
-                `<a href="blog.html?tag=${encodeURIComponent(tag)}" class="filter-tag-button animate__slide-up" data-delay="${i * 50}"># ${tag}</a>`
-            ).join('');
-        }
+        if (dynamicListContainer) { dynamicListContainer.innerHTML = sortedTags.map((tag, i) => `<a href="blog.html?tag=${encodeURIComponent(tag)}" class="filter-tag-button animate__slide-up" data-delay="${i * 50}"># ${tag}</a>`).join(''); }
     };
     
     // --- Footer and Final Setups ---
     const setupFooter = () => {
         const yearSpan = document.getElementById('current-year');
         if (yearSpan) yearSpan.textContent = new Date().getFullYear();
-
         const visitorSpan = document.getElementById('visitor-count');
-        if (visitorSpan) {
-            fetch(`${backendBaseUrl}handleVisitCount`)
-                .then(res => res.json())
-                .then(data => { visitorSpan.textContent = data.count; })
-                .catch(err => {
-                    console.error("Failed to fetch visitor count:", err);
-                    visitorSpan.textContent = '???';
-                });
-        }
-        // updateBodyBlur() is now defined at the top, this call is for initial setup.
+        if (visitorSpan) { fetch(`${backendBaseUrl}handleVisitCount`).then(res => res.json()).then(data => { visitorSpan.textContent = data.count || '??'; }).catch(() => { visitorSpan.textContent = '???'; }); }
         updateBodyBlur();
     };
 
-
-    // --- Call all initialization functions ---
-    setupAnimationsAndInteractions();
-    setupBackToTopButton();
-    setupCursorTrail();
-    setupReadProgressBar();
-    setupMainMenu();
-    setupPostCategoryFilters();
-    setupFooter(); // This includes the initial call to updateBodyBlur.
+    const initPage = () => {
+        initializeDynamicImages();
+        setupAnimationsAndInteractions();
+        setupBackToTopButton();
+        setupCursorTrail();
+        setupReadProgressBar();
+        setupMainMenu();
+        setupPostCategoryFilters();
+        setupFooter();
+    }
+    
+    // Initial page load
+    initPage();
 
     console.log("✅ script.js FINISHED execution.");
 });
