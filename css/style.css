@@ -1,7 +1,7 @@
 /* --- Reset & Base Styles --- */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
-/* 'LXGW WenKai Screen' is from lxgw-wenkai-screen-webfont@1.1.0/style.css */
-@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
+/* 'LXGW WenKai Screen' will now be imported from jsdelivr @latest version. */
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@latest/style.css'); 
 
 * { 
     box-sizing: border-box; 
@@ -958,6 +958,7 @@ textarea { resize: vertical; min-height: 120px; }
 #comments-list {
     margin-top: 1em; 
     text-align: left; 
+    box-sizing: border-box; /* IMPORTANT: Use border-box to handle padding correctly within flex/grid */
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 20px; 
