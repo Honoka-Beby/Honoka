@@ -8,18 +8,18 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <!-- <!-- 优化字体加载速度: 预加载主要中文字体 - CRITICAL FIX FOR 404 PATH --> -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibolt.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream is-homepage">
-    <!-- 全局页面过渡遮罩，在页面跳转时激活 -->
+    <!-- <!-.- 全局面画面过渡, 在页面加载时候淡出, 否则会出现白屏 --> -->
     <div id="global-page-transition-overlay"></div>
-    <!-- 动态鼠标指针容器 -->
+    <!-- <!-.- 动态鼠标指针器 --> -->
     <div id="cursor-trail"></div>
 
     <main class="main-content">
-        <!-- 全屏封面区域 -->
+        <!-- <!-.- 全草封面区域 --> -->
         <section class="hero-section">
             <div class="hero-content">
                 <h1 class="blog-title blog-title--animated is-homepage-title">
@@ -34,9 +34,11 @@
             </div>
         </section>
     </main>
-
-    <!-- 返回顶部按钮 -->
+    <!-- <!-.- 返回顶部按钮 --> -->
     <button id="back-to-top" title="返回顶部">↑</button>
+
+    <!-- !!! 在这里插入 jQuery 的 CDN 链接 !!! -->
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js" integrity="sha256-/JqT3SQfawRcv/BIHPThkBvs0OEvtFFmqPF/lYI/Cxo=" crossorigin="anonymous"></script>
 
     <script src="js/script.js"></script>
 </body>
