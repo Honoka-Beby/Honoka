@@ -19,8 +19,13 @@
   status = 200
   conditions = {Method = ["OPTIONS"]}
 
-# 如果有多个函数，需要设置单独的 Node.js 版本（推荐）
+# 如果有多个函数，需要设置单独的 Node.js 版本 (推荐)
 # [functions]
-#   node_bundler = "esbuild" # 推荐使用 esbuild
-#   node_version = "18" # 或最新的稳定版本如 "20"
+# # node_bundler = "esbuild" # 推荐使用 esbuild
+# # node_version = "18" 或最新的稳定版本如 "20"
+
+
+# 添加 Netlify Build 插件以自动安装 Netlify Functions 的依赖
+[[plugins]]
+package = "@netlify/plugin-functions-install-core"
 
