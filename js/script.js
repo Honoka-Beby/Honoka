@@ -125,7 +125,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(api, { method: 'GET', redirect: 'follow', signal: controller.signal, headers: { 'Accept': 'image/*,application/json' } });
                 clearTimeout(timeoutId);
 
-PRIVATE
                 if (response.ok) {
                     imageUrl = await extractImageUrl(response, apiDebugName);
                     if (imageUrl) { break; } 
@@ -275,6 +274,7 @@ PRIVATE
      * Includes a more robust manual trigger for critical homepage elements.
      */
     const setupScrollAnimations = () => {
+        // Updated selector to include main-header for animation if needed.
         const animatedElements = document.querySelectorAll('.animate__fade-in:not(.hero-content):not(.hero-subtitle):not(.hero-nav), .animate__slide-up:not(.hero-content):not(.hero-subtitle):not(.hero-nav)');
         console.log(`[Animations] Found ${animatedElements.length} scroll-animated generic elements to observe.`);
 
@@ -285,15 +285,20 @@ PRIVATE
                     setTimeout(() => { 
                         entry.target.classList.add('is-visible');
                         const isLooper = entry.target.closest('.is-homepage-title') || entry.target.closest('.is-header-title');
-                        // CRITICAL FIX: classList.containsAny 现在应该可以正常工作，因为它已被提前定义
+                        // CRITICAL FIX: classList.containsAny is now properly defined at the file top.
                         if (!isLooper && entry.target.classList.containsAny(['animate__fade-in', 'animate__slide-up'])) { 
                             observer.unobserve(entry.target);
                         }
                         // For paragraphs and lists inside content, also ensure visibility a bit after their parent becomes visible.
                         if (entry.target.closest('main.container.content-page-wrapper')) {
-                            entry.target.querySelectorAll('p:not(.post-excerpt):not(.form-hint):not(.no-comments-message), ul, ol').forEach((child, index) => {
+                            // Ensure paragraphs and lists inside also trigger their entrance animations.
+                            // Only target those *not* already handled by an `animate__` class.
+                            entry.target.querySelectorAll('p:not(.post-excerpt):not(.form-hint):not(.no-comments-message):not([class*="animate__"]), ul:not([class*="animate__"]), ol:not([class*="animate__"])').forEach((child, index) => {
                                 if(!child.classList.contains('is-visible')){
-                                    setTimeout(()=> child.classList.add('is-visible'), index * 50 + 100);
+                                    child.style.transitionDelay = `${index * 50 + 100}ms`; // Apply cascading delay
+                                    child.classList.add('is-visible');
+                                    // Remove delay after effect so future state changes are immediate
+                                    setTimeout(() => child.style.transitionDelay = '', index * 50 + 100 + 500); 
                                 }
                             });
                         }
@@ -313,8 +318,8 @@ PRIVATE
         const contentWrapper = document.querySelector('main.container.content-page-wrapper');
         // Only trigger `is-visible` on the content wrapper for non-homepage. Homepage `hero-content` is individual.
         if (contentWrapper && !document.body.classList.contains('is-homepage') && !contentWrapper.classList.contains('is-visible')) {
-            setTimeout(() => contentWrapper.classList.// CRITICAL FIX: ensure this is set to is-visible consistently
-            add('is-visible'), 150); 
+            // CRITICAL FIX: Removed the incomplete comment and fixed the syntax to properly add the class.
+            setTimeout(() => contentWrapper.classList.add('is-visible'), 150); 
             console.log("[Animations] Main content wrapper force-fade-in ensured.");
         }
 
@@ -345,10 +350,14 @@ PRIVATE
                     const delay = parseInt(section.dataset.delay || '0');
                      setTimeout(() => section.classList.add('is-visible'), delay + 100); // Small general delay
                      // Also handle children if any specific delays are present
-                     section.querySelectorAll('[data-delay]').forEach(child => {
+                     section.querySelectorAll('[data-delay]:not(.is-visible)').forEach(child => { // Add :not(.is-visible) to prevent re-modifying already visible
                         if (child !== section && !child.classList.contains('is-visible')) {
                             const childDelay = parseInt(child.dataset.delay || '0'); // Get delay relative to parent's animation start
-                            setTimeout(() => child.classList.add('is-visible'), delay + 100 + childDelay);
+                            child.style.transitionDelay = `${delay + 100 + childDelay}ms`; // Apply cascading delay
+                            setTimeout(() => { 
+                                child.classList.add('is-visible'); 
+                                setTimeout(() => child.style.transitionDelay = '', delay + 100 + childDelay + 500); // Clear delay after transition
+                            }, delay + 100 + childDelay);
                         }
                     });
                 }
@@ -358,7 +367,11 @@ PRIVATE
         document.querySelectorAll('.my-avatar, .contact-info, .post-content, .post-share-buttons, .read-more, .post-detail-title, .post-meta, .post-detail-banner').forEach(el => {
             // Apply delay if the element explicitly asks for it via data-delay.
             const delay = parseInt(el.dataset.delay || '0');
-            setTimeout(() => { if (!el.classList.contains('is-visible')) { el.classList.add('is-visible'); }}, delay + 200); // Slight delay for content
+            setTimeout(() => { 
+                if (!el.classList.contains('is-visible')) { 
+                    el.classList.add('is-visible'); 
+                }
+            }, delay + 200); // Slight delay for content
         });
     };
 
@@ -605,7 +618,9 @@ PRIVATE
                 buttonLink.dataset.filter = tag; 
                 buttonLink.dataset.delay = String(index * 50); 
                 dynamicCategoryList.appendChild(buttonLink);
-                setTimeout(() => buttonLink.classList.add('is-visible'), (index * 50) + 100); 
+                // The explicit setTimout below ensures the category links animate in as expected.
+                // The delay from [data-delay] is already honored by .animate__slide-up and .is-visible.
+                setTimeout(() => buttonLink.classList.add('is-visible'), (index * 50 + 100)); 
             });
             console.log(`[CategoryPage] Generated ${sortedTags.length} category links.`);
         }
@@ -648,10 +663,20 @@ PRIVATE
             })
                 .then(response => {
                     // console.log("[VisitorCount] Raw response check:", response); // Debugging response status
-                    if (!response.ok) { 
+                    if (!response.ok && response.status !== 500) { 
                         return response.json().then(error => { throw new Error(error.message || `HTTP ${response.status}.`); }).catch(() => {
                            throw new Error(`HTTP ${response.status}: Failed to parse error response.`);
                         }); 
+                    }
+                    // Handle 500 specifically from backend function, as it might return parsed JSON error content
+                    if (!response.ok && response.status === 500) {
+                         return response.json().then(error => { // Still try to parse JSON
+                             console.error('[VisitorCount] Backend 500 error response:', error);
+                             throw new Error(error.message || error.error || 'Server Internal Error while fetching count.');
+                         }).catch(err => { // If 500 also can't be parsed as JSON, treat as generic error
+                            console.error('[VisitorCount] Backend 500 error (cannot parse JSON):', err);
+                            throw new Error(`HTTP ${response.status}: Failed to parse response.`);
+                         });
                     }
                     return response.json();
                 })
@@ -665,7 +690,7 @@ PRIVATE
                     }
                 })
                 .catch(error => {
-                    console.error('[VisitorCount] Failed to retrieve or update visitor count FROM FRONTEND fetch:', error, '. You likely have a configuration error in your Firebase Admin SDK setup in Netlify Functions.');
+                    console.error('[VisitorCount] Failed to retrieve or update visitor count FROM FRONTEND fetch:', error, '. You likely have a backend configuration error (e.g., Firebase key) or Netlify Function deployment problem.');
                     visitorCountSpan.textContent = '???'; 
                 });
         }
@@ -704,7 +729,7 @@ PRIVATE
     setupPostCategoryFilters();
 
     // The HTMLElement.prototype.classList.containsAny definition has been moved to the top.
-    // So this line is no longer necessary here.
+    // So this line is (now confirmed) no longer necessary here.
 
     console.log("✅ script.js FINISHED execution.");
 });

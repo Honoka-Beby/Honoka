@@ -28,4 +28,3 @@
 # 添加 Netlify Build 插件以自动安装 Netlify Functions 的依赖
 [[plugins]]
 package = "@netlify/plugin-functions-install-core"
-

@@ -19,23 +19,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 headers: { 'Accept': 'application/json' } 
             });
 
-            // Console log the raw response status and text for debugging
-            console.log(`[CommentsAPI] getComments response status: ${response.status}`);
-            // if (!response.ok) { // Catches HTTP errors (4xx, 5xx)
-            //     const errorBody = await response.json().catch(() => ({ message: 'Cannot parse error body' }));
-            //     throw new Error(`HTTP error! Status: ${response.status}, Message: ${errorBody.message || 'Server did not respond with success.'}`);
-            // }
-
-            // CRITIAL FIX: If response is 500 (our function handled error), or not ok for any reason,
-            // we try to parse it, but also explicitly log what Netlify sent in the Function logs if possible.
+            console.log(`[CommentsAPI] getComments raw response status: ${response.status}`);
              if(!response.ok) {
                  const errorText = await response.text();
-                 console.error(`[CommentsAPI] getComments HTTP NOT OK (${response.status}): ${response.statusText}`, errorText);
+                 console.error(`[CommentsAPI] getComments HTTP NOT OK (${response.status || 'Unknown Status'}): ${response.statusText || 'Unknown Status Text'}`, errorText);
+                 // Try to parse error body as JSON if content-type indicates it
                  if(response.headers.get('content-type')?.includes('application/json')){
-                     const errorJson = JSON.parse(errorText); // Try parsing if JSON
-                     throw new Error(`Backend error (${response.status}): ${errorJson.message || errorJson.error || 'Unknown error.'}`);
-                 } else { // Fallback if plain text
-                     throw new Error(`Backend error (${response.status}): ${errorText || response.statusText}.`);
+                     try {
+                         const errorJson = JSON.parse(errorText); // Ensure errorBody is parsed as JSON only if it is JSON
+                         throw new Error(`Backend error (${response.status}): ${errorJson.message || errorJson.error || 'Unknown error from JSON.'}`);
+                     } catch (parseError) {
+                         // If received JSON, but parsing failed (malformed JSON)
+                         throw new Error(`Backend error (${response.status}): Failed to parse JSON error response. Raw text: "${errorText.substring(0, 100)}..."`);
+                     }
+                 } else { // Fallback if plain text (or no relevant content type)
+                     throw new Error(`Backend error (${response.status}): ${errorText || response.statusText || 'No detailed error message.'}.`);
                  }
              }
 
@@ -44,6 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return comments;
         } catch (error) {
             console.error('[CommentsAPI] Failed to fetch comments. This usually means a backend configuration issue (e.g. Firebase key) or Netlify Function deployment problem. Details:', error);
+            // In the error's message, `comments: []` added by Firebase Admin SDK may present in verbose environments.
             return []; // Always return an array to prevent crashes even on severe backend errors.
         }
     };
@@ -60,17 +59,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 body: JSON.stringify({ author, text }), 
             });
 
-            // Console log the raw response status and text for debugging
-            console.log(`[CommentsAPI] createComment response status: ${response.status}`);
-            // CRITIAL FIX: Same robust error handling as in getAllComments
+            console.log(`[CommentsAPI] createComment raw response status: ${response.status}`);
              if (!response.ok) { 
                  const errorText = await response.text();
-                 console.error(`[CommentsAPI] createComment HTTP NOT OK (${response.status}): ${response.statusText}`, errorText);
+                 console.error(`[CommentsAPI] createComment HTTP NOT OK (${response.status || 'Unknown Status'}): ${response.statusText || 'Unknown Status Text'}`, errorText);
                  if(response.headers.get('content-type')?.includes('application/json')){
-                     const errorJson = JSON.parse(errorText); // Try parsing if JSON
-                     throw new Error(`Backend error (${response.status}): ${errorJson.message || errorJson.error || 'Unknown error.'}`);
+                     try {
+                         const errorJson = JSON.parse(errorText);
+                         throw new Error(`Backend error (${response.status}): ${errorJson.message || errorJson.error || 'Unknown error from JSON.'}`);
+                     } catch (parseError) {
+                          throw new Error(`Backend error (${response.status}): Failed to parse JSON error response. Raw text: "${errorText.substring(0, 100)}..."`);
+                     }
                  } else { // Fallback if plain text
-                     throw new Error(`Backend error (${response.status}): ${errorText || response.statusText}.`);
+                     throw new Error(`Backend error (${response.status}): ${errorText || response.statusText || 'No detailed error message.'}.`);
                  }
              }
 
@@ -123,7 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
             commentCard.innerHTML = `
                 <div class="comment-info">
                    <p class="comment-text">${comment.text}</p>
-                   <div class="comment-meta">留言于 <strong>${formattedDate}</strong> by <strong>${comment.author}</strong></div>
+                   <div class="comment-meta">留言于 <strong>${formattedDate}</strong> by <strong>${comment.author || '匿名访客'}</strong></div>
                </div>
             `;
             commentCard.style.animationDelay = `${index * 80}ms`; 
@@ -176,10 +177,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const loadAndDisplayComments = async () => {
         console.log("[Comments] Initiating load and display of comments...");
         const comments = await getAllComments();
+        messagesToAnimate.push(...document.querySelectorAll('.comments-list-container .no-comments-message, #comments-list .post-card'));
+        // The displayComments function will handle .is-visible classes.
         displayComments(comments);
     };
 
-    loadAndDisplayComments(); 
+    // Initialize comments list if it's found (i.e., on comments.html)
+    // Make sure 'main-nav-menu' and other menu elements are actually present in the HTML structure that loads this script.
+    if (commentsList) { // Check if comment list container exists on THIS page.
+        loadAndDisplayComments(); 
+    } else {
+        // If on homepage or other non-comments.html pages that might include script.js + comments.js.
+        // This is safe, comments.js will essentially do nothing.
+    }
 
     console.log("✅ comments.js FINISHED execution.");
 });

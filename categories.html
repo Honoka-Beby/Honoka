@@ -10,7 +10,7 @@
     <link rel="stylesheet" href="css/animations.css">
     <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -18,24 +18,26 @@
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
+    <!-- 顶部导航栏结构 - 统一每个 HTML 文件 -->
     <header class="main-header">
         <div class="container">
-            <h1 class="blog-title blog-title--animated is-header-title">
-                <a href="index.html">Honoka的小屋</a>
-            </h1>
-            <button class="menu-toggle" aria-label="Toggle navigation" aria-controls="main-nav-menu">
+            <!-- 网站标题，点击返回主页 -->
+            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
+            <!-- 汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <nav id="main-nav-menu" class="main-nav" role="navigation" aria-expanded="false">
-                <button class="menu-close" aria-label="Close navigation">×</button>
+            <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
+            <nav id="main-nav-menu" class="main-nav">
+                <button class="menu-close" title="关闭">✕</button>
                 <ul>
                     <li><a href="index.html">主页</a></li>
                     <li><a href="blog.html">文章</a></li>
                     <li><a href="about.html">关于我</a></li>
                     <li><a href="comments.html">留言板</a></li>
-                    <li><a href="categories.html" class="active">分类</a></li> <!-- 新增分类入口，并设为活跃状态 -->
+                    <li><a href="categories.html" class="active">分类</a></li>
                 </ul>
             </nav>
         </div>
@@ -51,7 +53,9 @@
                 <!-- 分类标签将由 JavaScript (script.js) 在页面加载时动态生成 -->
             </div>
             <p class="animate__slide-up button-container" data-delay="300">
-                <a href="blog.html" class="button">← 返回所有文章</a>
+                <p>
+                  <a href="blog.html" class="button">← 返回所有文章</a>
+                </p>
             </p>
         </section>
     </main>
