@@ -1,44 +1,37 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Debugging: Log script start
     console.log("🚀 script.js STARTING execution...");
 
-    // Helper: Determine if device is mobile based on initial screen width. Updates dynamically on resize.
     let isMobile = window.innerWidth <= 767; 
     const updateIsMobileClass = () => {
         isMobile = window.innerWidth <= 767;
-        if (isMobile) {
-            document.body.classList.add('is-mobile');
-        } else {
-            document.body.classList.remove('is-mobile');
-        }
+        document.body.classList.toggle('is-mobile', isMobile); // Use toggle for robustness
     };
-    updateIsMobileClass(); // Initial check
-    window.addEventListener('resize', updateIsMobileClass); // Update on resize
+    updateIsMobileClass(); 
+    // Event listener for resize *after* initial definition, ensures it's attached only once.
+    window.addEventListener('resize', updateIsMobileClass); 
 
 
     // --- Global Page Transition Overlay Management ---
     const pageTransitionOverlay = document.getElementById('global-page-transition-overlay');
     if (pageTransitionOverlay) {
-        // Prepare overlay content if not already present
         if (!pageTransitionOverlay.querySelector('.loader')) {
             pageTransitionOverlay.innerHTML = `
                 <div class="loader"></div>
                 <p class="overlay-text">加载中...</p>
             `;
         }
-        // Initially hide overlay after page loads
-        setTimeout(() => { // Small delay to ensure overlay is already 'visible' before starting to hide
-            if (pageTransitionOverlay) { // Check if element still exists
+        // Initially hide overlay after page loads, with a guaranteed slight delay.
+        setTimeout(() => { 
+            if (pageTransitionOverlay) { 
                 pageTransitionOverlay.classList.remove('visible');
-                setTimeout(() => { // Wait for visual transition (0.5s CSS) to fully complete
-                    // Only hide if the overlay is actually there, preventing errors on hot-reloads etc.
+                // Ensure scroll is re-enabled _after_ the visual transition completes.
+                setTimeout(() => { 
                     if (pageTransitionOverlay) pageTransitionOverlay.style.display = 'none';
-                    // Re-enable body scroll, important if a prior page navigation had disabled it
                     document.body.classList.remove('no-scroll'); 
-                }, 500); 
+                }, 500); // Matches CSS transition duration
             }
         }, 100); 
-        console.log("[PageTransition] Page transition overlay initialized.");
+        console.log("[PageTransition] Overlay initialized.");
     }
 
     /**
@@ -46,175 +39,146 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {string} urlToNavigate - The URL to navigate to after the transition.
      */
     const activatePageTransition = (urlToNavigate) => {
-        if (!pageTransitionOverlay) { // Fallback if overlay element is missing somehow
-            window.location.href = urlToNavigate; 
-            return;
-        }
+        if (!pageTransitionOverlay) { window.location.href = urlToNavigate; return; }
         document.body.classList.add('no-scroll'); 
-        pageTransitionOverlay.style.display = 'flex'; // Ensure it's rendered visually
+        pageTransitionOverlay.style.display = 'flex'; // Make sure overlay is a flex container
         pageTransitionOverlay.classList.add('visible'); // Trigger CSS fade-in
-
-        setTimeout(() => {
-            // Once the fade-in animation completes (0.4s), perform the navigation
-            window.location.href = encodeURI(urlToNavigate); // Ensure URL is properly encoded
-        }, 400); // Matches CSS transition duration before actual navigation
+        setTimeout(() => { window.location.href = encodeURI(urlToNavigate); }, 400); // Navigate after CSS transition
         console.log(`[PageTransition] Activating transition to: ${urlToNavigate}`);
     };
 
-    // Intercept all internal link clicks for smooth page transitions
+    /**
+     * Intercepts all internal link clicks to apply a smooth page transition.
+     */
     document.querySelectorAll('a').forEach(link => {
-        // Attempt to create a URL object from the href, relative to current document (robustness)
         let hrefURL;
-        try {
+        try { // Robust parsing of URLs
             hrefURL = new URL(link.href, window.location.href); 
         } catch (e) {
-            console.warn(`[LinkInterceptor] Invalid URL encountered for link: ${link.href}`, e);
-            return; // Skip invalid links
+            console.warn(`[LinkInterceptor] Invalid URL encountered for link: "${link.href}"`, e);
+            return; // Skip and log invalid links
         }
-        const currentOrigin = window.location.origin;
 
-        // Conditions for an "internal link" to intercept:
-        // 1. Same origin (is part of our own domain)
-        // 2. Not a mailto: link
-        // 3. Not an anchor/hash link (like #section1), as these ideally scroll rather than reload
-        // 4. Not a explicit 'javascript:void(0)' or empty external (target_blank handled separately)
-        if (hrefURL.origin === currentOrigin && 
+        // Conditions to intercept: same origin, not mailto, not fragment (#hash), not a javascript:void(0) link
+        if (hrefURL.origin === window.location.origin && 
             hrefURL.protocol !== 'mailto:' && 
             hrefURL.hash === '' && 
             !link.getAttribute('href').startsWith('javascript:void(0)')) {
             
             link.addEventListener('click', (e) => {
-                // If link has target="_blank", it's intended to open in a new tab, so don't intercept transition.
-                if (link.target === '_blank') {
-                    console.log(`[LinkInterceptor] Skipping _blank link: ${link.href}`);
-                    return; 
-                }
-                e.preventDefault(); // Prevent default browser navigation
-                // Proceed with our custom page transition
+                if (link.target === '_blank') { return; } // Exclude target="_blank"
+                e.preventDefault(); 
                 activatePageTransition(link.href);
             });
-            // console.log(`[LinkInterceptor] Intercepted link: ${link.href}`);
         }
     });
 
-    // ################### NEW: Backend API Endpoints & Fetching ###################
-    // !!! IMPORTANT: Replace with YOUR ACTUAL NETLIFY SITE'S DOMAIN !!!
-    // The base URL for your Netlify Functions, deployed as part of your Netlify site.
-    // Example: https://your-netlify-site-name.netlify.app/.netlify/functions/
+    // ################### IMPORTANT: backendBaseUrl Configuration ###################
+    // !!! Replace with YOUR ACTUAL NETLIFY SITE'S DOMAIN !!!
+    // This value must exactly match your deployed Netlify frontend domain.
+    // Example: 'https://honoka1.netlify.app/.netlify/functions/' (if your site is honoka1.netlify.app)
     const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; // <-- Honoika, Please confirm this is YOUR correct domain!
 
 
     // --- Random Anime Wallpaper API for dynamic backgrounds/images ---
     /**
-     * Fetches a random anime image from various APIs.
-     * Includes robust error handling, timeouts, and fallbacks to local images.
-     * @param {HTMLElement} targetElement - The element to apply the image to (document.body for background, <img> for src).
-     * @param {string} type - 'background' or 'image'.
-     * @param {object} options - Configuration options (e.g., width, height hints for APIs).
+     * Fetches a random anime image from various APIs to apply to backgrounds or image elements.
+     * Includes robust error handling, timeouts, and fallbacks to local images and gradient.
+     * @param {HTMLElement} targetElement - The DOM element to receive the image (e.g., document.body or an `<img>`).
+     * @param {string} type - 'background' to set `body.background-image`, or 'image' to set `img.src`.
+     * @param {object} options - Optional parameters like width & height hints for certain APIs.
      */
     const fetchRandomAnimeImage = async (targetElement, type = 'background', options = { width: 1920, height: 1080 }) => {
         let imageUrl = '';
         const { width, height } = options; 
 
-        // Helper to extract a valid image URL from diverse API response formats
+        // Helper: Extracts a valid image URL from diverse JSON API responses.
         const extractImageUrl = async (response, apiDebugName) => {
             const contentType = response.headers.get('content-type');
-             // console.log(`[ImageLoader] API ${apiDebugName} Content-Type: ${contentType}`);
             if (contentType && contentType.startsWith('image/')) {
-                return response.givenUrl || response.url; // Direct image URL received from fetch
+                return response.givenUrl || response.url; // Direct image URL
             } else if (contentType && contentType.includes('json')) { 
                 const data = await response.json();
-                if (data && (data.imgurl || data.url) && typeof (data.imgurl || data.url) === 'string' && (data.imgurl || data.url).match(/\.(jpeg|jpg|gif|png|webp|bmp|avif)$/i)) { // Supported image formats
-                    return data.imgurl || data.url; // Image URL found within JSON
+                if (data && (data.imgurl || data.url) && typeof (data.imgurl || data.url) === 'string' && (data.imgurl || data.url).match(/\.(jpeg|jpg|gif|png|webp|bmp|avif)$/i)) { 
+                    return data.imgurl || data.url;
                 }
             }
-            console.warn(`[ImageLoader] 🔄 ${apiDebugName} failed to extract image URL from response. Content-Type: ${contentType}`);
+            console.warn(`[ImageLoader-${apiDebugName}] 🔄 Failed to extract image URL from response. Content-Type: ${contentType}. Trying next API if available.`);
             return ''; 
         };
         
-        // Priority Ordered Image APIs: Focused on fast, reliable, and anime-specific sources
-        // Removed less reliable APIs found problematic in previous iterations (random.dog, picsum, generic Unsplash).
+        // Tuned API Endpoints: Prioritized for stability and anime-specificity based on previous tests.
+        // Removed APIs that consistently failed or were too slow in previous iterations.
         const apiEndpoints = [
-            `https://iw233.cn/api/Pure.php`,                             // Known to be effective for anime imagery.
-            `https://api.adicw.cn/img/rand`,                            // Often returns good anime images.
-            `https://api.btstu.cn/sjbz/api.php?lx=dongman&format=json`, // General anime API, JSON response.
-            // Further APIs could be added here following testing for stability and desired content.
+            `https://iw233.cn/api/Pure.php`,                             // Known as a high-quality, reliable anime image source.
+            `https://api.adicw.cn/img/rand`,                            // Another generally stable source for anime images.
+            // Further APIs can be added here if stability/variety is an issue, after individual testing.
         ];
 
-        // Loop through APIs until a successful image URL is obtained
+        // Sequential fetching from APIs
         for (const api of apiEndpoints) {
-            const apiDebugName = new URL(api).hostname.split('.').slice(-2).join('.'); // Clean hostname for logging
+            const apiDebugName = new URL(api).hostname.split('.').slice(-2).join('.'); 
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout per API request
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // 8-second timeout for each API call
                 
-                const fetchOptions = { method: 'GET', redirect: 'follow', signal: controller.signal };
-                // Specify expected content-types to help with server negotiation
-                fetchOptions.headers = { 'Accept': 'image/*,application/json' };
-
-                 // Using direct `api` as both the URL to fetch and pass to extractImageUrl for more clarity
-                const response = await fetch(api, fetchOptions);
-                clearTimeout(timeoutId); // Clear timeout if fetch completes within time
+                const response = await fetch(api, { method: 'GET', redirect: 'follow', signal: controller.signal, headers: { 'Accept': 'image/*,application/json' } });
+                clearTimeout(timeoutId);
 
                 if (response.ok) {
                     imageUrl = await extractImageUrl(response, apiDebugName);
-                    if (imageUrl) {
-                        // console.log(`[ImageLoader] ✅ API Success (${apiDebugName}): ${imageUrl.substring(0, 50)}...`);
-                        break; // Exit loop on first successful image URL
-                    }
+                    if (imageUrl) { break; } // Success: Found image, break loop
                 } else {
-                    console.warn(`[ImageLoader] ⚠️ API ${apiDebugName} responded with HTTP status ${response.status}. Trying next API.`);
+                    console.warn(`[ImageLoader-${apiDebugName}] ⚠️ API responded with HTTP status ${response.status}. Trying next.`);
                 }
             } catch (innerError) {
                 if (innerError.name === 'AbortError') {
-                    console.warn(`[ImageLoader] ⏱️ API ${apiDebugName} timed out (8s limit). Trying next API.`);
+                    console.warn(`[ImageLoader-${apiDebugName}] ⏱️ Request timed out (8s limit). Trying next.`);
                 } else if (innerError instanceof TypeError || innerError instanceof DOMException) {
-                   console.warn(`[ImageLoader] 🚫 API ${apiDebugName} network/fetch error:`, innerError.message);
+                   console.warn(`[ImageLoader-${apiDebugName}] 🚫 Network/Fetch error:`, innerError.message);
                 } else {
-                    console.warn(`[ImageLoader] ❌ API ${apiDebugName} encountered an unexpected error:`, innerError);
+                    console.warn(`[ImageLoader-${apiDebugName}] ❌ Unexpected error:`, innerError);
                 }
             }
         }
         
-        // --- Image Preloading and Application ---
-        if (imageUrl) { // If an imageUrl was successfully obtained from any API
+        // --- Image Preloading and Application Logic ---
+        if (imageUrl) {
             const imgToLoad = new Image(); 
             imgToLoad.src = imageUrl;
             imgToLoad.onload = () => {
                 if (type === 'background') {
                     document.documentElement.style.setProperty('--bg-image', `url("${imageUrl}")`); 
-                    // console.log(`[ImageLoader] ✅ Applied dynamic background image: ${imageUrl.substring(0, 50)}...`);
+                    console.log(`[ImageLoader] ✅ Dynamic background applied.`);
                 } else if (type === 'image') {
                     targetElement.src = imageUrl; 
                     targetElement.style.opacity = '1'; 
-                    targetElement.style.objectFit = 'cover'; // Restore cover sizing for actual image
+                    targetElement.style.objectFit = 'cover'; // Normal sizing for a loaded image
                 }
-                // Clear any fallback states/styles that might have been applied earlier
+                // Clear any fallback styles/elements when the real image successfully loads
                 targetElement.classList.remove('is-loading-fallback'); 
-                targetElement.style.filter = ''; // Remove CSS filters (grayscale, blur)
-                const fallbackText = targetElement.nextElementSibling; // The potential fallback text overlay div
+                targetElement.style.filter = ''; 
+                const fallbackText = targetElement.nextElementSibling;
                 if (fallbackText && fallbackText.classList.contains('fallback-text-overlay')) {
-                    fallbackText.remove(); // Remove the overlay div
+                    fallbackText.remove();
                 }
-                // console.log(`[ImageLoader] ✅ Real image loaded successfully for ${targetElement.alt || 'background'}.`);
             };
             imgToLoad.onerror = () => { 
-                // If the obtained imageUrl ITSELF fails during preload (bad URL or broken image file)
-                console.warn(`[ImageLoader] 🚫 Preloaded valid Image URL (${imageUrl.substring(0, 50)}...) failed to render. Applying local fallback.`);
-                applyFallbackImage(targetElement, type); // Fallback to local image
+                console.warn(`[ImageLoader] 🚫 Preloading image "${imageUrl.substring(0, 50)}..." failed (corrupted or invalid URL after fetch). Applying local fallback.`);
+                applyFallbackImage(targetElement, type); 
             };
-        } else { // If NO valid imageUrl was obtained from ANY API after all attempts
+        } else { // No valid URL received from any API
             console.error('[ImageLoader] ❌ All online APIs failed to provide a valid image URL. Forcing initial local fallback.');
-            applyFallbackImage(targetElement, type); // Directly apply local fallback
+            applyFallbackImage(targetElement, 'image'); // Ensure 'image' fallback applies when directly on an img element
         }
     };
     
     /**
-     * Applies a local fallback image, a random gradient background, and a text overlay to target image elements.
-     * This provides immediate visual feedback if dynamic image loading fails.
-     * @param {HTMLElement} targetElement - The <img> element or document.body to apply fallback to.
-     * @param {string} type - 'background' or 'image'.
-     * @param {string|null} srcOverride - Optional, specific local path for the fallback image (e.g., if different than default).
+     * Applies local fallback imagery (pngs or random gradients) and a text overlay, for situations where
+     * dynamic image loading fails. Provides immediate visual feedback to the user.
+     * @param {HTMLElement} targetElement - The DOM element (e.g., an `<img>`) to apply fallback styles/content to.
+     * @param {string} type - 'background' (for `--bg-image` CSS var) or 'image' (for `<img>` src).
+     * @param {string|null} srcOverride - Optional direct path to a specific local fallback image.
      */
     const applyFallbackImage = (targetElement, type, srcOverride = null) => {
         const isThumbnail = targetElement.classList.contains('post-thumbnail');
@@ -224,151 +188,160 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (type === 'background') {
             document.documentElement.style.setProperty('--bg-image', getRandomGradient());
-            console.log(`[ImageLoader] 🖼️ Applied gradient background fallback.`);
+            console.log(`[ImageLoader] 🖼️ Applied gradient background fallback for body.`);
         } else if (type === 'image') {
-            targetElement.src = localFallbackSrc; // Set src to the local fallback image file
-            targetElement.style.objectFit = 'contain'; // Ensure fallback image fits within boundaries
-            targetElement.classList.add('is-loading-fallback'); // Add class for CSS filters/styles
-            targetElement.style.opacity = '1'; // Ensure <img> element is visible
-
-            // Apply a unique random gradient background directly to the image element
+            targetElement.src = localFallbackSrc; 
+            targetElement.style.objectFit = 'contain'; 
+            targetElement.classList.add('is-loading-fallback'); 
+            targetElement.style.opacity = '1'; 
+            
+            // As a robust fallback, also apply a random gradient background directly to the image element
             targetElement.style.backgroundImage = getRandomGradient(); 
-            // Position and size this gradient background to cover the element
             targetElement.style.backgroundRepeat = 'no-repeat';
             targetElement.style.backgroundPosition = 'center';
             targetElement.style.backgroundSize = 'cover';
 
-            // Create or update a text overlay element for explicit user feedback
             let fallbackTextOverlay = targetElement.nextElementSibling;
-            if (targetElement.tagName === 'IMG') { // Only modify <img> specific behavior
+            if (targetElement.tagName === 'IMG') {
                 if (!fallbackTextOverlay || !fallbackTextOverlay.classList.contains('fallback-text-overlay')) {
                     fallbackTextOverlay = document.createElement('div');
                     fallbackTextOverlay.classList.add('fallback-text-overlay');
                     fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                     // Ensure parent element (e.g., .post-card a, or .blog-post-detail) is positioned relative
                     if (targetElement.parentNode && getComputedStyle(targetElement.parentNode).position === 'static') {
                         targetElement.parentNode.style.position = 'relative'; 
                     }
-                    targetElement.parentNode.insertBefore(fallbackTextOverlay, targetElement.nextSibling); // Insert overlay after the <img> tag
+                    targetElement.parentNode.insertBefore(fallbackTextOverlay, targetElement.nextSibling); 
                     console.log(`[ImageLoader] Overlay created for ${targetElement.alt || 'Unnamed Image Title'}.`);
 
-                    // Secondary check: If the local fallback image itself cannot load, hide the <img> element completely.
-                    // This relies solely on the gradient background and text overlay for visual feedback.
+                    // Second-tier check: if the local fallback image itself is broken, hide the `<img>` tag and show only overlay over gradient.
+                    // This handles situations where img/post-thumbnail-fallback.png might be missing or corrupted.
                     const testLocalImage = new Image();
                     testLocalImage.src = localFallbackSrc;
                     testLocalImage.onload = () => {
-                         // If local image loads, keep overlay and image
-                          if (targetElement.style.display === 'none') targetElement.style.display = ''; 
-                         if (fallbackTextOverlay) fallbackTextOverlay.style.display = 'flex'; // Ensure overlay is visible over loaded local img
-                         // console.log(`[ImageLoader] Local fallback image "${localFallbackSrc}" loaded okay.`);
+                         if (targetElement.style.display === 'none') targetElement.style.display = ''; 
+                         if (fallbackTextOverlay) fallbackTextOverlay.style.display = 'flex'; 
+                        //  console.log(`[ImageLoader] Local fallback image "${localFallbackSrc}" loaded okay.`);
                     };
                     testLocalImage.onerror = () => {
-                        targetElement.style.display = 'none'; // Hide the `<img>` tag if its `src` (even local fallback) is broken
-                        if (fallbackTextOverlay) fallbackTextOverlay.style.display = 'flex'; // Ensure text overlay remains visible
-                        console.warn(`[ImageLoader] 🚫 Local fallback "${localFallbackSrc}" itself failed to load. Showing only text overlay over gradient.`);
+                        targetElement.style.display = 'none'; 
+                        if (fallbackTextOverlay) fallbackTextOverlay.style.display = 'flex'; 
+                        console.warn(`[ImageLoader] 🚫 Local fallback (path: "${localFallbackSrc}") itself failed to load. Displaying only text overlay over gradient.`);
                     };
                   
                 } else {
-                    fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :("; // Update current text
-                    fallbackTextOverlay.style.display = 'flex'; // Ensure it's showing
+                    fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :("; 
+                    fallbackTextOverlay.style.display = 'flex'; 
                     // console.log(`[ImageLoader] Updated existing overlay for ${targetElement.alt || 'Unnamed Image Title'}.`);
                 }
             }
-            console.log(`[ImageLoader] 🎨 Applied local fallback mechanism for: ${targetElement.alt || type}`);
+             console.log(`[ImageLoader] 🎨 Applied local fallback mechanism with overlay for: ${targetElement.alt || type}`);
         }
     };
     
     /**
-     * Generates a random vibrant linear gradient string for fallback backgrounds.
-     * HSL values are chosen for aesthetic warmth and distinction.
-     * @returns {string} CSS `linear-gradient` string.
+     * Generates a random, visually distinctive linear gradient string for use as a background.
+     * HSL color space is used for vibrant and good-looking combinations.
+     * @returns {string} A CSS `linear-gradient` value.
      */
     function getRandomGradient() {
-        const h1 = Math.floor(Math.random() * 360); // First hue (0-359)
-        const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; // Second hue, offset for variation (60-119 degrees apart)
-        const s = Math.floor(Math.random() * 30) + 70; // High saturation (70-99%) for vibrancy
-        const l = Math.floor(Math.random() * 20) + 50; // Medium lightness (50-69%)
+        const h1 = Math.floor(Math.random() * 360); 
+        const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; 
+        const s = Math.floor(Math.random() * 30) + 70; 
+        const l = Math.floor(Math.random() * 20) + 50; 
         return `linear-gradient(135deg, hsla(${h1}, ${s}%, ${l}%, 0.7), hsla(${h2}, ${s}%, ${l}%, 0.7))`;
     }
 
-
     // --- Global Background Image Setup (for Body) ---
-    fetchRandomAnimeImage(document.body, 'background', { width: 1920, height: 1080 }); // Always fetches a random background for the body
+    fetchRandomAnimeImage(document.body, 'background', { width: 1920, height: 1080 }); 
     console.log("[Background] Dynamic background initiated.");
 
 
     // --- Dynamic Article Thumbnail/Banner Images ---
     const setupDynamicPostImages = () => {
         document.querySelectorAll('.post-thumbnail[data-src-type="wallpaper"]').forEach(img => {
-            // Apply fallback upfront to minimize visual loading gaps
             applyFallbackImage(img, 'image'); 
-            fetchRandomAnimeImage(img, 'image', { width: 500, height: 300 }); // Fetches source for smaller thumbnails
+            fetchRandomAnimeImage(img, 'image', { width: 500, height: 300 }); 
         });
         console.log("[ImageLoader] Post thumbnails initiated.");
 
         const detailBanner = document.querySelector('.post-detail-banner[data-src-type="wallpaper"]');
         if (detailBanner) {
             applyFallbackImage(detailBanner, 'image'); 
-            fetchRandomAnimeImage(detailBanner, 'image', { width: 1000, height: 400 }); // Fetches source for larger banners
+            fetchRandomAnimeImage(detailBanner, 'image', { width: 1000, height: 400 }); 
             console.log("[ImageLoader] Post detail banner initiated.");
         }
     };
 
     /**
-     * Initializes elements with entrance animations, respecting `data-delay` attributes.
-     * This function now explicitly applies `is-visible` based on delays for critical homepage elements.
+     * Initializes elements with entrance (fade-in, slide-up) animations if they are in viewport.
+     * Includes a more robust manual trigger for critical homepage elements, reducing reliance on IO.
+     * Ensures CSS `is-visible` classes are applied to enable transitions.
      */
     const setupScrollAnimations = () => {
-        // Elements that should animate on scroll/view (excluding specific homepage elements now handled differently)
-        const animatedElements = document.querySelectorAll('.animate__fade-in:not(.main-header):not(.hero-subtitle):not(.hero-nav), .animate__slide-up:not(.hero-subtitle):not(.hero-nav)');
-        console.log(`[Animations] Found ${animatedElements.length} scroll-animated elements.`);
+        // Selector for all elements that need entrance animation (generalized)
+        const animatedElements = document.querySelectorAll('.animate__fade-in:not(.hero-content):not(.hero-subtitle):not(.hero-nav), .animate__slide-up:not(.hero-content):not(.hero-subtitle):not(.hero-nav)');
+        console.log(`[Animations] Found ${animatedElements.length} scroll-animated generic elements to observe.`);
 
+        // Intersection Observer for off-screen elements that come into view
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                     // Check for data-delay on elements (excluding homepage top elements)
+                // To avoid redundant animations if CSS already makes it visible or other JS has handled it.
+                if (entry.isIntersecting && !entry.target.classList.contains('is-visible')) {
                     const delay = parseInt(entry.target.dataset.delay || '0');
-                    setTimeout(() => { // Apply animations after specified delay
+                    setTimeout(() => { // Apply animation after a potential delay
+                        // Mark as visible and unobserve if it's a one-time animation
+                        entry.target.classList.add('is-visible');
+                        // console.log(`[Animations] Element animated via IO: ${entry.target.tagName} (#${entry.target.id || ''}.${Array.from(entry.target.classList).filter(c => !c.startsWith('animate__')).join('.')})`);
+                        
+                        // Prevent unobserving always-on animated items (like header title)
                         const isLooper = entry.target.closest('.is-homepage-title') || entry.target.closest('.is-header-title');
-                        if (isLooper && entry.target.classList.contains('is-visible')) {
-                           // For looping elements, ensure they get 'is-visible' if somehow missed and are animated by their own CSS.
-                           // Their main animation is CSS driven, so once they are 'visible' via JS or CSS, let CSS handle loops.
-                        } else if (!entry.target.classList.contains('is-visible')) { // Only add if not already visible
-                            entry.target.classList.add('is-visible');
-                            if (!isLooper) { // Only unobserve non-looping animations after they become visible once
-                                observer.unobserve(entry.target);
-                                // console.log(`[Animations] Element observed & animated: ${entry.target.tagName} with classList: ${Array.from(entry.target.classList).join(', ')}`);
-                            }
-                        } 
+                        if (!isLooper && entry.target.classList.containsAny(['animate__fade-in', 'animate__slide-up'])) { // Check if it's a transition controlled by us
+                            observer.unobserve(entry.target);
+                        }
                     }, delay);
                 } 
             });
-        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }); // rootMargin makes animation trigger earlier
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" }); // `rootMargin` to trigger animations slightly earlier
 
         animatedElements.forEach(el => observer.observe(el));
 
-        // Ensure main header always has its initial fade-in or is visible on load without delay
-        const mainHeader = document.querySelector('.main-header');
-        if (mainHeader && !mainHeader.classList.contains('is-visible')) {
-            mainHeader.classList.add('is-visible'); 
-            // console.log("[Animations] Main header instantly visible.");
+
+        // CRITICAL FIX: Ensure main layout components and homepage elements are _always_ visibly guaranteed.
+        // We ensure critical components become visible even if IO fails or is delayed.
+        const header = document.querySelector('.main-header');
+        if (header && !header.classList.contains('is-visible')) {
+            setTimeout(() => header.classList.add('is-visible'), 50); // Small initial delay for header fade-in
+            console.log("[Animations] Main header force-visible.");
         }
 
-        // ---------- FIX FOR HOMEPAGE BUTTONS/SUBTITLE NOT SHOWING ----------
-        // For homepage specific core elements (subtitle and nav links), directly apply 'is-visible' with data-delay
-        // These elements were likely missed by IntersectionObserver if they are initially "above" the rootMargin or due to initial render state.
+        const contentWrapper = document.querySelector('main.container.content-page-wrapper');
+        if (contentWrapper && !contentWrapper.classList.contains('is-visible')) {
+            // Apply a slight delay to the main content container's fade-in if it exist without is-homepage class
+            setTimeout(() => contentWrapper.classList.add('is-visible'), 150); 
+            console.log("[Animations] Main content wrapper force-fade-in ensured.");
+        }
+
+
+        // ---------- FIX FOR HOMEPAGE SUBTITLE & NAV BUTTONS NOT SHOWING ----------
+        // Specifically for the homepage hero section's direct children.
+        // These are guaranteed to be in view, so we trigger their 'is-visible' directly with their specified data-delay.
         if (document.body.classList.contains('is-homepage')) {
-            const homepageAnimatedCoreElements = document.querySelectorAll('.hero-subtitle.animate__slide-up, .hero-nav.animate__slide-up');
-            homepageAnimatedCoreElements.forEach(el => {
-                const delay = parseInt(el.dataset.delay || '0');
-                setTimeout(() => {
-                    if (el && !el.classList.contains('is-visible')) {
-                        el.classList.add('is-visible');
-                        // console.log(`[Animations] HomePage core element forced visible with delay ${delay}ms: ${el.tagName} with classList: ${Array.from(el.classList).join(', ')}`);
-                    }
-                }, delay + 50); // Add a small extra buffer to ensure parent fadeIn occurs first
+            const heroContent = document.querySelector('.hero-content'); // Main wrapper for homepage content
+            if (heroContent && !heroContent.classList.contains('is-visible')) {
+                setTimeout(() => heroContent.classList.add('is-visible'), 100);
+            }
+
+            const homepageAnimElements = document.querySelectorAll('.hero-subtitle[data-delay], .hero-nav[data-delay]');
+            homepageAnimElements.forEach(el => {
+                if (!el.classList.contains('is-visible')) { // Only animate if not already visible (e.g., from initial static CSS)
+                    const delay = parseInt(el.dataset.delay || '0');
+                    setTimeout(() => {
+                        el.classList.add('is-visible'); // Add the magic class
+                       console.log(`[Animations] Homepage element force-animated: ${el.tagName} (delay: ${delay}ms)`);
+                    }, delay + (heroContent ? 150 : 0)); // Extra buffer if parent has its own animation too
+                }
             });
-             console.log("[Animations] Homepage core elements (`hero-subtitle`, `hero-nav`) scheduled for visibility.");
+            console.log("[Animations] Homepage core elements visibility ensured with explicit JS triggers.");
         }
     };
 
@@ -376,39 +349,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Back to Top Button ---
     const setupBackToTopButton = () => {
         const btn = document.getElementById('back-to-top');
-        if (!btn) { console.log("[BackToTop] Button element not found."); return; }
+        if (!btn) { console.log("[BackToTop] Button element not found. Feature disabled."); return; }
 
-        // Show/hide button based on scroll position
         window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) { 
-                btn.classList.add('show');
-            } else {
-                btn.classList.remove('show');
-            }
+            if (window.scrollY > 300) { btn.classList.add('show'); } 
+            else { btn.classList.remove('show'); }
         });
 
-        // Smooth scroll to top when button is clicked
-        btn.addEventListener('click', () => {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        });
-        // Set initial visibility on load if already scrolled down
+        btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
         if (window.scrollY > 300) { btn.classList.add('show'); }
         console.log("[BackToTop] Button initialized.");
     };
     
-    // --- Custom Cursor Trail Effect ---
+    // --- Custom Cursor Trail Effect for Desktop ---
     const setupCursorTrail = () => {
         const cursorDot = document.getElementById('cursor-trail');
-        // Disable on mobile devices or if cursorDot element is missing
-        if (!cursorDot || isMobile) { // Use dynamically updated isMobile from global closure
-            if (cursorDot) cursorDot.style.display = 'none'; // Ensure main cursor dot is hidden
-             // only set cursor to auto if not on a touch device and it was hidden (to restore default)
-            if (!isMobile) document.body.style.cursor = 'auto'; // Restore default pointer
-            console.log(`[CursorTrail] Disabled for ${isMobile ? 'mobile' : 'missing element'}.`);
+        if (!cursorDot || isMobile) { 
+            if (cursorDot) cursorDot.style.display = 'none'; 
+            document.body.style.cursor = 'auto'; // Ensure fallback to default system cursor on mobile or if element missing
+            console.log(`[CursorTrail] Disabled for ${isMobile ? 'mobile' : 'missing element'} or browser compatibility mode.`);
             return;
         }
         
-        // Desktop-only cursor trail functionality: tracks mouse movement and spawns smaller dots
         try {
             window.addEventListener('mousemove', e => {
                 cursorDot.style.left = `${e.clientX}px`;
@@ -421,13 +383,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 trail.style.top = `${e.clientY}px`;
                 
                 setTimeout(() => { 
-                    if (trail.parentNode) {
-                        trail.parentNode.removeChild(trail);
-                    }
-                }, 500); // Remove trail dots after their CSS animation finishes
+                    if (trail.parentNode) { trail.parentNode.removeChild(trail); }
+                }, 500); 
             });
 
-            // Hover effects for various interactive elements to change the main cursor's appearance
             document.querySelectorAll('a, button, input:not([type="submit"]), textarea, .post-card, .menu-toggle, .main-nav a, .filter-tag-button').forEach(el => { 
                 el.onmouseenter = () => { 
                     cursorDot.style.transform = 'translate(-50%,-50%) scale(1.5)';
@@ -438,46 +397,40 @@ document.addEventListener('DOMContentLoaded', () => {
                     cursorDot.style.backgroundColor = 'var(--primary-color)';
                 };
             });
-            
-            setTimeout(() => cursorDot.style.opacity = '1', 100); // Initial fade-in of main cursor dot
+            // Initial opacity set high after setup
+            setTimeout(() => cursorDot.style.opacity = '1', 100); 
             console.log("[CursorTrail] Initialized for desktop.");
         } catch (error) {
             console.error("[CursorTrail] Error during initialization:", error);
-            document.body.style.cursor = 'auto'; // Ensure normal cursor if custom fails
-            if (cursorDot) cursorDot.style.display = 'none'; // Hide custom cursor
+            document.body.style.cursor = 'auto'; 
+            if (cursorDot) cursorDot.style.display = 'none'; 
         }
     };
 
-    // --- Read Progress Bar for Article Pages ---
+    /**
+     * Initializes the read progress bar for article detail pages.
+     * Uses scroll events to update a visual progress bar fixed at the top of the viewport.
+     */
     const setupReadProgressBar = () => {
         const progressBar = document.getElementById('read-progress-bar');
-        const content = document.querySelector('.blog-post-detail'); // Article content area
-        if (!progressBar || !content) { console.log("[ReadProgressBar] Not an article page or elements not found."); return; } 
+        const content = document.querySelector('.blog-post-detail'); 
+        if (!progressBar || !content) { console.log("[ReadProgressBar] Not an article page or elements not found. Feature skipped."); return; } 
 
-        // Calculates overall document scroll progress
         const calculateProgress = () => {
-           const documentHeight = Math.max(
-                document.body.scrollHeight, 
-                document.documentElement.scrollHeight, 
-                document.body.offsetHeight, 
-                document.documentElement.offsetHeight, 
-                document.body.clientHeight, 
-                document.documentElement.clientHeight
-            );
+           const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight, document.body.offsetHeight, document.documentElement.offsetHeight, document.body.clientHeight, document.documentElement.clientHeight);
             const windowHeight = window.innerHeight;
-
-            const scrollRange = documentHeight - windowHeight; // Total scrollable height
-            const currentScrollPosition = window.scrollY; // Current scroll from top
+            const scrollRange = documentHeight - windowHeight; // Total distance user can scroll
+            const currentScrollPosition = window.scrollY; 
 
             let readProgress = (currentScrollPosition / scrollRange) * 100;
             readProgress = Math.min(100, Math.max(0, readProgress)); // Clamp value between 0 and 100
 
-            progressBar.style.width = readProgress + '%';
+            progressBar.style.width = readProgress + '%'; // Update width based on progress
         }
 
         window.addEventListener('scroll', calculateProgress);
         window.addEventListener('resize', calculateProgress); 
-        setTimeout(calculateProgress, 500); // Initial call after a brief delay for layout stability
+        setTimeout(calculateProgress, 500); // Initial calculation after a slight delay
         console.log("[ReadProgressBar] Enabled for article page.");
     };
     
@@ -491,72 +444,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const menuClose = document.querySelector('.main-nav .menu-close');
         
         if (!menuToggle || !mainNav || !menuClose) {
-            console.warn('[MainMenu] Menu (toggle, nav, or close button) elements not found. Main menu features disabled.');
-            document.body.classList.remove('no-scroll'); // Ensure scroll is enabled if menu can't function
+            console.warn('[MainMenu] Menu (toggle, nav/panel, or close button) elements not found. Menu features disabled.');
+            document.body.classList.remove('no-scroll'); 
             return;
         }
 
         const openMenu = () => {
-            mainNav.classList.add('is-open'); // This applies the CSS slide-in/visibility
-            menuToggle.setAttribute('aria-expanded', 'true'); // Accessible state
-            document.body.classList.add('no-scroll'); // Disable body scroll
-            console.log("[MainMenu] Menu is now open.");
+            mainNav.classList.add('is-open'); 
+            menuToggle.setAttribute('aria-expanded', 'true');
+            document.body.classList.add('no-scroll'); 
+            console.log("[MainMenu] Panel menu is now open.");
         };
 
         const closeMenu = () => {
-            if (!mainNav.classList.contains('is-open')) return; // Avoid redundant closures
+            if (!mainNav.classList.contains('is-open')) return; 
             mainNav.classList.remove('is-open');
             menuToggle.setAttribute('aria-expanded', 'false');
-            document.body.classList.remove('no-scroll'); // Re-enable body scroll
-            console.log("[MainMenu] Menu is now closed.");
+            document.body.classList.remove('no-scroll'); 
+            console.log("[MainMenu] Panel menu is now closed.");
         };
 
-        // Toggle mechanism for the hamburger icon
         menuToggle.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevents click from bubbling to body and immediately closing menu
-            if (mainNav.classList.contains('is-open')) {
-                closeMenu();
-            } else {
-                openMenu();
-            }
+            event.stopPropagation(); 
+            if (mainNav.classList.contains('is-open')) { closeMenu(); } 
+            else { openMenu(); }
         });
-        // Separate event for the 'X' close button within the menu panel
         menuClose.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevents click bubbling
+            event.stopPropagation(); 
             closeMenu();
         });
 
-        // Close menu when an internal navigation link within the menu is clicked
         mainNav.querySelectorAll('a').forEach(link => {
             let hrefURL;
             try { hrefURL = new URL(link.href, window.location.href); } 
             catch (e) {
-                 console.warn(`[MainMenu] Invalid menu link encountered: ${link.href}`, e);
-                 // If invalid, let it handle as a non-intercepted link. Or fall-through to close.
-                 link.addEventListener('click', closeMenu); // still attempt to close if it's external or weird.
+                 link.addEventListener('click', closeMenu); // Fallback to just close menu for malformed/external links
                  return; 
             }
-            const currentOrigin = window.location.origin;
-
-            if (hrefURL.origin === currentOrigin && !hrefURL.protocol.startsWith('mailto:') && hrefURL.hash === '') {
-                link.addEventListener('click', () => {
-                    setTimeout(() => {
-                        closeMenu(); 
-                    }, 400); // Small delay to allow page transition to start visually fade out
-                });
-            } else { // Handle external links or hash links by just closing the menu directly
-                link.addEventListener('click', closeMenu);
-            }
+            if (hrefURL.origin === window.location.origin && hrefURL.protocol !== 'mailto:' && hrefURL.hash === '') {
+                // For internal links that trigger transitions, delay menu close slightly
+                link.addEventListener('click', () => { setTimeout(() => { closeMenu(); }, 400); });
+            } else { link.addEventListener('click', closeMenu); } // Direct close for external/hash links
         });
 
-        // Close menu when clicking anywhere on the document body *outside* the menu or its toggle button
+        // Close menu on clicks outside
         document.body.addEventListener('click', (event) => {
-            // Check if menu is open AND click target is neither the menu panel NOR the toggle button
-            if (mainNav.classList.contains('is-open') && 
-                !mainNav.contains(event.target) &&  
-                !menuToggle.contains(event.target)) {
+            if (mainNav.classList.contains('is-open') && !mainNav.contains(event.target) && !menuToggle.contains(event.target) ) {
                 closeMenu();
-                // console.log("[MainMenu] Clicked outside menu, closed.");
+                // console.log("[MainMenu] Click detected outside menu (body). Shutting down menu.");
             }
         });
         console.log("[MainMenu] Navigation menu initialized.");
@@ -565,206 +500,164 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // ################### NEW FEATURE: Blog Post Category/Tag Filtering ###################
     /**
-     * Initializes interactive category filter buttons for the blog page ('blog.html').
-     * It dynamically generates these buttons based on `data-tags` attributes of posts.
-     * Also, for the dedicated 'categories.html' page, it generates simple links to blog.html with tag filters.
+     * Initializes interactive category filter buttons for the blog page ('blog.html')
+     * and dynamically generates category links for the 'categories.html' page.
+     * This function now queries for all existing post cards on _any_ page to get a comprehensive list of tags.
      */
     const setupPostCategoryFilters = () => {
-        // Elements from blog.html
         const categoryFiltersContainer = document.getElementById('blog-category-filters');
-        const blogPostsGrid = document.getElementById('all-posts-grid');
+        const blogPostsGrid = document.getElementById('all-posts-grid'); // Where posts are listed on blog.html
         
-        // Element from categories.html
         const isCategoriesPage = window.location.pathname.includes('categories.html');
-        const dynamicCategoryList = document.getElementById('dynamic-category-list'); 
+        const dynamicCategoryList = document.getElementById('dynamic-category-list'); // For tags on categories.html
 
-        // If on blog.html, but main containers are missing, log and skip interactive filters.
-        if(window.location.pathname.includes('blog.html') && (!categoryFiltersContainer || !blogPostsGrid)){
-             console.warn("[CategoryFilter] Blog page but filters/posts container missing. Interactive filters disabled.");
+        // If on blog.html, but filter/grid containers are absent (e.g., in a development view without full content), log and skip interactive features.
+        if (window.location.pathname.includes('blog.html') && (!categoryFiltersContainer || !blogPostsGrid)) {
+             console.log("[CategoryFilter] Blog page with missing filter/grid containers. Interactive tag filters skipped.");
         }
 
-        // Gather all unique tags from all post cards, whether on blog.html or categories.html
+        // Aggregate unique tags from all post cards across _all loaded HTML files_ for comprehensive list.
         const allTags = new Set();
-        // Assuming post cards are consistently within <div class="posts-grid" id="all-posts-grid"> or similar
-        const allPostCards = document.querySelectorAll('.post-card'); // Query all possible post cards on the page
-        allPostCards.forEach(post => { // Loop through all found post cards
-            const tagsAttr = post.dataset.tags; // Retrieve tags from data-tags HTML attribute (e.g., "tag1, tag2")
-            if (tagsAttr) {
-                // Split, trim, and add each tag to the Set (Set naturally handles uniqueness)
-                tagsAttr.split(',').map(tag => tag.trim()).forEach(tag => allTags.add(tag));
+        const allPostCards = document.querySelectorAll('.post-card'); // Select all elements with 'post-card' class.
+        allPostCards.forEach(post => { 
+            const tagsAttr = post.dataset.tags; // Expected format: "tag1, tag2, tag3"
+            if (tagsAttr) { // If 'data-tags' attribute exists, parse it.
+                tagsAttr.split(',').map(tag => tag.trim()).forEach(tag => allTags.add(tag)); // Add each trimmed tag.
             }
         });
-        // Console log for debugging tags gathered
-        // console.log("[CategoryFilter] Collected Raw Tags:", Array.from(allTags).sort());
+        // Console logging the collected tags for debugging purposes.
+        // console.log("[CategoryFilter] Collected All Unique Tags:", Array.from(allTags).sort());
 
-        // For `blog.html`: Generate interactive filter buttons and handle click filtering
+        // Part 1: Interactive filtering on 'blog.html'
         if (categoryFiltersContainer && blogPostsGrid) {
-            // Ensure "All Articles" button exists at the start
+            // Ensure the "All Articles" button is present and functional.
             let allButton = categoryFiltersContainer.querySelector('[data-filter="all"]');
-             if (!allButton) { // Create if it doesn't exist
+             if (!allButton) { 
                 allButton = document.createElement('button');
                 allButton.classList.add('filter-tag-button');
                 allButton.textContent = `全部文章`;
                 allButton.dataset.filter = 'all';
-                categoryFiltersContainer.prepend(allButton); // Insert at the beginning
+                categoryFiltersContainer.prepend(allButton); // Add to the start
             }
-            allButton.addEventListener('click', () => filterPosts('all', allButton)); // Add event listener
+            allButton.addEventListener('click', () => filterPosts('all', allButton));
 
-            // Dynamically create tag filter buttons
-            const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN')); // Sort for consistent order
+            // Dynamically generate individual tag filter buttons.
+            const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN')); // Sort tags alphabetically.
             sortedTags.forEach(tag => {
-                // Only add if not already present (prevents duplicates on re-runs)
+                // Avoid creating duplicate buttons if they already exist (e.g., from static HTML or prior runs).
                 if (!categoryFiltersContainer.querySelector(`[data-filter="${tag}"]`)) { 
                     const button = document.createElement('button');
                     button.classList.add('filter-tag-button');
-                    button.textContent = ` #${tag}`; // Display with a hash prefix
+                    button.textContent = ` #${tag}`; 
                     button.dataset.filter = tag; 
-                    categoryFiltersContainer.appendChild(button);
-                    button.addEventListener('click', () => filterPosts(tag, button));
+                    categoryFiltersContainer.appendChild(button); // Add to the container
+                    button.addEventListener('click', () => filterPosts(tag, button)); // Attach click handler
                 }
             });
 
-            // Filtering logic for posts on the blog page
+            // Core function to actually filter blog posts based on a selected tag.
             const filterPosts = (filterTag, clickedButton = null) => {
-                // Deactivate all buttons first
-                categoryFiltersContainer.querySelectorAll('.filter-tag-button').forEach(btn => {
-                    btn.classList.remove('active');
-                });
-                // Activate the clicked button, or the 'All Articles' button if 'all' is selected
-                if (clickedButton) {
-                    clickedButton.classList.add('active'); 
-                } else if (filterTag === 'all' && allButton) {
-                    allButton.classList.add('active');
+                categoryFiltersContainer.querySelectorAll('.filter-tag-button').forEach(btn => { btn.classList.remove('active'); });
+                if (clickedButton) { 
+                    clickedButton.classList.add('active'); // Highlight clicked button
+                } else if (filterTag === 'all' && allButton) { 
+                    allButton.classList.add('active'); // Default to 'All Articles' if no specific filter button clicked
                 }
 
-                allPostCards.forEach(post => { // Now use `allPostCards` to iterate on all for filtering
+                allPostCards.forEach(post => { // Iterate through all collected post cards to show/hide.
                     const tagsAttr = post.dataset.tags;
-                    if (!tagsAttr) { // If a post has no tags, show it only if 'all' is selected
-                        post.style.display = (filterTag === 'all') ? 'block' : 'none'; 
+                    if (!tagsAttr) { 
+                        post.style.display = (filterTag === 'all') ? 'block' : 'none'; // Posts without tags only show for 'all'.
                         return;
                     }
                     const postTags = tagsAttr.split(',').map(tag => tag.trim());
 
-                    // Show post if 'all' filter is active or if post contains the selected tag
-                    if (filterTag === 'all' || postTags.includes(filterTag)) {
+                    if (filterTag === 'all' || postTags.includes(filterTag)) { // Match filter or show all.
                         post.style.display = 'block'; 
                     } else {
                         post.style.display = 'none'; 
                     }
                 });
-                // console.log(`[CategoryFilter] Applied filter: "${filterTag}"`);
+                console.log(`[CategoryFilter] Applied filter: "${filterTag}"`);
             };
 
-            // Initial filtering based on URL parameter (e.g., navigating from categories.html)
+            // Initial filtering applied on page load, usually when navigating via a tag link from 'categories.html'.
             const urlParams = new URLSearchParams(window.location.search);
-            const initialTag = urlParams.get('tag'); 
+            const initialTag = urlParams.get('tag'); // Check for a 'tag' URL parameter.
             if (initialTag) {
-                const initialButton = categoryFiltersContainer.querySelector(`[data-filter="${initialTag}"]`);
-                filterPosts(initialTag, initialButton); // Filter and highlight the button
-            } else {
-                filterPosts('all', allButton); // Default to 'all' posts
+                const initialButton = categoryFiltersContainer.querySelector(`[data-filter="${initialTag.trim()}"]`); // Find corresponding button.
+                filterPosts(initialTag.trim(), initialButton); // Apply filter and activate button.
+            } else { 
+                filterPosts('all', allButton); // If no tag in URL, default to show all posts.
             }
-             console.log("[CategoryFilter] Interactive filters initialized on blog page.");
+            console.log("[CategoryFilter] Interactive filters initialized on blog page.");
         }
         
-        // For `categories.html`: Generate static links instead of interactive buttons
+        // Part 2: Generating category links on 'categories.html'
         if (isCategoriesPage && dynamicCategoryList) {
-            dynamicCategoryList.innerHTML = ''; // Clear previous content
+            dynamicCategoryList.innerHTML = ''; 
 
-            const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN'));
-            
-            if (sortedTags.length === 0) { // If no tags found just show a message
-                 dynamicCategoryList.innerHTML = `<p class="no-comments-message">暂时没有可用的文章分类。</p>`;
-                 console.log("[CategoryPage] No tags found.");
+            const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN')); // Sorted for presentation.
+            if (sortedTags.length === 0) { 
+                 dynamicCategoryList.innerHTML = `<p class="no-comments-message is-visible">暂时没有可用的文章分类。</p>`; // Message if no tags.
                  return;
             }
 
-            sortedTags.forEach(tag => {
-                const buttonLink = document.createElement('a');
-                // Link navigates to `blog.html` with a URL parameter for filtering
-                buttonLink.href = `blog.html?tag=${encodeURIComponent(tag)}`; 
-                buttonLink.classList.add('filter-tag-button'); // Reuse styling
-                // Check if current button's tag is in URL (e.g. if we came back from blog.html via back button)
-                const urlParams = new URLSearchParams(window.location.search);
-                if (urlParams.get('tag') === tag) {
-                    // buttonLink.classList.add('active'); // You might want active state also visually on categories page
-                }
+            sortedTags.forEach((tag, index) => {
+                const buttonLink = document.createElement('a'); // Anchor tag for navigation.
+                buttonLink.href = `blog.html?tag=${encodeURIComponent(tag)}`; // Target blog.html with filter param.
+                buttonLink.classList.add('filter-tag-button', 'animate__slide-up'); // Use button styles & entrance animation.
                 buttonLink.textContent = ` # ${tag}`;
                 buttonLink.dataset.filter = tag; 
+                buttonLink.dataset.delay = String(index * 50); // Small sequential delay (CSS will handle the rest)
                 dynamicCategoryList.appendChild(buttonLink);
+                // Force visibility for consistency, the CSS will handle delay
+                setTimeout(() => buttonLink.classList.add('is-visible'), (index * 50) + 100); 
             });
-            console.log(`[CategoryPage] Generated ${sortedTags.length} category links...`);
+            console.log(`[CategoryPage] Generated ${sortedTags.length} category links.`);
         }
     };
 
 
     // --- Share buttons for article pages ---
-    /**
-     * Sets up social media share links for blog posts.
-     * Dynamically constructs URLs based on current page title and URL.
-     */
     const setupShareButtons = () => {
         const shareButtons = document.querySelectorAll('.post-share-buttons a.weibo, .post-share-buttons a.qq');
-        if (shareButtons.length === 0) { console.log("[ShareButtons] No share buttons found on this page."); return; } 
+        if (shareButtons.length === 0) { return; } 
 
         const currentUrl = encodeURIComponent(window.location.href);
         const pageTitle = document.title;
-        const articleTitle = encodeURIComponent(pageTitle.split(' - ')[0] || "Honoka的小屋"); // Use part before first ' - ' or default 
+        const articleTitle = encodeURIComponent(pageTitle.split(' - ')[0] || "Honoka的小屋"); 
 
         shareButtons.forEach(btn => {
             if (btn.classList.contains('weibo')) {
                 btn.href = `https://service.weibo.com/share/share.php?url=${currentUrl}&title=${articleTitle}`;
             } else if (btn.classList.contains('qq')) {
                 const imgElement = document.querySelector('.post-detail-banner');
-                // Only include image URL in share if it's a real image that loaded successfully, not a fallback or data URL.
                 const imgUrl = (imgElement && imgElement.src && !imgElement.classList.contains('is-loading-fallback') && !imgElement.src.startsWith('data:image/')) 
-                               ? encodeURIComponent(imgElement.src) 
-                               : ''; // Empty string if no valid sharable image
+                               ? encodeURIComponent(imgElement.src) : '';
                 btn.href = `https://connect.qq.com/widget/shareqq/index.html?url=${currentUrl}&title=${articleTitle}${imgUrl ? '&pics=' + imgUrl : ''}`;
             }
-            // console.log(`[ShareButtons] Configured share link for: ${btn.classList}`);
         });
         console.log("[ShareButtons] Initialized.");
     };
     
-    /**
-     * Manages footer details (dynamic copyright year, backend visitor count)
-     * and dynamically adjusts body background blur based on device type (mobile/desktop).
-     */
+    // --- Footer dynamic details and Dynamic Blur Adjustment for Body (includes Backend Visitor Count) ---
     const setupFooterAndDynamicBlur = () => {
-        // Dynamic copyright year
         const currentYearSpan = document.getElementById('current-year');
-        if (currentYearSpan) {
-            currentYearSpan.textContent = new Date().getFullYear();
-            // console.log("[Footer] Copyright year updated.");
-        }
+        if (currentYearSpan) { currentYearSpan.textContent = new Date().getFullYear(); }
 
-        // --- NEW: Backend Visitor Counter ---
-        // Fetches updated visitor count from a Netlify Function.
+        // --- Backend Visitor Counter ---
         const visitorCountSpan = document.getElementById('visitor-count');
         if (visitorCountSpan) {
-            // Call Netlify Function on page load
             fetch(`${backendBaseUrl}handleVisitCount`, {
                 method: 'GET',
-                 headers: {
-                    'Accept': 'application/json',
-                    // The 'Access-Control-Allow-Origin' header is for the *response*, not the request.
-                    // Request headers would go here if your backend functions required a specific origin or other custom headers for incoming requests.
-                    // For standard GET, no special request headers are often needed.
-                 }
+                 headers: { 'Accept': 'application/json' }
             })
                 .then(response => {
-                    if (!response.ok) { // If HTTP status is not 2xx
-                        console.error(`[VisitorCount] Backend responded with HTTP status: ${response.status}`);
-                        // Try to parse JSON error message if provided by function
-                        return response.json().then(error => { 
-                            throw new Error(error.message || `HTTP status ${response.status} from visit count function.`); 
-                        });
-                    }
-                    return response.json(); // Parse successful JSON response
+                    if (!response.ok) { return response.json().then(error => { throw new Error(error.message || `HTTP ${response.status}.`); }); }
+                    return response.json();
                 })
                 .then(data => {
-                    // Update the displayed count; fallback to 0 if data.count is unexpected
                     if (data && typeof data.count !== 'undefined') {
                         visitorCountSpan.textContent = data.count;
                         console.log(`[VisitorCount] Updated to: ${data.count}.`);
@@ -774,56 +667,45 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 })
                 .catch(error => {
-                    console.error('[VisitorCount] Failed to retrieve or update visitor count from backend:', error);
-                    visitorCountSpan.textContent = '???'; // On error, display clear placeholder
+                    console.error('[VisitorCount] Failed to retrieve or update visitor count:', error);
+                    visitorCountSpan.textContent = '???'; 
                 });
         }
-
-        // Dynamic Background Blur Adjustment for Body (performance/readability)
-        /**
-         * Adjusts the `backdrop-filter` blur intensity on the `body::before` pseudo-element.
-         * Uses CSS custom properties and 'isMobile' flag to apply different blur levels for
-         * desktop vs. mobile devices to optimize for performance and legibility.
-         */
+        // Dynamic Background Blur Adjustment
         const updateBodyBlur = () => {
-            // Retrieve blur values from CSS custom properties defined in css/themes.css
             const desktopBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
-            const mobileBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim();
-
-            isMobile = window.innerWidth <= 767; // Re-evaluate global 'isMobile' flag on each resize
-            if (isMobile) { 
-                // Set the mutable CSS variable for global blur to the mobile-specific value
-                document.documentElement.style.setProperty('--body-global-blur-value', mobileBlur);
-                document.body.classList.add('is-mobile'); // Keep 'is-mobile' class on body for responsive CSS styling
-            } else {
-                document.documentElement.style.setProperty('--body-global-blur-value', desktopBlur);
-                document.body.classList.remove('is-mobile'); 
-            }
-            // console.log(`[Blur] Body blur set to: ${getComputedStyle(document.documentElement).getPropertyValue('--body-global-blur-value')} (isMobile: ${isMobile}).`);
+            const mobileBlur = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim(); // Ensure this variable exists in themes.css
+            isMobile = window.innerWidth <= 767; 
+            document.documentElement.style.setProperty('--body-global-blur-value', isMobile ? mobileBlur : desktopBlur);
+            document.body.classList.toggle('is-mobile', isMobile); // Toggle based on isMobile
         };
         
-        // Initial setup for the global blur variable. Default to desktop value until first resize/evaluation.
         document.documentElement.style.setProperty('--body-global-blur-value', getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim());
-        updateBodyBlur(); // Apply blur settings on first page load
-        window.addEventListener('resize', updateBodyBlur); // Update blur dynamically on window resize events
+        updateBodyBlur(); 
+        window.addEventListener('resize', updateBodyBlur); 
         console.log("[Blur] Dynamic background blur feature initialized.");
+
+        // Force footer to be visible after all checks, as it's the last element of content.
+        const footer = document.querySelector('.main-footer');
+        if(footer && !footer.classList.contains('is-visible')){
+            setTimeout(() => footer.classList.add('is-visible'), 500); // Give it a slight delay
+            console.log("[Footer] Force-visibity ensured.");
+        }
     }
 
 
     // --- Global Feature Initialization Point ---
-    // Ensure the order of initialization respects dependencies and desired visual sequencing.
+    // Note: Order matters for dependencies. Cursor trail (desktop-only feature) needs immediate attention if applicable.
     setupDynamicPostImages(); 
-    setupScrollAnimations();
-    setupCursorTrail(); // Now initialized much earlier.
+    setupCursorTrail(); // Init early for responsiveness
+    setupScrollAnimations(); // Critically handles element visibility.
     setupBackToTopButton();
     setupReadProgressBar();
     setupMainMenu(); 
     setupShareButtons();
+    // This calls fetch for visitor count and also sets up dynamic blur & footer visibility.
     setupFooterAndDynamicBlur(); 
-
-    // Category/Tag filtering is for blog.html and categories.html, so it runs on relevant pages.
     setupPostCategoryFilters();
 
-    // Debugging: Log script end
     console.log("✅ script.js FINISHED execution.");
 });

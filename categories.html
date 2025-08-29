@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -44,7 +47,7 @@
             <p class="animate__slide-up" data-delay="100">
                 在这里你可以找到所有文章的分类，点击标签即可跳转到文章列表并查看该分类下的所有文章。
             </p>
-            <div id="dynamic-category-list" class="posts-grid category-grid animate__fade-in animate__delay-200" data-delay="200">
+            <div id="dynamic-category-list" class="posts-grid category-grid animate__fade-in" data-delay="200">
                 <!-- 分类标签将由 JavaScript (script.js) 在页面加载时动态生成 -->
             </div>
             <p class="animate__slide-up button-container" data-delay="300">
@@ -54,7 +57,7 @@
     </main>
 
     <footer class="main-footer">
-        <div class="container">  <!-- 修复此处 div 闭合标签 -->
+        <div class="container">
             <p>&copy; <span id="current-year"></span> Honoka的小屋. All rights reserved.</p>
             <p>QQ: 3203418940 | 访问量: <span id="visitor-count">0</span></p>
         </div>

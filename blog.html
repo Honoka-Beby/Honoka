@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -53,7 +56,7 @@
             <div class="posts-grid" id="all-posts-grid">
                 <!-- 第一篇文章卡片 -->
                 <div class="post-card animate__slide-up" data-tags="影评,治愈,新海诚">
-                    <a href="posts/first-post.html">
+                    <a href="posts/first-post.html" data-delay="0">
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="「你的名字」影评" class="post-thumbnail">
                         <div class="post-info">
                             <h3>我与《你的名字》的初次邂逅：情感的交织与时间的奇迹</h3>
@@ -64,8 +67,8 @@
                     </a>
                 </div>
                 <!-- 第二篇文章卡片 -->
-                <div class="post-card animate__slide-up" data-delay="100" data-tags="手办,分享,waifu,收藏">
-                    <a href="posts/second-post.html">
+                <div class="post-card animate__slide-up" data-tags="手办,分享,waifu,收藏">
+                    <a href="posts/second-post.html" data-delay="100">
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="手办收藏" class="post-thumbnail">
                         <div class="post-info">
                             <h3>手办坑里的那些趣事和我最爱的waifu：我的次元收藏之旅</h3>
@@ -76,8 +79,8 @@
                     </a>
                 </div>
                 <!-- 新增第三篇文章卡片： 四月新番速览 (使用 article-template.html) -->
-                <div class="post-card animate__slide-up" data-delay="200" data-tags="新番,推荐,动画">
-                    <a href="posts/article-template.html"> 
+                <div class="post-card animate__slide-up" data-tags="新番,推荐,动画">
+                    <a href="posts/article-template.html" data-delay="200"> 
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="新番推荐" class="post-thumbnail">
                         <div class="post-info">
                             <h3>四月新番速览：不容错过的几部神作预定！</h3>
@@ -88,8 +91,8 @@
                     </a>
                 </div>
                 <!-- 新增第四篇文章卡片： 编程心情 -->
-                <div class="post-card animate__slide-up" data-delay="300" data-tags="编程,杂谈,日常,前端">
-                    <a href="posts/third-post.html"> 
+                <div class="post-card animate__slide-up" data-tags="编程,杂谈,日常,前端">
+                    <a href="posts/third-post.html" data-delay="300"> 
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="代码与诗意" class="post-thumbnail">
                         <div class="post-info">
                             <h3>代码与我的诗和远方：一个关于前端开发的独白</h3>
@@ -99,7 +102,6 @@
                         </div>
                     </a>
                 </div>
-                <!-- 可在此添加更多文章卡片，记得为每张卡片添加 `data-tags` 属性 -->
             </div>
         </section>
     </main>

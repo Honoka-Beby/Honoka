@@ -8,6 +8,9 @@
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="../css/animations.css">
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -44,14 +47,14 @@
     <main class="container content-page-wrapper animate__fade-in">
         <article class="blog-post-detail">
             <h2 class="post-detail-title animate__slide-up">代码与我的诗和远方：一个关于前端开发的独白 📝</h2> 
-            <div class="post-meta animate__slide-up animate__delay-100" data-delay="100">
+            <div class="post-meta animate__slide-up" data-delay="100">
                 <time datetime="2024-05-02">2024年5月2日</time> by <span class="author-name">Honoka</span> 
                 <span class="post-tags"><span class="tag">#编程</span><span class="tag">#前端</span><span class="tag">#日常</span><span class="tag">#学习</span></span> 
             </div>
             
-            <img src="../img/post-detail-banner-fallback.png" data-src-type="wallpaper" alt="编程与灵感图" class="post-detail-banner animate__fade-in animate__delay-200" data-delay="200">
+            <img src="../img/post-detail-banner-fallback.png" data-src-type="wallpaper" alt="编程与灵感图" class="post-detail-banner animate__fade-in" data-delay="200">
 
-            <div class="post-content animate__slide-up animate__delay-300" data-delay="300">
+            <div class="post-content animate__slide-up" data-delay="300">
                 <p>
                     一直以来，身边总有些朋友好奇，为什么我会选择编程，会喜欢坐在电脑前一行行敲代码。对我来说，写代码并不全然是冰冷的逻辑和枯燥的效率追求，它更像是一场充满发现与创造的旅程，一种将脑海中的想法转化为实体，呈现在屏幕前的魔法。
                 </p>
@@ -78,13 +81,13 @@
                 </p>
             </div>
 
-            <div class="post-share-buttons animate__slide-up animate__delay-400" data-delay="400">
+            <div class="post-share-buttons animate__slide-up" data-delay="400">
                 <span>分享此文章到:</span>
                 <a href="#" target="_blank" class="share-button weibo">Weibo</a>
                 <a href="#" target="_blank" class="share-button qq">QQ</a>
                 <a href="#" onclick="alert('微信分享请使用手机截图或浏览器分享功能'); return false;" class="share-button wechat">WeChat</a> 
             </div>
-            <div class="read-more animate__slide-up animate__delay-500" data-delay="500">
+            <div class="read-more animate__slide-up" data-delay="500">
                 <a href="../blog.html" class="button">← 返回文章列表</a>
             </div>
         </article>

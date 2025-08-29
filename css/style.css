@@ -63,7 +63,7 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
     font-size: 1em;
     font-family: var(--font-primary);
     text-shadow: 0 1px 3px rgba(0,0,0,0.2);
-    -webkit-tap-highlight-color: transparent; /* 消除移动端点击蓝色背景 */
+    -webkit-tap-highlight-color: transparent; 
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -78,12 +78,12 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
 /* --- Custom Cursor Trail --- */
 #cursor-trail {
     position: fixed;
-    width: 0; height: 0; /* 控制初始隐藏 */
+    width: 0; height: 0; 
     background: var(--primary-color);
     border-radius: 50%;
-    pointer-events: none; /* 确保不影响鼠标交互 */
+    pointer-events: none; 
     z-index: 9999;
-    transform: translate(-50%, -50%); /* 居中定位 */
+    transform: translate(-50%, -50%); 
     transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.2s;
     opacity: 0;
     will-change: top, left, width, height, opacity, transform;
@@ -200,70 +200,69 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 .hero-content {
     position: relative;
     z-index: 2; 
-    animation: fadeIn 1.5s ease-out;
+    /* The children elements will have their own animations; this ensures the container is visible first */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out; /* Smooth entrance for the main group of content */
 }
+.hero-content.is-visible { /* Add is-visible to this by JS before its children animate */
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
 /* 核心：主页标题 “Honoka的小屋” 的文字渐变发光走马灯动画 */
 .blog-title--animated.is-homepage-title > a { 
-    color: var(--text-color); /* 这是文字本身的基准颜色，在背景渐变的透明区域透出或作为回退 */
+    color: var(--text-color); 
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
-    text-shadow: none; /* 移除任何默认的text-shadow, 辉光由 filter */
+    text-shadow: none; 
     position: relative;
     display: inline-block; 
     vertical-align: top;
     line-height: 1.2;
     padding: 0 10px; 
-    overflow: hidden; /* **关键：裁剪多余的背景动画** */
+    overflow: hidden; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
-    transform: translateZ(0); /* 强制 GPU 加速 */
+    transform: translateZ(0); 
 
-    /* 核心渐变动画背景：包含从透明白色 --> 粉色发光 --> 透明白色的光带 */
     background-image: linear-gradient(90deg, 
-        /* 渐变带从透明白（显示底层白色文字）到亮粉色再回到透明白 */
-        #ffffff 0%, /* 文字原始白色区域的颜色 */
-        rgba(255, 255, 255, 0.9) 10%, /* 稍微透明的白色，平滑过渡 */
-        rgba(var(--primary-color-rgb), 0.7) 30%, /* 粉色发光开始强烈的区域 */
-        rgba(var(--primary-color-rgb), 1) 50%, /* 粉色发光中心最纯净最亮，与主色一致 */
-        rgba(var(--primary-color-rgb), 0.7) 70%, /* 粉色逐渐淡出 */
-        rgba(255, 255, 255, 0.9) 90%, /* 逐渐恢复透明白色 */
-        #ffffff 100% /* 结束时恢复白色文字颜色 */
+        #ffffff 0%, 
+        rgba(255, 255, 255, 0.9) 10%, 
+        rgba(var(--primary-color-rgb), 0.7) 30%, 
+        rgba(var(--primary-color-rgb), 1) 50%, 
+        rgba(var(--primary-color-rgb), 0.7) 70%, 
+        rgba(255, 255, 255, 0.9) 90%, 
+        #ffffff 100% 
     );
-     background-size: 300% 100%; /* 确保渐变带远宽于文字，以实现完整的滑动效果 */
-     background-position: -150% 0; /* 调整起始位置，让光带从左侧的外面开始 */
+     background-size: 300% 100%; 
+     background-position: -150% 0; 
      background-repeat: no-repeat;
     
-    /* 将背景裁剪为文字形状，并使文字填充透明 */
-    -webkit-background-clip: text; /* Webkit browsers */
-    background-clip: text; /* 标准 */
-    -webkit-text-fill-color: transparent; /* Webkit browsers */
-    /* !Important: color 作为 fallback 或在 background-clip:text 未生效时确保文字可见 */
+    -webkit-background-clip: text; 
+    background-clip: text; 
+    -webkit-text-fill-color: transparent; 
     
-    /* 动画定义：仅仅移动背景位置，实现走马灯效果 */
     animation: homepage-title-flow-gradient 4s linear infinite; 
-
-    /* 为文字添加辉光滤镜，使其在被粉色渐变填充时更像发光 */
-    /* drop-shadow 会在文字的 alpha 区域产生颜色阴影，完美配合 text-fill-color: transparent */
-     filter: drop-shadow(0 0 5px rgba(var(--primary-color-rgb), 0.8)) /* 较紧致的粉色光 */
-             drop-shadow(0 0 15px rgba(var(--primary-color-rgb), 0.5)); /* 更宽、柔和的粉色光 */
-    
-    /* !Important: 避免 filter 可能在某些浏览器上中断 background-clip 应用 */
+    filter: drop-shadow(0 0 5px rgba(var(--primary-color-rgb), 0.8)) 
+             drop-shadow(0 0 15px rgba(var(--primary-color-rgb), 0.5)); 
     will-change: background-position, filter; 
 }
 
+
 /* 核心动画：让背景渐变从左到右滑动 */
 @keyframes homepage-title-flow-gradient {
-    0% { background-position: -200% 0; } /* 渐变从文字区域极左外侧开始 */
-    100% { background-position: 200% 0; }  /* 渐变滑动到文字区域极右外侧结束 */
+    0% { background-position: -200% 0; } 
+    100% { background-position: 200% 0; } 
 }
 
 
 /* 导航栏 "Honoka的小屋" 标题的粉色慢速呼吸式辉光动画 (仅发光，不滑动) */
-.main-header .blog-title--animated.is-header-title > a { /* 应用到导航栏标题 */
+.main-header .blog-title--animated.is-header-title > a { 
     font-size: 1.8rem; 
-    color: var(--heading-color); /* 默认白色/标题颜色，此处不需要透明 */
+    color: var(--heading-color); 
     position: relative; 
     display: inline-block; 
     vertical-align: middle;
@@ -272,15 +271,13 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     animation: header-text-pulse-glow 2s ease-in-out infinite alternate; 
     will-change: text-shadow, filter; 
 
-    /* ------------- 禁用主页标题的复杂效果 ------------- */
-    /* 重置所有 background-clip, background-image, text-fill-color，确保不继承主页动画 */
     -webkit-background-clip: border-box; 
     background-clip: border-box;
-    -webkit-text-fill-color: initial; /* 恢复默认的文字填充颜色（即 'color' 属性）*/
-    background-image: none; /* 移除背景图片动画 */
-    background-color: transparent; /* 确保背景色透明 */
-    filter: none; /* 移除 drop-shadow 滤镜 */
-    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); /* 给文字一个基础的柔和白光 */
+    -webkit-text-fill-color: initial; 
+    background-image: none;
+    background-color: transparent; 
+    filter: none; 
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); 
 }
 
 @keyframes header-text-pulse-glow {
@@ -294,15 +291,30 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     margin: 1rem 0 2rem;
     color: var(--text-color);
     text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    opacity: 0; 
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Controlled by JS .is-visible */
+}
+.hero-subtitle.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .hero-nav {
-    display: flex; /* Ensure these are flex children for proper row layout */
-    justify-content: center; /* Center buttons horizontally */
-    flex-wrap: wrap; /* Allow buttons to wrap on smaller screens */
-    gap: 1rem; /* Spacing between buttons */
+    display: flex; 
+    justify-content: center; 
+    flex-wrap: wrap; 
+    gap: 1rem;
+    opacity: 0; 
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Controlled by JS .is-visible */
 }
+.hero-nav.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .hero-nav .nav-link {
-    margin: 0; /* Remove individual margins to use gap */
+    margin: 0; 
     font-size: 1.1rem;
     font-weight: 500;
     padding: 0.5rem 1.2rem;
@@ -324,7 +336,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 /* --- General Header and Navigation with Mini-Panel Menu --- */
 .main-header { 
     padding: 0.3rem 0.5rem; 
-    min-height: var(--header-min-height, 50px); /* 使用 CSS 变量设置最小高度，方便统一调整 */
+    min-height: var(--header-min-height, 50px); 
     display: flex; 
     align-items: center; 
     justify-content: center; 
@@ -338,8 +350,14 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     width: 100%; 
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
-    transform: translateZ(0); /* 强制 GPU 加速 */
+    transform: translateZ(0); 
+    opacity: 0; /* Hidden by default, explicit fadeIn by JS */
+    transition: opacity 0.5s ease-out;
 }
+.main-header.is-visible {
+    opacity: 1;
+}
+
 .main-header .container { 
     width: 100%; 
     display: flex; 
@@ -376,91 +394,87 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* 全新：圆润的导航菜单小框样式 */
 .main-nav {
-    display: flex; /* 总是 flex 提高布局稳定性，但通过 transform 隐藏 */
-    position: fixed; /* 固定在视图中，覆盖其他内容 */
-    top: calc(var(--header-min-height, 50px) + 15px); /* 位于 header 下方，并留出一些顶部边距，通过 CSS 变量 */
-    right: 20px; /* 距离屏幕右侧的悬停区域或固定距离 */
-    width: 250px; /* 菜单小框的固定宽度 */
-    /* max-height: calc(100vh - (var(--header-min-height, 50px) + 15px + 10px)); (header-border-top-button_margin-bottom)*/
-    max-height: calc(100vh - 85px); /* 基于新计算结果 */
-    box-sizing: border-box; /* 边框和内边距包含在宽度内 */
+    display: flex; 
+    position: fixed; 
+    top: calc(var(--header-min-height, 50px) + 15px); 
+    right: 20px; 
+    width: 250px; 
+    max-height: calc(100vh - 85px); 
+    box-sizing: border-box; 
 
-    background-color: var(--card-bg-color); /* 半透明背景 */
-    -webkit-backdrop-filter: blur(var(--content-backdrop-blur)); /* 磨砂玻璃效果 */
+    background-color: var(--card-bg-color); 
+    -webkit-backdrop-filter: blur(var(--content-backdrop-blur)); 
     backdrop-filter: blur(var(--content-backdrop-blur));
-    border-radius: var(--border-radius-lg); /* 圆润的边角 */
-    border: 1px solid var(--border-color); /* 边框与主题色呼应 */
-    box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); /* 柔和阴影 */
+    border-radius: var(--border-radius-lg); 
+    border: 1px solid var(--border-color); 
+    box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); 
     
-    /* 初始隐藏状态：完全在视口右侧外部 */
-    transform: translateX(110%); /* 比 100% 多一点，确保没有缝隙露出来 */
+    transform: translateX(110%); 
     opacity: 0; 
     visibility: hidden;
-    pointer-events: none; /* 默认不响应鼠标事件 */
+    pointer-events: none; 
     
-     /* 动画过渡 */
     transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out; 
-    /* 动画强制 GPU 加速，确保流畅 */
+    
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
-    padding: 1.5rem; /* 菜单内容内边距 */
+    padding: 1.5rem; 
     flex-direction: column;
-    justify-content: flex-start; /* 保持内容从顶部开始 */
+    justify-content: flex-start; 
     align-items: center;
-    text-align: center; /* 确保文本例如关闭按钮的图标居中 */
-    overflow-y: auto; /* 内容过多时可滚动 */
+    text-align: center; 
+    overflow-y: auto; 
 }
-.main-nav.is-open { /* 菜单打开状态 */
-    transform: translateX(0); /* 菜单移入视图，回到正常位置 */
+.main-nav.is-open { 
+    transform: translateX(0); 
      opacity: 1; 
     visibility: visible;
     pointer-events: auto; 
 }
 .main-nav ul { 
     list-style: none; display: flex; flex-direction: column; 
-    gap: 1.2rem; /* 菜单项间距 */
-    margin: 0; align-items: center; /* 确保 li 垂直居中排列 */
-    padding: 0.5rem 0 0; /* 顶部留一些空隙，底部紧凑 */
+    gap: 1.2rem; 
+    margin: 0; align-items: center; 
+    padding: 0.5rem 0 0; 
     width: 100%;
 }
-.main-nav ul li { width: 100%;} /* 确保列表项占据满宽度以便按钮宽度调整 */
+.main-nav ul li { width: 100%;} 
 .main-nav a { 
     font-weight: 500; 
     padding: 0.8em 1.5em; 
-    border-radius: var(--border-radius-lg); /* 大圆角按钮 */
-    font-size: 1.2em; /* 增大菜单文字 */
-    width: 100%; /* 菜单项宽度，可以调整 max-width */
-    max-width: 200px; /* 限制按钮最大宽度 */
-    color: var(--primary-color); /* 初始文字颜色 */
-    background-color: transparent; /* 默认透明背景 */
-    white-space: nowrap; /* 防止按钮内文字换行 */
-    overflow: hidden; /* 隐藏溢出文本 */
-    text-overflow: ellipsis; /* 显示省略号 */
+    border-radius: var(--border-radius-lg); 
+    font-size: 1.2em; 
+    width: 100%; 
+    max-width: 200px; 
+    color: var(--primary-color); 
+    background-color: transparent; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
 
-    /* ------------- 导航按钮独特的 UI 样式 ------------- */
-    border: 1px solid rgba(var(--primary-color-rgb), 0.3); /* 轻微边框 */
-    text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.3); /* 初始粉色微光 */
-    transition: all 0.3s ease; /* 统一过渡动画 */
+    border: 1px solid rgba(var(--primary-color-rgb), 0.3); 
+    text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.3); 
+    transition: all 0.3s ease; 
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 }
 .main-nav a:hover, .main-nav a.active { 
-    color: var(--heading-color); /* 悬停文字白色 */
-    background-color: var(--primary-color); /* 悬停背景填充鲜艳粉色 */
-    transform: translateY(-2px); /* 稍微上浮 */
+    color: var(--heading-color); 
+    background-color: var(--primary-color); 
+    transform: translateY(-2px); 
     box-shadow: 0 4px 15px rgba(var(--primary-color-rgb), 0.6), 
-                inset 0 0 10px rgba(var(--heading-color-rgb), 0.7); /* 强烈粉色外阴影 + 亮白内阴影形成发光 */
-    border-color: var(--primary-color); /* 悬停时边框也变粉色 */
-     text-shadow: 0 0 10px rgba(var(--heading-color-rgb), 0.8), 0 0 20px rgba(var(--primary-color-rgb), 0.5); /* 悬停时文字加强白光和粉光 */
+                inset 0 0 10px rgba(var(--heading-color-rgb), 0.7); 
+    border-color: var(--primary-color); 
+     text-shadow: 0 0 10px rgba(var(--heading-color-rgb), 0.8), 0 0 20px rgba(var(--primary-color-rgb), 0.5); 
 } 
  .main-nav .menu-close {
     display: block; 
     position: absolute;
     top: 10px; 
-    right: 1rem; /* 相对小框右边距 */
+    right: 1rem; 
     font-size: 1.8em; 
     font-weight: normal; 
     color: var(--meta-text-color); 
@@ -471,14 +485,14 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     -webkit-tap-highlight-color: transparent;
     z-index: 202; 
     transition: color 0.2s ease, transform 0.2s ease;
-     border-radius: 50%; /* 圆形关闭按钮 */
-     line-height:1; /* 垂直居中 'x' */
-     width: 1.5em; /* 确保圆形点击区域 */
-     height: 1.5em; /* 确保圆形点击区域 */
+     border-radius: 50%; 
+     line-height:1; 
+     width: 1.5em; 
+     height: 1.5em; 
 }
 .main-nav .menu-close:hover {
     color: var(--primary-color); 
-    transform: scale(1.2) rotate(90deg); /* 放大旋转效果 */
+    transform: scale(1.2) rotate(90deg); 
 }
 
 
@@ -487,7 +501,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     font-family: var(--font-display); 
     font-weight: 700;
     color: #fff;
-    text-align: center; /* 文本内容居中 */
+    text-align: center; 
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
@@ -496,14 +510,21 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+    opacity: 0; /* Default hidden */
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.section-title.is-visible, .page-title.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .section-title::after, .page-title::after {
     content: '';
     position: absolute; 
-    bottom: -0.5rem; /* 稍微下移，与文字拉开距离 */
+    bottom: -0.5rem; 
     left: 50%;
     transform: translateX(-50%);
-    width: 50%; /* 宽度调整 */
+    width: 50%; 
     max-width: 300px;
     height: 3px;
     background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
@@ -519,19 +540,26 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 .category-filters {
     margin-bottom: 2rem;
     display: flex;
-    flex-wrap: wrap; /* 允许换行 */
-    justify-content: center; /* 按钮居中 */
-    gap: 0.8rem; /* 按钮间距 */
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 0.8rem; 
     width: 100%;
     padding: 0 1rem;
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+    opacity: 0; /* Default hidden */
+    transform: translateY(10px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.category-filters.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .filter-tag-button {
     font-size: 0.95em;
     padding: 0.6em 1.2em;
-    border-radius: 20px; /* 圆润按钮 */
+    border-radius: 20px; 
     background-color: rgba(var(--secondary-color-rgb), 0.15);
     color: var(--secondary-color);
     border: 1px solid rgba(var(--secondary-color-rgb), 0.3);
@@ -549,9 +577,9 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 /* 分类归档页的网格布局 */
 .category-grid {
     margin-top: 1.5rem;
-    padding-bottom: 2rem; /* 底部与按钮组间隔 */
+    padding-bottom: 2rem; 
     width: 100%;
-    justify-items: center; /* 网格项居中 */
+    justify-items: center; 
 }
 /* 分类归档页的分类项按钮样式(基于 filter-tag-button 稍微调整) */
 .category-grid .filter-tag-button {
@@ -585,19 +613,41 @@ main.container.content-page-wrapper {
     flex-grow: 1; 
     display: flex;
     flex-direction: column;
-    align-items: center; /* **FIX**: 使内部的块级子元素（如 h2, div.sections）水平居中 */
+    align-items: center; /* Ensures central alignment for block children */
     justify-content: flex-start; 
     text-align: initial; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+
+     opacity: 0; /* Set initial opacity for main wrapper to ensure proper entrance via JS */
+     transition: opacity 0.6s ease-out; /* Main fadeIn for the wrapper content itself */
+}
+main.container.content-page-wrapper.is-visible {
+    opacity: 1;
+}
+
+/* 所有的 `<p>` 标签默认也隐藏，配合 JS 动画 */
+.content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message),
+.content-pages-wrapper ul,
+.content-pages-wrapper ol {
+    opacity: 0;
+    transform: translateY(10px); /* Slight slide up effect */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Apply to non-card paragraphs */
+}
+/* When .is-visible is added to the parent wrapper, then these paragraphs animate in */
+.content-page-wrapper p.is-visible,
+.content-page-wrapper ul.is-visible,
+.content-page-wrapper ol.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
 
-/* --- Posts Grid (Blog Page) --- */
+/* --- Posts Grid (Blog Page & Comments List) --- */
 .posts-grid { 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* **FIX**: 改进为更灵活的响应式列 */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 30px; 
     width: 100%; 
     max-width: 900px; 
@@ -616,55 +666,63 @@ main.container.content-page-wrapper {
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+
+    opacity: 0; /* Default hidden, controlled by JS and data-delay */
+    transform: translateY(20px); 
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s ease; 
+}
+.post-card.is-visible { /* Class added by JS to reveal with animation */
+    opacity: 1;
+    transform: translateY(0);
 }
 .post-card a { 
     color: inherit; 
     display: flex; 
     flex-direction: column; 
     height: 100%;
-    position: relative; /* **重要：让图片和文本叠加层能定位** */
+    position: relative; 
 } 
 .post-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(var(--primary-color-rgb), 0.3); }
 .post-thumbnail { 
     width: 100%; 
     height: 200px; 
     object-fit: cover; 
-    /* 滤镜过渡，当图片加载成功时移除此滤镜 */
     transition: filter 0.3s ease, transform 0.3s ease; 
     font-size: 0; 
     flex-shrink: 0; 
-    background-color: var(--bg-fallback-color); /* 在所有 fallbacks 之前提供纯色背景 */
-    filter: none; /* 默认无滤镜 */
+    /* The gradient fallback will be set directly via JS as background-image, making these fallback only if that itself fails */
+    background: var(--bg-fallback-color) no-repeat center center / cover; 
+    filter: none; 
 }
 
-/* 图片正在加载或加载失败（未替换 API 图片）的样式 */
+/* Image loading/fallback states */
 .post-thumbnail.is-loading-fallback {
-    object-fit: contain; /* Scale fallback image to fit without cropping */
-    filter: saturate(0) brightness(0.5) blur(1px); /* 将图片灰度+变暗+模糊，突出文字提示 */
-    /* 添加过渡，使得从模糊 -> 清晰有一个动画效果，提升渐进式加载体验。 */
-    /* 当 JS 将 src 替换为真实图片时，会移除 is-loading-fallback 类，filter 自动恢复 none */
+    /* object-fit: contain ensures entire fallback image is seen, even if it leaves bars */
+    object-fit: contain; 
+    filter: saturate(0) brightness(0.5) blur(1px); /* Visually transform fallback image to indicate processing/failure */
 } 
-/* 全局 fallback-text-overlay 样式，同时用于文章卡片和详情页横幅 */
+
+/* Global fallback-text-overlay for all images */
 .fallback-text-overlay {
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%); 
     width: 100%;
-    height: 100%; /* 让叠加层覆盖整个图片容器 */
-    display: flex; /* 用于文本居中 */
+    height: 100%; 
+    display: flex;
     justify-content: center;
     align-items: center;
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
     text-shadow: 0 0 5px rgba(0,0,0,0.8);
-    background: rgba(0,0,0,0.5); /* 半透明黑底，确保文字可读 */
+    background: rgba(0,0,0,0.5); 
     pointer-events: none; 
     z-index: 5;
     font-family: var(--font-primary); 
-    padding: 0 10px; /* 左右内边距防止文字溢出 */
+    padding: 0 10px; 
     text-align: center;
-    border-radius: inherit; /* 继承父元素的圆角，或根据需要设置 */
+    border-radius: inherit; 
 }
 
 
@@ -674,7 +732,7 @@ main.container.content-page-wrapper {
     display: flex; 
     flex-direction: column; 
     text-align: left; 
-    align-self:stretch; /* 确保 post-info 占据整个宽度 */
+    align-self:stretch; 
 } 
 .post-info h3 { 
     margin: 0 0 0.5rem; 
@@ -682,9 +740,8 @@ main.container.content-page-wrapper {
     font-size: 1.4rem; 
     color: #fff; 
     
-    /* 限制标题行数并显示省略号，以防过长挤压布局 */
     display: -webkit-box;
-    -webkit-line-clamp: 2; /* 最多显示2行 */
+    -webkit-line-clamp: 2; 
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -698,9 +755,8 @@ main.container.content-page-wrapper {
     text-align: justify; 
     z-index: 1;
     
-    /* 限制摘要行数并显示省略号 */
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* 最多显示3行 */
+    -webkit-line-clamp: 3; 
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -709,14 +765,14 @@ main.container.content-page-wrapper {
 .post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
 .post-tags .tag {
     display: inline-block;
-    background-color: rgba(var(--secondary-color-rgb), 0.15); /* 调整透明度使其更淡 */
+    background-color: rgba(var(--secondary-color-rgb), 0.15); 
     color: var(--secondary-color);
-    padding: 0.25em 0.8em; /* 调整 padding */
+    padding: 0.25em 0.8em; 
     border-radius: 5px;
     font-size: 0.75em;
-    opacity: 0.9; /* 略微提高不透明度 */
+    opacity: 0.9; 
     border: 1px solid rgba(var(--secondary-color-rgb), 0.2);
-    cursor: pointer; /* 提示可点击 */
+    cursor: pointer; 
     transition: all 0.2s ease;
 }
 .post-tags .tag:hover {
@@ -734,7 +790,16 @@ main.container.content-page-wrapper {
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+
+     opacity: 0; 
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
+.about-me-section.is-visible, .comment-section.is-visible, .categories-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 
 .about-me-section p, .comment-section p, .categories-section p { 
     font-size: 1.05em;
@@ -742,8 +807,16 @@ main.container.content-page-wrapper {
     margin-left: auto; 
     margin-right: auto; 
     text-align: justify; 
-    padding: 0 0.5rem; /* **修复**: 增加左右内边距，防止在手机端文本顶头 */
+    padding: 0 0.5rem; 
 }
+.comment-form-container .form-hint { /* Ensure form hint is also set to opacity 0 on load and handled by its parent's js/css to reveal */
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+}
+.comment-form-container.is-visible .form-hint {
+    opacity: 1;
+}
+
 /* 对列表也应用max-width和margin auto */
 .content-page-wrapper ul, .content-page-wrapper ol { 
     max-width: 760px;
@@ -751,6 +824,7 @@ main.container.content-page-wrapper {
     margin-right: auto;
     text-align: left; 
     padding-left: 2em; 
+    /* Use for reveal via JS class later */
 }
 /* 对分类页的按钮容器确保居中 */
 .categories-section .button-container {
@@ -765,13 +839,19 @@ main.container.content-page-wrapper {
     border: 4px solid var(--primary-color);
     box-shadow: 0 0 0 8px rgba(var(--primary-color-rgb), 0.2); 
     transition: transform 0.3s ease, box-shadow 0.3s ease;
+     opacity: 0; /* Hide avatar initially */
+     transform: scale(0.8); /* Scale in from smaller */
+}
+.about-me-section.is-visible .my-avatar.is-visible { /* Animate separately but ensure parent is visible first */
+    opacity: 1;
+    transform: scale(1);
 }
 .about-me-section .my-avatar:hover {
     transform: scale(1.05) rotate(5deg);
     box-shadow: 0 0 0 12px rgba(var(--primary-color-rgb), 0.3);
 }
 .about-me-section .contact-info {
-    text-align: left; /* **修复**，確保內部文本左對齊 */
+    text-align: left; 
     max-width: 480px;
     margin: 2em auto;
     padding: 1.5em; 
@@ -783,11 +863,14 @@ main.container.content-page-wrapper {
      -webkit-backface-visibility: Hidden; 
     backface-visibility: Hidden;
     transform: translateZ(0); 
+     opacity: 0; /* Hide contact info initially */
+     transform: translateY(10px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
-.about-me-section .contact-info h3 { color: var(--secondary-color); font-family: var(--font-display); border-bottom: 1px dashed var(--border-color); padding-bottom: 0.5em;}
-.about-me-section .contact-info ul { list-style: none; padding: 0.5em 0;}
-.about-me-section .contact-info ul li { margin-bottom: 0.7em;}
-
+.about-me-section.is-visible .contact-info.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
 
 /* Comments Form */
 .comment-form-container {
@@ -798,12 +881,19 @@ main.container.content-page-wrapper {
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     width: 100%; 
     max-width: 700px;
-    text-align: left; /* **修复：确保表单内容保持左对齐** */
+    text-align: left; 
     -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
     backdrop-filter: blur(var(--card-backdrop-blur));
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+     opacity: 0; /* Default hidden, controlled by JS & parent's is-visible */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.comment-form-container.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .comment-form-container h3 {
     text-align: center; 
@@ -845,6 +935,11 @@ textarea { resize: vertical; min-height: 120px; }
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+     opacity: 0; /* Default hidden */
+     transition: opacity 0.5s ease-out; /* Controlled by JS is-visible */
+}
+.comments-list-container.is-visible {
+    opacity: 1;
 }
 .comments-list-container h3 {
     text-align: center; 
@@ -855,53 +950,54 @@ textarea { resize: vertical; min-height: 120px; }
 }
 
 #comments-list {
-    margin-top: 1em;
+    margin-top: 1em; 
     text-align: left; 
     display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); /* 桌面端仍然保持多列 */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 20px; 
     width: 100%; 
-    max-width: 900px; 
-     margin-left: auto; 
-     margin-right: auto; 
+    max-width: 100%; 
+    margin-left: auto; 
+    margin-right: auto;
 }
-.comment-card {
-    background-color: var(--card-bg-color); 
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius);
-    padding: 1.5em;
-    box-shadow: 0 2px 8px rgba(var(--shadow-rgb), 0.1);
-    position: relative;
-    overflow: hidden;
-    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
-    backdrop-filter: blur(var(--card-backdrop-blur));
-     -webkit-backface-visibility: hidden; 
-    backface-visibility: hidden;
-    transform: translateZ(0); 
+/* Re-style post-card specific to comment list */
+#comments-list.comments-list .post-card { /* Target more specifically */
+    padding: 1.5em; 
+    height: auto; 
+    font-size: 1em;
+    opacity: 0;
+    transform: translateY(20px);
 }
-.comment-card::before {
-    content: '💬';
-    position: absolute;
-    top: 10px;
-    right: 15px;
-    font-size: 2em;
-    opacity: 0.1;
-    color: var(--primary-color);
+#comments-list.comments-list .post-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
-.comment-card p {
-    margin-bottom: 0.5em;
-    font-size: 1.em;
+
+/* Comment text and meta info classes */
+.comment-info { /* Wrapper for text and meta inside comment card */
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.comment-text {
+    margin-bottom: 0.5em; /* Specific for comments text */
+    font-size: 1em;
     color: var(--text-color);
     max-width: 100%;
+    text-align: left; /* Ensure comment text is left-aligned */
+    word-wrap: break-word; /* Ensure long words wrap */
+    overflow-wrap: break-word;
 }
-.comment-card .comment-meta {
+.comment-meta {
     font-size: 0.85em;
     color: var(--meta-text-color);
     border-top: 1px dashed var(--border-color);
     padding-top: 0.8em;
     margin-top: 1em;
+    text-align: left; /* Ensure meta text is left-aligned */
 }
-.comment-card .comment-meta strong { color: var(--primary-color); }
+.comment-meta strong { color: var(--primary-color); }
+
 .no-comments-message { 
     text-align: center;
     color: var(--meta-text-color); 
@@ -910,6 +1006,13 @@ textarea { resize: vertical; min-height: 120px; }
     font-family: var(--font-primary); 
     grid-column: 1 / -1; 
     width: 100%; 
+     opacity: 0; /* Initially hidden */
+     transform: translateY(10px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.comments-list-container.is-visible .no-comments-message.is-visible { /* Reveal when parent is visible OR when JS explicitly adds `is-visible` */
+    opacity: 1;
+    transform: translateY(0);
 }
 
 
@@ -926,11 +1029,18 @@ main .blog-post-detail {
     backdrop-filter: blur(var(--card-backdrop-blur));
     display: flex; 
     flex-direction: column;
-    align-items: center; /* **修复**: 使内部的块级子元素水平居中 */
+    align-items: center; 
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+
+     opacity: 0; /* Default hidden, controlled by JS for Entrance animation */
+     transition: opacity 0.6s ease-out; 
 }
+main .blog-post-detail.is-visible {
+    opacity: 1;
+}
+
 .post-detail-title {
     font-size: 2.8em;
     text-align: center; 
@@ -938,7 +1048,15 @@ main .blog-post-detail {
     line-height: 1.3;
     display: block; 
     width: 100%; 
+    opacity: 0; /* Hidden by default, controlled by JS for Entrance animation */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
+.post-detail-title.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .post-detail-title::after {
     content: '';
     position: absolute; 
@@ -959,7 +1077,16 @@ main .blog-post-detail {
     padding-bottom: 1.5em;
     border-bottom: 1px dashed var(--border-color);
     width: 100%; 
+     opacity: 0; /* Hidden by default, controlled by JS for Entrance animation */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
+.post-meta.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
 .post-detail-banner {
     width: 100%;
     height: 380px;
@@ -967,22 +1094,26 @@ main .blog-post-detail {
     border-radius: var(--border-radius);
     margin-bottom: 2em;
     box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
-    font-size: 0; /* 隐藏 img 标签自身的 alt 文本 */
+    font-size: 0; 
     position: relative; 
-    background-color: var(--bg-fallback-color); 
-    /* 滤镜过渡，当图片加载成功时移除此滤镜 */
-    transition: filter 0.3s ease; 
-    filter: none; /* 默认无滤镜 */
+    /* Gradient fallback default */
+    background: var(--bg-fallback-color) no-repeat center center / cover;
+    filter: none; 
+    opacity: 0; /* Hidden by default, controlled by JS and data-delay */
+    transition: opacity 0.5s ease-out, filter 0.3s ease, transform 0.3s ease;
+}
+.post-detail-banner.is-visible {
+    opacity: 1;
 }
 .post-detail-banner.is-loading-fallback {
-    filter: saturate(0) brightness(0.6) blur(1px); /* 应用滤镜 */
-    object-fit: contain; /* 回退时确保图片全部显示 */
+    filter: saturate(0) brightness(0.6) blur(1px); 
+    object-fit: contain; 
 }
-/* Post detail banner fallback text 调整 */
+/* Post detail banner fallback text style, matching img height */
 .post-detail-banner + .fallback-text-overlay { 
-    height: 380px; /* 覆盖整个 banner 的高度 */
-    border-radius: var(--border-radius); /* 圆角也匹配 */
-    font-size: 1.4rem; /* 字体增大 */
+    height: 380px; 
+    border-radius: var(--border-radius); 
+    font-size: 1.4rem; 
 }
 
 
@@ -990,6 +1121,13 @@ main .blog-post-detail {
     width: 100%; 
     max-width: 760px; 
     text-align: justify; 
+     opacity: 0; /* Hidden by default, controlled by JS for Entrance animation */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.post-content.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .post-content h3 {
     margin-top: 2.5em;
@@ -999,18 +1137,20 @@ main .blog-post-detail {
     color: var(--heading-color);
     font-family: var(--font-display);
     font-size: 1.8em;
-    text-align: left; /* **修复**: 确保标题内部文本左对齐 */
+    text-align: left; 
     width: 100%; 
 }
 .post-content p, .post-content ul, .post-content ol { 
     font-size: 1.05em;
     margin-bottom: 1.5em;
     line-height: 1.8;
-    text-align: justify; /* **FIX**: 文章段落保持两端对齐 */
-    padding: 0 0.5rem; /* **FIX**: 增加左右内边距，手机端避免顶头 */
+    text-align: justify; 
+    padding: 0 0.5rem; 
 
+    /* Removed specific opacity/transform for p/ul/ol here, defer to parent .post-content's .is-visible for now */
+    /* If more granular control needed, re-add child fade-ins with suitable delays */
 }
-.post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} /* 列表左对齐 */
+.post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} 
 .post-content ul li, .post-content ot li {margin-bottom: 0.5em;}
 
 
@@ -1022,6 +1162,13 @@ main .blog-post-detail {
     border-top: 1px dashed var(--border-color);
     width: 100%; 
     max-width: 700px; 
+     opacity: 0; 
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.post-share-buttons.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 .post-share-buttons span {
     color: var(--meta-text-color);
@@ -1057,9 +1204,15 @@ main .blog-post-detail {
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+
+     opacity: 0; /* Hidden by default, reveal via JS */
+     transition: opacity 0.5s ease-out;
+}
+.main-footer.is-visible { /* Add this class by JS on script end */
+    opacity: 1;
 }
 .main-footer .container {
-    padding: 0 1.5rem; /* 消除一些小屏幕上页脚内容顶满的风险 */
+    padding: 0 1.5rem; 
 }
 
 
@@ -1090,7 +1243,7 @@ main .blog-post-detail {
 }
 #back-to-top:hover {
     background-color: var(--primary-hover-color);
-    box-shadow: 0 5x 15px rgba(var(--primary-color-rgb), 0.5);
+    box-shadow: 0 5px 15px rgba(var(--primary-color-rgb), 0.5);
     transform: translateY(-5px) scale(1.05); 
 }
 
@@ -1114,15 +1267,17 @@ main .blog-post-detail {
     /* 通用移动端样式覆盖 */
     body {
         cursor: auto; 
+        opacity: 1; 
+        transform: none; 
     }
     body::before { 
-        backdrop-filter: blur(var(--body-global-blur-value)); /* 使用动态变量 */
+        backdrop-filter: blur(var(--body-global-blur-value)); 
         -webkit-backdrop-filter: blur(var(--body-global-blur-value));
     }
     body.is-mobile #cursor-trail { 
         display: none !important; 
     }
-    .container {padding: 1rem;} 
+    .container {padding: 0.8rem;} /* Slightly less padding to gain space */
 
     /* ------------- 头部导航栏适配 ------------- */
     .main-header { padding: 0.3rem 0.5rem; min-height: var(--header-min-height-mobile, 45px);} 
@@ -1136,38 +1291,38 @@ main .blog-post-detail {
     
     /* 缩小菜单小框在手机端更紧凑 */
     .main-nav {
-        top: calc(var(--header-min-height-mobile, 45px) + 10px); /* 适应手机端头部高度，保持间距 */
-        right: 1rem; /* 距离右侧的固定值，而非 padding */
-        width: 180px; 
-        max-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 10px + 10px)); /* 更小的高度 */
-        padding: 0.8rem;
+        top: calc(var(--header-min-height-mobile, 45px) + 10px); 
+        right: 0.8rem; /* Slightly less margin for smaller screens */
+        width: 170px; /* Reduced width */
+        max-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 10px + 10px)); 
+        padding: 0.6rem; /* Reduced padding */
     }
     .main-nav.is-open { 
-        transform: translateX(0); /* 菜单移入视图 */
+        transform: translateX(0); 
     }
-    .main-nav .menu-close { font-size: 1.5em; top: 5px; right: 0.8rem; } /* 缩小关闭按钮 */
-    .main-nav ul { gap: 0.7rem; padding: 0.3rem 0;} 
-    .main-nav a { font-size: 1em; padding: 0.4em 0.7em; width: 95%; max-width: 160px;}
+    .main-nav .menu-close { font-size: 1.4em; top: 3px; right: 0.6rem; } /* Further reduced size/position */
+    .main-nav ul { gap: 0.6rem; padding: 0.2rem 0;} 
+    .main-nav a { font-size: 0.9em; padding: 0.4em 0.7em; width: 95%; max-width: 160px;}
     
-    /* ------------- 英雄区域适配 ------------- */
+    /* ------------- 英雄区域适配 (首页) ------------- */
     .hero-content { padding: 0.5rem; margin-top: -15px;} 
-    .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem;} 
-    .hero-nav .nav-link { margin: 0; padding: 0.5rem 0.8em; font-size: 0.9em; width: unset; flex-grow: 1;} /* 手机首页按钮自适应宽度 */
+    .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem; padding: 0;} /* Ensure padding is 0 */
+    .hero-nav .nav-link { margin: 0; padding: 0.5rem 0.8em; font-size: 0.9em; width: unset; flex-grow: 1;} 
     .hero-nav { gap: 0.5rem;}
 
 
     /* ------------- 内容区域适配 （包括博客列表和留言板！）------------- */
     main.container.content-page-wrapper { 
-        margin: 0.8rem auto; 
-        padding: 1rem 0.5rem; 
-        display: flex; /* 确保 internal content wrap/align */
+        margin: 0.4rem auto; /* Less vertical margin */
+        padding: 0.8rem 0.6rem; /* Adjusted internal padding */
+        display: flex; 
         flex-direction: column; 
-        align-items: center; /* Centers internal _block_ elements like section-title, comment-form-container */
+        align-items: center; 
     }
 
-    .page-title, .section-title { font-size: 1.5rem; margin-bottom: 1rem; }
+    .page-title, .section-title { font-size: 1.5rem; margin-bottom: 0.8rem; } /* Reduced margins */
      .section-title::after, .page-title::after {
-        bottom: -0.3rem; 
+        bottom: -0.2rem; /* Adjusted position */
         width: 60%; 
      }
     .comment-form-container h3, 
@@ -1176,84 +1331,90 @@ main .blog-post-detail {
     .about-me-section .contact-info h3 { font-size: 1.2rem; margin-top: 0.6rem;}
     
     .category-filters {
-        gap: 0.6rem; 
-        padding: 0 0.5rem;
-        margin-bottom: 1.5rem;
+        gap: 0.5rem; 
+        padding: 0 0.5rem; 
+         margin-bottom: 1rem; /* Reduced margin */
     }
     .filter-tag-button {
-        font-size: 0.85em;
-        padding: 0.5em 1em; 
-        border-radius: 15px; 
+        font-size: 0.8em; /* Smaller font for tags */
+        padding: 0.4em 0.8em; 
+        border-radius: 12px; 
          white-space: nowrap; 
     }
     .category-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
-        gap: 12px;
+        gap: 10px; /* Reduced gap */
          max-width: 100%; 
     }
     .category-grid .filter-tag-button {
-        padding: 0.6em 1em; /* 手机端分类按钮 padding 也调整 */
-        min-width: unset; /* 适应内容 */
+        padding: 0.5em 0.8em; 
+        min-width: unset; 
         width: 100%;
+        font-size: 0.9em; /* slightly larger for categories page buttons */
     }
 
 
     /* **FIX: 博客文章列表网格强制单列且内容自适应** */
     .posts-grid, #comments-list { 
-        grid-template-columns: 1fr; /* 手机端强制单列，解决截断问题 */
-        gap: 15px; 
-        margin-left: 0; /* 消除可能的多余 margin */
+        grid-template-columns: 1fr; 
+        gap: 12px; /* Reduced gap */
+        margin-left: 0; 
         margin-right: 0;
         max-width: 100%;
     }
+    .post-card {
+        transform: translateY(10px); /* Smaller animation offset */
+    }
     /* **FIX: 文章卡片内容自适应** */
     .post-card .post-info {
-        padding: 0.8rem;
-        width: 100%; /* 确保占据100%宽度 */
-        align-items: flex-start; /* 内容左对齐 */
+        padding: 0.6rem; /* Reduced padding */
+        width: 100%; 
+        align-items: flex-start; 
     }
-    .post-card .post-thumbnail { /* 封面确保能显示本地图 */
-        height: 160px;
+    .post-card .post-thumbnail { 
+        height: 140px; /* Reduced height */
     }
 
-    .post-info h3 { font-size: 1.3rem; -webkit-line-clamp: 2; /* 限制标题行数 */ text-align: left;} 
-    .post-excerpt { font-size: 0.85em; -webkit-line-clamp: 3; /* 限制摘要行数 */ text-align: justify; }
+    .post-info h3 { font-size: 1.2rem; -webkit-line-clamp: 2; text-align: left;} 
+    .post-excerpt { font-size: 0.8em; -webkit-line-clamp: 3; text-align: justify; }
 
     /* **FIX: 详情页和留言板段落/表单内容适配** */
     .about-me-section p, 
     .comment-section p, 
     .content-page-wrapper .form-group input, 
     .content-page-wrapper .form-group textarea,
-    .post-content h3 strong, /* Fix internal strong title */
+    .post-content h3, 
     .post-content p, .post-content ul, .post-content ol { 
-        padding: 0; /* 清除了 internal padding, 外部容器已经控制好 */
-        font-size: 0.95em; /* 调整字体大小 */
-        text-align: justify; /* 手机端也保持段落两端对齐 */
+        padding: 0 0.5em; 
+        font-size: 0.90em; /* Reduced font size */
+        text-align: justify; 
     }
-     .post-content h3 { font-size: 1.3em; padding-left: 0.5em; text-align: left;}
-    .post-share-buttons {margin-top: 1.5em; padding-top: 1em;}
-    .post-share-buttons .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; }
+     .post-content h3 { font-size: 1.2em; padding-left: 0.5em; text-align: left; border-left: 3px solid var(--secondary-color);} 
+    .post-share-buttons {margin-top: 1em; padding-top: 0.8em;} /* Reduced margins */
+    .post-share-buttons .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; border-radius: 4px; } 
 
-    .comment-form-container, .about-me-section .contact-info, /* **修复**：联系信息卡片尺寸 */
-    .categories-section .button-container { /* **修复**：分类按钮容器尺寸 */
-        padding: 1.2rem 1em; 
-        margin: 1rem auto; 
+    .comment-form-container, .about-me-section .contact-info { 
+        padding: 1rem 0.8em; /* Further adjustment for small-screens for input area */
+        margin: 0.8rem auto; /* Less margin */
     }
-    /* FIX: 确保留言板的表单组自适应 */
+    /* FIX: 确保留言板的表单组完全自适应 */
     .comment-form-container .form-group { padding: 0;}
     .comment-form-container label, .comment-form-container .form-hint { text-align: left; padding: 0.2rem;}
 
-    .comments-list-container { padding: 1em 0.5em; margin-top: 2em;}
+    .comments-list-container { padding: 0.8em 0.5em; margin-top: 1.5em;}
+    #comments-list.comments-list .post-card { /* Reduced initial transform for comments on mobile */
+        transform: translateY(10px);
+    }
     
-     .post-detail-banner { height: 160px; margin-bottom: 1em; }
-    .post-detail-banner + .fallback-text-overlay { height: 160px; font-size: 1.1rem;} /* 适配图片高度 */
+     .post-detail-banner { height: 140px; margin-bottom: 0.8em; } /* Reduced height */
+    .post-detail-banner + .fallback-text-overlay { height: 140px; font-size: 1em;} 
 
 
-    /* 脚部适配 */
-    .main-footer { padding: 0.8rem 0.5rem;}
-    .main-footer .container { padding: 0 0.5rem; flex-direction: column; gap: 0.5rem;} /* 消除页脚内边距，内容垂直居中 */
-    .main-footer p {font-size: 0.75em;}
+    /* Footer on mobile */
+    .main-footer { padding: 0.6rem 0.5rem;}
+    .main-footer .container { padding: 0 0.5rem; flex-direction: column; gap: 0.3rem;} 
+    .main-footer p {font-size: 0.7em;}
 
-    #back-to-top { bottom: 0.4rem; right: 0.4rem; width: 28px; height: 28px; font-size: 0.9em; }
+    #back-to-top { bottom: 0.2rem; right: 0.2rem; width: 25px; height: 25px; font-size: 0.8em; }
 
 }
