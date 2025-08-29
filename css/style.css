@@ -41,7 +41,7 @@ body::before {
     -webkit-backdrop-filter: blur(var(--body-global-blur-value)); /* Webkit 兼容 */
     z-index: -1; /* 位于正常内容之下，body背景图之上 */
     transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
-    -webkit-backface-visibility: hidden; /* 针对 GPU 加速的常见修复 */
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); /* 强制开启 GPU 加速，避免 backdrop-filter 问题 */
 }
@@ -396,10 +396,16 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 .main-nav {
     display: flex; 
     position: fixed; 
+/*
+    之前我这里纠结了一下响应式高度问题。
+    经仔细检查，你的 `top: calc(var(--header-min-height, 50px) + 15px);` 和后面 media query 里 `top: calc(var(--header-min-height-mobile, 45px) + 10px);` 的写法是完全正确的，并且通过覆盖 `--header-min-height-mobile` 变量可以在移动端正确应用，不需要额外的 `max()` 函数。
+    因此，这个 `top` 属性不需要修改。
+*/
     top: calc(var(--header-min-height, 50px) + 15px); 
+    
     right: 20px; 
     width: 250px; 
-    max-height: calc(100vh - 85px); 
+    max-height: calc(100vh - 85px); /* 保持原样，与你之前的截图一致 */
     box-sizing: border-box; 
 
     background-color: var(--card-bg-color); 
@@ -1391,7 +1397,7 @@ main .blog-post-detail.is-visible {
     }
      .post-content h3 { font-size: 1.2em; padding-left: 0.5em; text-align: left; border-left: 3px solid var(--secondary-color);} 
     .post-share-buttons {margin-top: 1em; padding-top: 0.8em;} /* Reduced margins */
-    .post-share-buttons .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; border-radius: 4px; } 
+    .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; border-radius: 4px; } 
 
     .comment-form-container, .about-me-section .contact-info { 
         padding: 1rem 0.8em; /* Further adjustment for small-screens for input area */
