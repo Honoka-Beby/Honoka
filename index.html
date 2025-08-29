@@ -8,15 +8,41 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <!-- 优化字体加载速度：预加载主要中文字体 -->
+    <!-- CRITICAL FIX: 更正 LXGW WenKai Screen 字体的预加载路径和权重 -->
     <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-semibold.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream is-homepage">
+
     <!-- 全局页面过渡遮罩，在页面跳转时激活 -->
     <div id="global-page-transition-overlay"></div>
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
+
+    <!-- 新添加的通用头部导航栏结构 -->
+    <header class="main-header">
+        <div class="container">
+            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
+            <!-- 汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!-- 主导航菜单 (会在小屏幕上初始隐藏) -->
+            <nav id="main-nav-menu" class="main-nav">
+                <button class="menu-close" title="关闭">✕</button>
+                <ul>
+                    <li><a href="blog.html">文章</a></li>
+                    <li><a href="about.html">关于</a></li>
+                    <li><a href="comments.html">留言</a></li>
+                    <!-- 这里可以根据需要添加更多导航链接 -->
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <!-- 头部导航栏结构结束 -->
 
     <main class="main-content">
         <!-- 全屏封面区域 -->

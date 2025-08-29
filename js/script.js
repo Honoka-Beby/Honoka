@@ -1,4 +1,14 @@
 document.addEventListener('DOMContentLoaded', () => {
+    // CRITICAL FIX: 将 HTMLElement.prototype.classList.containsAny 移动到顶部定义，确保所有函数在调用前都可以访问。
+    HTMLElement.prototype.classList.containsAny = function(classNames) {
+        for (let i = 0; i < classNames.length; i++) {
+            if (this.classList.contains(classNames[i])) {
+                return true;
+            }
+        }
+        return false;
+    };
+
     console.log("🚀 script.js STARTING execution...");
 
     let isMobile = window.innerWidth <= 767; 
@@ -115,6 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(api, { method: 'GET', redirect: 'follow', signal: controller.signal, headers: { 'Accept': 'image/*,application/json' } });
                 clearTimeout(timeoutId);
 
+PRIVATE
                 if (response.ok) {
                     imageUrl = await extractImageUrl(response, apiDebugName);
                     if (imageUrl) { break; } 
@@ -274,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     setTimeout(() => { 
                         entry.target.classList.add('is-visible');
                         const isLooper = entry.target.closest('.is-homepage-title') || entry.target.closest('.is-header-title');
+                        // CRITICAL FIX: classList.containsAny 现在应该可以正常工作，因为它已被提前定义
                         if (!isLooper && entry.target.classList.containsAny(['animate__fade-in', 'animate__slide-up'])) { 
                             observer.unobserve(entry.target);
                         }
@@ -301,7 +313,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const contentWrapper = document.querySelector('main.container.content-page-wrapper');
         // Only trigger `is-visible` on the content wrapper for non-homepage. Homepage `hero-content` is individual.
         if (contentWrapper && !document.body.classList.contains('is-homepage') && !contentWrapper.classList.contains('is-visible')) {
-            setTimeout(() => contentWrapper.classList.add('is-visible'), 150); 
+            setTimeout(() => contentWrapper.classList.// CRITICAL FIX: ensure this is set to is-visible consistently
+            add('is-visible'), 150); 
             console.log("[Animations] Main content wrapper force-fade-in ensured.");
         }
 
@@ -690,15 +703,8 @@ document.addEventListener('DOMContentLoaded', () => {
     setupFooterAndDynamicBlur(); // Important to call AFTER `updateBodyBlur` is set up.
     setupPostCategoryFilters();
 
-    // Adding a generic utility to check if an element contains any of a list of classes
-    HTMLElement.prototype.classList.containsAny = function(classNames) {
-        for (let i = 0; i < classNames.length; i++) {
-            if (this.classList.contains(classNames[i])) {
-                return true;
-            }
-        }
-        return false;
-    };
+    // The HTMLElement.prototype.classList.containsAny definition has been moved to the top.
+    // So this line is no longer necessary here.
 
     console.log("✅ script.js FINISHED execution.");
 });
