@@ -1,5 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // 之前修复的 containsAny 方法，保持不变
+    // 之前修复的 containsAny 方法，保持不变，功能完好
     if (typeof DOMTokenList !== 'undefined' && !DOMTokenList.prototype.containsAny) {
         DOMTokenList.prototype.containsAny = function(classNames) {
             for (let i = 0; i < classNames.length; i++) {
@@ -32,15 +32,10 @@ document.addEventListener('DOMContentLoaded', () => {
     updateIsMobileClass();
     window.addEventListener('resize', updateIsMobileClass);
 
-
-    // --- Global Page Transition Overlay Management ---
     const pageTransitionOverlay = document.getElementById('global-page-transition-overlay');
     if (pageTransitionOverlay) {
         if (!pageTransitionOverlay.querySelector('.loader')) {
-            pageTransitionOverlay.innerHTML = `
-                <div class="loader"></div>
-                <p class="overlay-text">加载中...</p>
-            `;
+            pageTransitionOverlay.innerHTML = `<div class="loader"></div><p class="overlay-text">加载中...</p>`;
         }
         setTimeout(() => {
             if (pageTransitionOverlay) {
@@ -51,7 +46,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 }, 500);
             }
         }, 100);
-        console.log("[PageTransition] Overlay initialized for first load.");
     }
 
     const activatePageTransition = (urlToNavigate) => {
@@ -62,19 +56,12 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.classList.add('no-scroll');
         pageTransitionOverlay.style.display = 'flex';
         pageTransitionOverlay.classList.add('visible');
-        setTimeout(() => {
-            window.location.href = encodeURI(urlToNavigate);
-        }, 400);
-        console.log(`[PageTransition] Activating transition to: ${urlToNavigate}`);
+        setTimeout(() => { window.location.href = encodeURI(urlToNavigate); }, 400);
     };
 
     document.querySelectorAll('a').forEach(link => {
         let hrefURL;
-        try {
-            hrefURL = new URL(link.href, window.location.href);
-        } catch (e) {
-            return;
-        }
+        try { hrefURL = new URL(link.href, window.location.href); } catch (e) { return; }
         if (hrefURL.origin === window.location.origin && hrefURL.protocol !== 'mailto:' && (!hrefURL.hash || hrefURL.pathname !== window.location.pathname) && !link.getAttribute('href').startsWith('javascript:void(0)')) {
             link.addEventListener('click', (e) => {
                 if (link.target === '_blank') return;
@@ -86,145 +73,163 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/';
 
-    // --- Random Anime Wallpaper API ---
-    const fetchRandomAnimeImage = async (targetElement, type = 'background') => {
-        let imageUrl = '';
-        // 最终修复：增加一个更稳定的API，并调整顺序
-        const apiEndpoints = [
-            `https://api.yujn.cn/api/acg.php?type=image`, // 新增的、更稳定的API
-            `https://iw233.cn/api/Pure.php`,
-            `https://api.adicw.cn/img/rand.php`
-        ];
-
-        const extractImageUrl = async (response) => {
-            if (!response || !response.url) return '';
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.startsWith('image/')) {
-                return response.url;
-            }
-             // Forcing no-cors means we can't inspect the body, so we rely on the final response URL being the image.
-             if(response.type === 'opaque') {
-                return response.url;
-             }
-            return '';
-        };
-
-        for (const api of apiEndpoints) {
-            try {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 4000);
-                // 最终修复：添加 mode: 'no-cors' 来解决CORS跨域问题
-                const response = await fetch(api, { signal: controller.signal, mode: 'no-cors' });
-                clearTimeout(timeoutId);
-
-                // 对于 'no-cors' 请求, response.ok is always false, so we check response.type
-                imageUrl = await extractImageUrl(response);
-                if (imageUrl) break;
-            } catch (error) {
-                console.warn(`[ImageLoader] API error for ${api}: ${error.message}`);
-            }
-        }
-
-        if (imageUrl) {
-            const img = new Image();
-            img.src = imageUrl;
-            img.onload = () => {
-                if (type === 'background') {
-                    document.documentElement.style.setProperty('--bg-image', `url("${imageUrl}")`);
-                } else {
-                    targetElement.src = imageUrl;
-                    targetElement.style.objectFit = 'cover';
-                    targetElement.classList.remove('is-loading-fallback');
-                    targetElement.style.opacity = '1';
-                    const fallbackText = targetElement.nextElementSibling;
-                    if (fallbackText && fallbackText.classList.contains('fallback-text-overlay')) {
-                        fallbackText.remove();
-                    }
-                }
-            };
-            img.onerror = () => applyFallbackImage(targetElement, type);
-        } else {
-            applyFallbackImage(targetElement, type);
-        }
-    };
-
-    const applyFallbackImage = (targetElement, type) => {
-        const isThumbnail = targetElement.classList.contains('post-thumbnail');
-        const fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
-        // 最终修复：使用绝对路径，确保在任何页面都能正确找到图片
-        const baseRelativePath = '/img/';
-        const localFallbackSrc = `${baseRelativePath}${fallbackFilename}`;
-
-        if (type === 'background') {
-            document.documentElement.style.setProperty('--bg-image', getRandomGradient());
-        } else {
-            targetElement.src = localFallbackSrc;
-            targetElement.style.objectFit = 'contain';
-            targetElement.classList.add('is-loading-fallback');
-            targetElement.style.opacity = '1';
-            targetElement.style.backgroundImage = getRandomGradient();
-
-            let fallbackText = targetElement.nextElementSibling;
-            if (!fallbackText || !fallbackText.classList.contains('fallback-text-overlay')) {
-                fallbackText = document.createElement('div');
-                fallbackText.className = 'fallback-text-overlay';
-                if (targetElement.parentNode.style.position === 'static'){
-                    targetElement.parentNode.style.position = 'relative';
-                }
-                targetElement.insertAdjacentElement('afterend', fallbackText);
-            }
-            fallbackText.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-        }
-    };
-
+    // ########## ULTIMATE FIX 1: Robust Image Fetching & Fallback ##########
+    
+    // 生成一个漂亮的渐变色，作为最底层的后备方案
     const getRandomGradient = () => {
         const h1 = Math.floor(Math.random() * 360);
         const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360;
         return `linear-gradient(135deg, hsla(${h1}, 85%, 60%, 0.7), hsla(${h2}, 85%, 60%, 0.7))`;
     };
 
-    fetchRandomAnimeImage(document.body, 'background');
+    // 极端情况下的备用函数，确保网站有内容，即使API和本地图片都失败
+    const applyFallbackImage = (targetElement, type) => {
+        const isThumbnail = targetElement.classList.contains('post-thumbnail');
+        const fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
+        const absoluteBasePath = '/img/'; // 始终使用绝对路径
+        const localFallbackSrc = `${absoluteBasePath}${fallbackFilename}`;
 
-    const initializeDynamicImages = () => {
-        document.querySelectorAll('.post-thumbnail, .post-detail-banner').forEach(img => {
-            if (img.dataset.initialized) return; // 防止重复初始化
-            img.dataset.initialized = 'true';
-            applyFallbackImage(img, 'image');
-            fetchRandomAnimeImage(img, 'image');
-        });
-    }
+        if (type === 'background') {
+            document.documentElement.style.setProperty('--bg-image', getRandomGradient());
+            console.log("[Fallback] Applied gradient background for body.");
+        } else { // type === 'image'
+            targetElement.src = localFallbackSrc;
+            targetElement.style.objectFit = 'contain';
+            targetElement.classList.add('is-loading-fallback');
+            targetElement.style.opacity = '1';
+            // 关键：为<img>元素本身添加渐变背景，即使本地备用图片404，也能看到一个漂亮的色块
+            targetElement.style.backgroundImage = getRandomGradient();
 
-    // --- Animations and Interactions ---
+            let fallbackText = targetElement.nextElementSibling;
+            if (!fallbackText || !fallbackText.classList.contains('fallback-text-overlay')) {
+                fallbackText = document.createElement('div');
+                fallbackText.className = 'fallback-text-overlay';
+                 if (targetElement.parentNode && getComputedStyle(targetElement.parentNode).position === 'static'){
+                    targetElement.parentNode.style.position = 'relative';
+                }
+                targetElement.insertAdjacentElement('afterend', fallbackText);
+            }
+            fallbackText.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
+            console.log(`[Fallback] Applied local fallback for an image element.`);
+        }
+    };
+    
+    // 全新重构的图片获取函数
+    const fetchRandomAnimeImage = async (targetElement, type = 'background') => {
+        // 更新为更稳定、更多样的API列表
+        const apiEndpoints = [
+            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images', // 非常稳定的API
+            'https://www.dmoe.cc/random.php',
+            'https://api.lolicon.app/setu/v2?r18=0&size=original' // JSON格式API
+        ];
+
+        let imageUrl = null;
+
+        for (const apiUrl of apiEndpoints) {
+            console.log(`[ImageLoader] Attempting to fetch from ${apiUrl}`);
+            try {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000); // 延长超时时间到8秒
+
+                const response = await fetch(apiUrl, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    console.warn(`[ImageLoader] API ${apiUrl} responded with status ${response.status}.`);
+                    continue; // 继续尝试下一个API
+                }
+
+                // 检查响应类型
+                const contentType = response.headers.get('content-type');
+                if (contentType && contentType.includes('application/json')) {
+                    const data = await response.json();
+                    if (data && data.data && data.data.length > 0 && data.data[0].urls && data.data[0].urls.original) {
+                       imageUrl = data.data[0].urls.original; // 从JSON中提取URL
+                    }
+                } else if (contentType && contentType.startsWith('image/')) {
+                    // 如果响应是直接的图片，最终的URL就是图片地址
+                    imageUrl = response.url;
+                }
+
+                if (imageUrl) {
+                    console.log(`[ImageLoader] ✅ Success! Found image URL: ${imageUrl}`);
+                    break; // 找到图片，跳出循环
+                }
+            } catch (error) {
+                console.error(`[ImageLoader] ❌ Failed to fetch from ${apiUrl}. Error:`, error.message);
+                // 不在这里调用fallback，循环会继续尝试下一个API
+            }
+        }
+
+        // 循环结束后，我们决定是使用API图片还是启用后备方案
+        if (imageUrl) {
+            const img = new Image();
+            img.src = imageUrl;
+            img.onload = () => {
+                const targetSrc = `url("${imageUrl}")`;
+                if (type === 'background') document.documentElement.style.setProperty('--bg-image', targetSrc);
+                else {
+                    targetElement.src = imageUrl;
+                    targetElement.style.objectFit = 'cover';
+                    targetElement.classList.remove('is-loading-fallback');
+                    const fallbackText = targetElement.nextElementSibling;
+                    if (fallbackText?.classList.contains('fallback-text-overlay')) fallbackText.remove();
+                }
+                console.log(`[ImageLoader] Image successfully loaded and applied.`);
+            };
+            img.onerror = () => {
+                console.error(`[ImageLoader] Image URL ${imageUrl} valid but failed to load. Applying fallback.`);
+                applyFallbackImage(targetElement, type);
+            };
+        } else {
+            console.error(`[ImageLoader] ALL APIs failed. Applying final fallback.`);
+            applyFallbackImage(targetElement, type); // 所有API都失败了，启用后备
+        }
+    };
+
+    // ########## ULTIMATE FIX 2: Force Render Core UI Elements ##########
+
     const setupAnimationsAndInteractions = () => {
+        // 关键修复：不再等待任何东西，立即强制显示核心UI，确保网站骨架永远存在
+        const header = document.querySelector('.main-header');
+        const contentWrapper = document.querySelector('.hero-content, .content-page-wrapper, main.container');
+        const footer = document.querySelector('.main-footer');
+
+        if(header) setTimeout(() => header.classList.add('is-visible'), 50);
+        if(contentWrapper) setTimeout(() => contentWrapper.classList.add('is-visible'), 100);
+        if(footer) setTimeout(() => footer.classList.add('is-visible'), 250);
+
+        console.log("[Visibility] Core UI elements visibility forced.");
+
+        // IntersectionObserver现在只负责“额外”的动画，不影响核心内容的显示
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
                     const delay = parseInt(entry.target.dataset.delay || '0');
-                    setTimeout(() => {
-                        entry.target.classList.add('is-visible');
-                    }, delay);
+                    setTimeout(() => entry.target.classList.add('is-visible'), delay);
                     observer.unobserve(entry.target);
                 }
             });
         }, { threshold: 0.1 });
 
-        document.querySelectorAll('.animate__fade-in, .animate__slide-up').forEach(el => observer.observe(el));
-
-        const mainContent = document.querySelector('.hero-content, .content-page-wrapper');
-        if (mainContent) {
-           setTimeout(() => {
-                mainContent.classList.add('is-visible');
-                mainContent.querySelectorAll('[data-delay]').forEach(child => {
-                    const childDelay = parseInt(child.dataset.delay) || 0;
-                    setTimeout(() => child.classList.add('is-visible'), childDelay);
-                });
-            }, 100);
-        }
-
-        const footer = document.querySelector('.main-footer');
-        if (footer) setTimeout(() => footer.classList.add('is-visible'), 500);
+        // 只观察那些不是核心布局的动画元素
+        document.querySelectorAll('.animate__slide-up:not(.main-header):not(.hero-content):not(.content-page-wrapper):not(main.container), .animate__fade-in:not(.main-header):not(.hero-content):not(.content-page-wrapper):not(main.container)')
+            .forEach(el => observer.observe(el));
     };
 
+
+    const initializeDynamicImages = () => {
+        fetchRandomAnimeImage(document.body, 'background');
+        document.querySelectorAll('.post-thumbnail, .post-detail-banner').forEach(img => {
+            if (img.dataset.initialized) return;
+            img.dataset.initialized = 'true';
+            // 首先显示备用图片，然后再去尝试加载动态图片
+            applyFallbackImage(img, 'image');
+            fetchRandomAnimeImage(img, 'image');
+        });
+    };
+    
+    // 其他功能函数保持不变，它们本身没有问题
     const setupBackToTopButton = () => {
         const btn = document.getElementById('back-to-top');
         if (!btn) return;
@@ -264,32 +269,30 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const setupPostCategoryFilters = () => {
+        const filtersContainer = document.getElementById('blog-category-filters');
+        if (!filtersContainer) return;
         const allTags = new Set([...document.querySelectorAll('.post-card[data-tags]')].flatMap(p => p.dataset.tags.split(',').map(tag => tag.trim()).filter(Boolean)));
         const sortedTags = [...allTags].sort((a,b) => a.localeCompare(b, 'zh-CN'));
-        const filtersContainer = document.getElementById('blog-category-filters');
         
-        if (filtersContainer) {
-            filtersContainer.innerHTML = `<button class="filter-tag-button active" data-filter="all">全部文章</button>`;
-            sortedTags.forEach(tag => { filtersContainer.innerHTML += `<button class="filter-tag-button" data-filter="${tag}">#${tag}</button>`; });
+        filtersContainer.innerHTML = `<button class="filter-tag-button active" data-filter="all">全部文章</button>`;
+        sortedTags.forEach(tag => { filtersContainer.innerHTML += `<button class="filter-tag-button" data-filter="${tag}">#${tag}</button>`; });
 
-            filtersContainer.addEventListener('click', e => {
-                if (e.target.matches('.filter-tag-button')) {
-                    const filter = e.target.dataset.filter;
-                    document.querySelectorAll('#all-posts-grid .post-card').forEach(post => post.style.display = (filter === 'all' || (post.dataset.tags && post.dataset.tags.split(',').map(t => t.trim()).includes(filter))) ? '' : 'none');
-                    [...filtersContainer.children].forEach(b => b.classList.toggle('active', b === e.target));
-                }
-            });
+        filtersContainer.addEventListener('click', e => {
+            if (e.target.matches('.filter-tag-button')) {
+                const filter = e.target.dataset.filter;
+                document.querySelectorAll('#all-posts-grid .post-card').forEach(post => post.style.display = (filter === 'all' || (post.dataset.tags && post.dataset.tags.split(',').map(t => t.trim()).includes(filter))) ? '' : 'none');
+                [...filtersContainer.children].forEach(b => b.classList.toggle('active', b === e.target));
+            }
+        });
 
-            const initialTag = new URLSearchParams(window.location.search).get('tag');
-            const initialBtn = filtersContainer.querySelector(`[data-filter="${initialTag || 'all'}"]`);
-            if (initialBtn) initialBtn.click();
-        }
+        const initialTag = new URLSearchParams(window.location.search).get('tag');
+        const initialBtn = filtersContainer.querySelector(`[data-filter="${initialTag || 'all'}"]`);
+        if (initialBtn) initialBtn.click();
 
         const dynamicListContainer = document.getElementById('dynamic-category-list');
         if (dynamicListContainer) { dynamicListContainer.innerHTML = sortedTags.map((tag, i) => `<a href="blog.html?tag=${encodeURIComponent(tag)}" class="filter-tag-button animate__slide-up" data-delay="${i * 50}"># ${tag}</a>`).join(''); }
     };
     
-    // --- Footer and Final Setups ---
     const setupFooter = () => {
         const yearSpan = document.getElementById('current-year');
         if (yearSpan) yearSpan.textContent = new Date().getFullYear();
@@ -298,9 +301,10 @@ document.addEventListener('DOMContentLoaded', () => {
         updateBodyBlur();
     };
 
-    const initPage = () => {
-        initializeDynamicImages();
-        setupAnimationsAndInteractions();
+    // 初始化所有功能
+    function initializePage() {
+        setupAnimationsAndInteractions(); // 优先执行，确保UI可见
+        initializeDynamicImages();        // 然后加载图片，不会阻塞UI
         setupBackToTopButton();
         setupCursorTrail();
         setupReadProgressBar();
@@ -309,8 +313,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupFooter();
     }
     
-    // Initial page load
-    initPage();
+    initializePage(); // 执行初始化
 
-    console.log("✅ script.js FINISHED execution.");
+    console.log("✅ script.js FINISHED execution. Site should be fully functional now.");
 });
