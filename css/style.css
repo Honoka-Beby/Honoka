@@ -1425,3 +1425,16 @@ main .blog-post-detail.is-visible {
     #back-to-top { bottom: 0.2rem; right: 0.2rem; width: 25px; height: 25px; font-size: 0.8em; }
 
 }
+
+
+/* =============================================== */
+/* == ULTIMATE FIX: Force Visibility Override == */
+/* =============================================== */
+/* This is the "sledgehammer" class. It overrides any animation
+   styles that might be stuck on opacity: 0 or transform.
+   The !important rule ensures it always wins. */
+.force-visible {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+}
