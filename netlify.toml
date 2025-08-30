@@ -1,30 +1,24 @@
 # netlify.toml
 
 [build]
-  publish = "." # 或实际的前端输出目录
-  command = "echo 'No client build command'" # 如果前端纯静态或只有dev构建指令
-  functions = "netlify/functions" # 你的 Netlify Functions 代码存放的目录
+  publish = "."
+  command = "echo 'No client build command'"
+  functions = "netlify/functions"
 
 [[headers]]
-  for = "/.netlify/functions/*" # 对所有函数路径应用 CORS Headers
+  for = "/.netlify/functions/*"
   [headers.values]
-    Access-Control-Allow-Origin = "https://honoka1.netlify.app" # ！！！务必替换为你的 Netlify 站点域名！！！
+    Access-Control-Allow-Origin = "https://honoka1.netlify.app" # 确保这里是你正确的网站域名
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
     Access-Control-Allow-Headers = "Content-Type"
-    Access-Control-Max-Age = "86400"
 
-[[redirects]] # 处理 OPTIONS 请求（CORS预检），重要！
+# ★★★ FIX: 添加了处理POST请求前CORS预检(OPTIONS)的规则，对后端稳定性至关重要 ★★★
+[[redirects]]
   from = "/.netlify/functions/*"
   to = "/.netlify/functions/:splat"
   status = 200
+  force = true # 强制执行
   conditions = {Method = ["OPTIONS"]}
 
-# 如果有多个函数，需要设置单独的 Node.js 版本 (推荐)
-# [functions]
-# # node_bundler = "esbuild" # 推荐使用 esbuild
-# # node_version = "18" 或最新的稳定版本如 "20"
-
-
-# 添加 Netlify Build 插件以自动安装 Netlify Functions 的依赖
 [[plugins]]
 package = "@netlify/plugin-functions-install-core"
