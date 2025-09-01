@@ -1,66 +1,64 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    console.log("🚀 [Final Version 6.0 - ERROR-FREE & ULTIMATE STABILITY] script.js STARTING execution...");
+    console.log("🚀 [FINAL Version: BUG-FREE & ULTIMATE STABILITY] script.js STARTING execution...");
 
     // ===================================================================
-    // 1. CORE UTILITIES & DYNAMIC STATE
-    //    Moved setupCursorTrail UP here to ensure it's defined before anything calls it.
+    // 1. CORE UTILITIES & DYNAMIC STATE (including Cursor Trail definition)
+    //    The setupCursorTrail function is placed here to ensure it's defined
+    //    before anything (like updateBodyStyling) attempts to call it.
     // ===================================================================
 
-    // ★★★ FIX: Modified setupCursorTrail to be robust with dynamic mobile status ★★★
     const setupCursorTrail = () => {
         const cursorDot = document.getElementById('cursor-trail');
-        // Always get the *current* mobile status from the body class, which is updated on resize.
         const isCurrentlyMobile = document.body.classList.contains('is-mobile'); 
 
         if (cursorDot) {
             if (!isCurrentlyMobile) {
                 document.body.style.cursor = 'none'; // Hide browser's default cursor
-                cursorDot.style.display = 'block'; // Ensure custom cursor dot is visible
-                cursorDot.style.opacity = '1'; // Ensure default custom cursor has opacity (was 0 in CSS default)
+                cursorDot.style.display = 'block'; 
+                cursorDot.style.opacity = '1'; 
 
-                // Remove existing mousemove listener before adding to prevent duplicates
-                if (window.mousemoveHandler) { // Check if handler exists before removing
-                    window.removeEventListener('mousemove', window.mousemoveHandler); 
-                }
-                // Add listener with a persistent handler directly on window for easy removal
-                window.mousemoveHandler = e => { 
-                    cursorDot.style.left = `${e.clientX}px`; 
-                    cursorDot.style.top = `${e.clientY}px`; 
+                // Use unique named handlers for add/removeEventListener consistency
+                const mousemoveHandler = e => {
+                    cursorDot.style.left = `${e.clientX}px`;
+                    cursorDot.style.top = `${e.clientY}px`;
                 };
-                window.addEventListener('mousemove', window.mousemoveHandler); 
+
+                // Remove any pre-existing listener to avoid duplicates
+                window.removeEventListener('mousemove', window._cursorMoveHandler); 
+                // Add the new listener
+                window.addEventListener('mousemove', mousemoveHandler);
+                window._cursorMoveHandler = mousemoveHandler; // Keep reference for removal
 
                 // Event listeners for interactive elements for cursor scale effect
                 document.querySelectorAll('a, button, .post-card').forEach(el => {
-                    // Prevent duplicate listeners - specific named functions required for removeEventListener to work
-                    if (el.dataset.addedCursorListeners) { // Check if listeners were added to this element
-                        el.removeEventListener('mouseenter', window.handleMouseEnter);
-                        el.removeEventListener('mouseleave', window.handleMouseLeave);
-                    }
+                    const handleMouseEnter = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                    const handleMouseLeave = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
+
+                    // Remove pre-existing specific element listeners to avoid duplicates
+                    el.removeEventListener('mouseenter', el._hoverEnterHandler);
+                    el.removeEventListener('mouseleave', el._hoverLeaveHandler);
                     
-                    window.handleMouseEnter = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                    window.handleMouseLeave = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
-
-                    el.addEventListener('mouseenter', window.handleMouseEnter);
-                    el.addEventListener('mouseleave', window.handleMouseLeave);
-                    el.dataset.addedCursorListeners = 'true'; // Mark as added
+                    el.addEventListener('mouseenter', handleMouseEnter);
+                    el.addEventListener('mouseleave', handleMouseLeave);
+                    el._hoverEnterHandler = handleMouseEnter; // Keep reference
+                    el._hoverLeaveHandler = handleMouseLeave; // Keep reference
                 });
-            } else {
-                document.body.style.cursor = 'auto'; // Show default cursor on mobile devices
-                cursorDot.style.display = 'none'; // Hide custom cursor
-                cursorDot.style.opacity = '0'; // Ensure custom cursor is effectively hidden
 
-                // Remove mousemove listener if in mobile mode
-                if (window.mousemoveHandler) {
-                     window.removeEventListener('mousemove', window.mousemoveHandler);
-                     delete window.mousemoveHandler; // Clean up the global reference
-                }
+            } else { // On mobile: hide custom cursor, restore default OS cursor
+                document.body.style.cursor = 'auto'; 
+                cursorDot.style.display = 'none'; 
+                cursorDot.style.opacity = '0'; 
+
+                // Clean up listeners for non-mobile interaction
+                window.removeEventListener('mousemove', window._cursorMoveHandler); 
+                delete window._cursorMoveHandler; 
+
                 document.querySelectorAll('a, button, .post-card').forEach(el => {
-                    if (el.dataset.addedCursorListeners) {
-                        el.removeEventListener('mouseenter', window.handleMouseEnter);
-                        el.removeEventListener('mouseleave', window.handleMouseLeave);
-                        delete el.dataset.addedCursorListeners;
-                    }
+                    el.removeEventListener('mouseenter', el._hoverEnterHandler);
+                    el.removeEventListener('mouseleave', el._hoverLeaveHandler);
+                    delete el._hoverEnterHandler;
+                    delete el._hoverLeaveHandler;
                 });
             }
         }
@@ -75,9 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--body-global-blur-value', currentIsMobile ? mobileBlurCssVar : desktopBlurCssVar);
         document.body.classList.toggle('is-mobile', currentIsMobile);
         
-        // ★★★ FIX: Re-evaluate cursor visibility immediately after body class is updated ★★★
-        // This is safe now because setupCursorTrail is defined above.
-        setupCursorTrail(); 
+        setupCursorTrail(); // Now safe to call
     };
 
     // Initial call on load, and then listen for resize events
@@ -85,56 +81,76 @@ document.addEventListener('DOMContentLoaded', () => {
     window.addEventListener('resize', updateBodyStyling); 
 
 
-    // ===================================================================
-    // 2. ULTIMATE VISIBILITY FIX (Most Critical Function for Content Display)
-    // This runs IMMEDIATELY on `DOMContentLoaded` to guarantee content is visible.
-    // ===================================================================
+    // ===============================================
+    // 2. ULTIMATE VISIBILITY FIX (CRITICAL for content display)
+    //    This function explicitly ensures ALL intended content elements are marked visible.
+    // ===============================================
     const applyImmediateVisibilityFix = () => {
-        // Step 1: Force critical structural elements to be immediately visible.
-        // This targets outer wrappers for the main sections. `force-visible` uses `!important` in CSS.
-        const structuralElements = document.querySelectorAll('.main-header, .hero-section, .content-page-wrapper, .main-footer, .main-content');
+        // Step 1: Force critical structural elements to be display-visible using !important CSS.
+        const structuralElements = document.querySelectorAll(
+            '.main-header, .hero-section, .content-page-wrapper, .main-footer, .main-content'
+        );
         structuralElements.forEach(el => {
-            el.classList.add('force-visible');
+            el.classList.add('force-visible'); // Add the force-visible class
         });
         console.log("[VisibilityFix] Top-level structural UI elements immediately 'force-visible' to ensure base layout.");
 
-        // Step 2: Now, for ALL elements that are designed to animate (`animate__` prefix),
-        // we directly apply the `is-visible` class with a calculated delay.
-        // This ENSURES content displays without dependency on tricky IntersectionObserver timing for initial load.
-        // It respects `data-delay` for a staggered effect while forcing visibility.
-        const elementsToAnimateThroughoutPage = document.querySelectorAll('[class*="animate__"]');
-        elementsToAnimateThroughoutPage.forEach(el => {
-            const delay = parseInt(el.dataset.delay || '0', 10); // Grab existing animation delay
-            setTimeout(() => {
-                el.classList.add('is-visible');
-            }, delay + 50); // Add a small base delay + existing data-delay for staggered show
-        });
-        console.log("[VisibilityFix] All content elements flagged for animation are being directly set to 'is-visible'. This is the core solution for blank pages.");
+        // Step 2: Now, for ALL elements that are designed to animate (either via 'animate__-*' class
+        // or by having their opacity zeroed via specific CSS selectors like '.content-page-wrapper p'),
+        // we directly apply the 'is-visible' class with a small delay.
+        // This ensures content displays without relying solely on IntersectionObserver's timing (which can be flaky).
+        // ★★★ CRITICAL FIX: BROADENED SELECTOR FOR GUARANTEED VISIBILITY ★★★
+        const elementsToEnsureVisible = document.querySelectorAll(
+            // 1. Elements with explicit 'animate__' prefix classes (already handled by prev logic, but included for completeness)
+            '[class*="animate__"], ' + 
+            // 2. Elements that might NOT have 'animate__' directly in HTML but are styled with opacity:0 in style.css
+            //    and are expected to become visible with 'is-visible'.
+            //    This aggressively targets common text and container elements within visible wrappers.
+            '.main-content h1, .main-content h2, .main-content h3, .main-content h4, ' +
+            '.main-content p, .main-content ul, .main-content ol, ' +
+            '.hero-subtitle, .hero-nav, ' + // Homepage specific elements
+            '.section-title, .page-title, ' + // General section titles
+            '.about-me-section .my-avatar, .about-me-section .contact-info, .about-me-section .contact-info ul, .about-me-section .contact-info li, ' + // About page specific
+            '.comment-form-container, .comments-list-container, .comments-list-container .no-comments-message, ' + // Comments page specific
+            '#comment-form .form-group, #comments-list .post-card, #comments-list .comment-info, ' + // Deeper parts of comments
+            '.post-detail-title, .post-meta, .post-detail-banner, .post-content, .post-content strong, .post-content em, .post-content a, .post-content code, .post-content time, .post-content blockquote, .post-content pre, .post-content img, .post-content hr, .post-share-buttons, .post-share-buttons span, .share-button, .blog-post-detail .read-more, ' + // Article detail page elements
+            '.category-filters, .category-filters .filter-tag-button, ' + // Blog filters
+            '.categories-section p, .categories-section .posts-grid a, ' + // Categories page elements
+            '.posts-grid .post-card' // Individual post cards
+        );
 
-        // Step 3: Initialize IntersectionObserver for robustness.
-        // It will catch any elements that might have been missed by the direct application,
-        // or any content dynamically loaded or scrolled into view *after* initial setup.
+        elementsToEnsureVisible.forEach(el => {
+            const delay = parseInt(el.dataset.delay || '0', 10);
+            setTimeout(() => {
+                // Only add 'is-visible' if it's not already forcefully visible from earlier structural pass.
+                // This ensures content transitions if intended, or just pops visible if it's crucial.
+                if (!el.classList.contains('force-visible')) {
+                    el.classList.add('is-visible');
+                }
+            }, delay + 50); // Add small base delay for a smoother immediate showing + existing data-delay
+        });
+        console.log(`[VisibilityFix] ${elementsToEnsureVisible.length} content elements globally targeted for 'is-visible' class application. This should make all content visible.`);
+
+        // Step 3: Re-initialize IntersectionObserver for robustness.
+        // It will catch any elements dynamically added *after* initial setup or elements
+        // that are designed to animate *only* when scrolled into view (if not caught by above).
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                // Only add `is-visible` if it's currently hidden and in view.
-                // This prevents redundant operations on elements already made visible by step 2.
                 if (entry.isIntersecting && !entry.target.classList.contains('is-visible')) {
                     entry.target.classList.add('is-visible');
-                    observer.unobserve(entry.target); // Stop observing once it's visible
-                    // console.log(`[Observer] Additional element made visible by scroll: ${entry.target.tagName} with classes: ${entry.target.className}`);
+                    observer.unobserve(entry.target); 
                 }
             });
         }, { 
-            threshold: 0.1 // Triggers when 10% of the element is visible
+            threshold: 0.1 
         });
 
-        // Loop through all animatable elements again for the observer.
-        // Elements already visible from Step 2 will be ignored by the observer's `if` condition.
+        // Continue observing animatable elements for any missed cases through scrolling.
         document.querySelectorAll('[class*="animate__"]')
             .forEach(el => observer.observe(el));
     };
 
-    // ★★★ CRITICAL: Call the immediate visibility fix FIRST ★★★
+    // ★★★ CRITICAL: Call the immediate visibility fix FIRST once DOM is ready ★★★
     applyImmediateVisibilityFix(); 
 
 
@@ -143,33 +159,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     const pageTransitionOverlay = document.getElementById('global-page-transition-overlay');
     
-    // Logic to initially fade out the overlay on bare page load.
+    // Fade out the overlay on bare page load.
     if (pageTransitionOverlay) {
-        // Ensure the overlay fades out smoothly after the page content is guaranteed to be visible.
-        // This is now decoupled from the content visibility.
+        // Ensure the overlay fades out smoothly after potentially a very brief wait
         setTimeout(() => {
             pageTransitionOverlay.classList.remove('visible');
             setTimeout(() => {
                 pageTransitionOverlay.style.display = 'none';
-                document.body.classList.remove('no-scroll'); // Re-enable scrolling after transition
+                document.body.classList.remove('no-scroll'); 
             }, 500); 
         }, 100); 
     }
 
-    // Attach click handlers for internal links to trigger the transition
+    // Attach click handlers for internal links
     document.querySelectorAll('a').forEach(link => {
-        // Only target internal, non-anchor, non-javascript, non-blank target links
-        if (link.hostname === window.location.hostname && !link.href.includes('#') && link.target !== '_blank' && !link.href.startsWith('javascript:') && !link.href.startsWith('mailto:')) { // Added mailto: exclusion
+        // Only target internal, non-anchor, non-javascript protocol, non-external links
+        if (link.hostname === window.location.hostname && !link.href.includes('#') && 
+            !link.href.startsWith('javascript:') && !link.href.startsWith('mailto:') &&
+            link.target !== '_blank') { 
             link.addEventListener('click', (e) => {
-                e.preventDefault(); // Prevent default instant navigation
+                e.preventDefault(); 
 
                 if (pageTransitionOverlay) {
-                    document.body.classList.add('no-scroll'); // Prevent scroll during transition
-                    pageTransitionOverlay.style.display = 'flex'; // Make overlay visible
-                    setTimeout(() => pageTransitionOverlay.classList.add('visible'), 10); // Trigger fade-in CSS animation
-                    setTimeout(() => window.location.href = link.href, 400); // Navigate after fade-in
+                    document.body.classList.add('no-scroll'); 
+                    pageTransitionOverlay.style.display = 'flex'; 
+                    setTimeout(() => pageTransitionOverlay.classList.add('visible'), 10); 
+                    setTimeout(() => window.location.href = link.href, 400); 
                 } else {
-                    window.location.href = link.href; // Fallback for no overlay
+                    window.location.href = link.href; 
                 }
             });
         }
@@ -178,50 +195,56 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // 4. DYNAMIC IMAGE LOADING & FALLBACK
     // ===================================================================
-    const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; // Centralized Backend URL
+    // Centralized Backend URL for convenience, adjust if your Netlify Functions URL changes
+    const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; 
 
     const getRandomGradient = () => `linear-gradient(135deg, hsla(${Math.floor(Math.random()*360)}, 85%, 60%, 0.7), hsla(${(Math.floor(Math.random()*360))}, 85%, 60%, 0.7))`;
     
+    // Apply local fallback image (either a static local asset or a generated gradient)
     const applyFallbackImage = (imgElement, type) => {
         const isThumbnail = imgElement?.classList.contains('post-thumbnail');
-        // NOTE: The fallback images must be present in your /img/ directory
         const fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
-        const fallbackSrc = `/img/${fallbackFilename}`; 
+        const fallbackSrc = `/img/${fallbackFilename}`; // Absolute path to your local fallback images
         
         if (type === 'background') {
             document.documentElement.style.setProperty('--bg-image', getRandomGradient()); 
         } else if (imgElement) {
             imgElement.src = fallbackSrc; 
-            imgElement.style.objectFit = 'contain'; 
-            imgElement.style.backgroundImage = getRandomGradient(); 
+            imgElement.style.objectFit = 'contain'; // Often better for placeholder to show full picture
+            imgElement.style.backgroundColor = 'var(--bg-fallback-color)'; // Solid color behind if gradient is absent
+            imgElement.style.backgroundImage = getRandomGradient(); // Aesthetic gradient as a visual layer
             imgElement.classList.add('is-loading-fallback'); 
 
+            // Create/update a visual overlay indicating loading/fallback state if image fails
             let fallbackTextOverlay = imgElement.nextElementSibling;
-            if (!fallbackTextOverlay || !fallbackTextOverlay.classList.contains('fallback-text-overlay')) {
+            const parentRelativePositioned = imgElement.parentNode && getComputedStyle(imgElement.parentNode).position === 'static';
+            
+            if (!fallbackTextOverlay?.classList.contains('fallback-text-overlay')) {
+                // If the next sibling is not our overlay, create one.
                 fallbackTextOverlay = document.createElement('div');
                 fallbackTextOverlay.className = 'fallback-text-overlay';
-                if (imgElement.parentNode && getComputedStyle(imgElement.parentNode).position === 'static'){
+                if (parentRelativePositioned) { // Ensure parent is position:relative for absolute child positioning
                     imgElement.parentNode.style.position = 'relative'; 
                 }
-                imgElement.insertAdjacentElement('afterend', fallbackTextOverlay);
+                imgElement.insertAdjacentElement('afterend', fallbackTextOverlay); // Insert after the img
             }
             fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
         }
     };
     
+    // Fetches a random Anime image from a specific API
     const fetchRandomAnimeImage = async (imgElement, type = 'background') => {
-        // Prioritize more reliable/secure API for dynamic images
         const apiEndpoints = [
-            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images', // Stable, direct image URL
-            'https://www.dmoe.cc/random.php', // Another direct image URL option
+            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images', // Direct image URL
+            'https://www.dmoe.cc/random.php',       // Direct image URL
         ];
         let imageUrl = null;
 
         for (const apiUrl of apiEndpoints) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => {
-                    console.warn(`[ImageLoader] API ${apiUrl} timed out after 8 seconds.`);
+                const timeoutId = setTimeout(() => { // Abort fetch if it takes too long
+                    console.warn(`[ImageLoader] API ${apiUrl} timed out after 8 seconds. Aborting.`);
                     controller.abort();
                 }, 8000); 
 
@@ -229,31 +252,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 clearTimeout(timeoutId); 
 
                 if (!response.ok) {
-                    console.warn(`[ImageLoader] API ${apiUrl} responded with status ${response.status}. Trying next API.`);
-                    continue; 
+                    throw new Error(`HTTP status ${response.status}`);
                 }
-
-                // For APIs that return direct image URLs (like btstu.cn)
-                if (response.headers.get('content-type')?.startsWith('image/')) {
-                    imageUrl = response.url;
-                } else {
-                    // Fallback/check for APIs returning JSON that contains an image URL (e.g., lolicon, if implemented)
-                    // The current APIs (btstu, dmoe) should generally return direct image data or redirect to it.
-                    // For now, if not 'image/', assume direct URL from response.url for simplicity or re-evaluate.
-                    // Given your current APIs, response.url should be the image URL if response.ok.
-                    imageUrl = response.url;
-                }
+                imageUrl = response.url; // For direct image/redirect APIs, response.url is the image URL
 
                 if (imageUrl) {
-                    console.log(`[ImageLoader] ✅ Found image from ${apiUrl}: ${imageUrl}`);
+                    console.log(`[ImageLoader] ✅ Found valid image URL from ${apiUrl}: ${imageUrl}`);
                     break; 
                 }
             } catch (error) {
-                console.warn(`[ImageLoader] Failed in fetch attempt from ${apiUrl}. Error:`, error.message);
+                console.warn(`[ImageLoader] Failed to fetch image from ${apiUrl}. Error:`, error.message);
+                // Continue to the next API on specific errors (timeout, network, HTTP non-200)
             }
         }
 
-        // After trying all APIs, if an imageUrl was found, attempt to use it.
         if (imageUrl) {
             const tempImg = new Image();
             tempImg.src = imageUrl;
@@ -263,30 +275,37 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (imgElement) {
                     imgElement.src = imageUrl;
                     imgElement.style.objectFit = 'cover'; 
-                    imgElement.style.backgroundImage = ''; 
+                    imgElement.style.backgroundImage = ''; // Remove fallback gradient
+                    imgElement.style.backgroundColor = ''; // Remove fallback solid color
                     imgElement.classList.remove('is-loading-fallback');
-                    imgElement.nextElementSibling?.classList.contains('fallback-text-overlay') && imgElement.nextElementSibling.remove();
+                    // Remove fallback text overlay when the real image loads
+                    const nextSib = imgElement.nextElementSibling;
+                    if (nextSib?.classList.contains('fallback-text-overlay')) nextSib.remove();
                 }
                 console.log(`[ImageLoader] Dynamic image successfully applied.`);
             };
             tempImg.onerror = () => {
-                console.error(`[ImageLoader] Fetched image (${imageUrl}) failed to load/render. Applying fallback.`);
-                applyFallbackImage(imgElement, type);
+                console.error(`[ImageLoader] Fetched dynamic image (${imageUrl}) failed to load/render. Applying local fallback.`);
+                applyFallbackImage(imgElement, type); // Fallback if dynamically fetched URL doesn't load
             };
         } else {
-            console.warn(`[ImageLoader] All image APIs attempts failed to fetch a valid URL. Applying final fallback.`);
-            applyFallbackImage(imgElement, type); 
+            console.warn(`[ImageLoader] All configured image APIs attempts failed to acquire a valid image URL. Applying final local fallback.`);
+            applyFallbackImage(imgElement, type); // Apply fallback if no dynamic URL could be found
         }
     };
 
     // Orchestrates fetching background and content images
     const initializeDynamicImages = () => {
-        fetchRandomAnimeImage(null, 'background'); // Target null for global background
+        // Only run if not already set or specifically requested
+        if (!document.documentElement.style.getPropertyValue('--bg-image').includes('url')) {
+            applyFallbackImage(null, 'background'); // Set immediate gradient fallback
+            fetchRandomAnimeImage(null, 'background'); // Then load dynamic background
+        }
         document.querySelectorAll('.post-thumbnail, .post-detail-banner').forEach(img => {
-            if (!img.dataset.initialized) {
+            if (!img.dataset.initialized) { // Prevent re-initialization
                 img.dataset.initialized = 'true'; 
-                applyFallbackImage(img, 'image'); 
-                fetchRandomAnimeImage(img, 'image'); 
+                applyFallbackImage(img, 'image'); // Always show local fallback first for quick visual
+                fetchRandomAnimeImage(img, 'image'); // Then try for dynamic image
             }
         });
     };
@@ -310,9 +329,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!bar) return;
         window.addEventListener('scroll', () => {
             const documentHeight = document.documentElement.scrollHeight - document.documentElement.clientHeight;
-            // Prevent division by zero and ensure percentage is clamped
             const progress = documentHeight > 0 ? (window.scrollY / documentHeight) * 100 : 0;
-            bar.style.width = `${Math.min(100, Math.max(0,progress))}%`;
+            bar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
         });
     };
 
@@ -329,19 +347,21 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         toggle.addEventListener('click', (e) => {
-            e.stopPropagation(); 
+            e.stopPropagation(); // Prevents click from bubbling to document and closing immediately
             nav.classList.toggle('is-open');
-            const isOpen = nav.classList.contains('is-open');
+            const isOpen = nav.classList.contains('is-open'); // Get current state
             toggle.setAttribute('aria-expanded', String(isOpen));
-            document.body.classList.toggle('no-scroll', isOpen);
+            document.body.classList.toggle('no-scroll', isOpen); // Add/remove no-scroll based on menu state
         });
 
+        // Close menu if a click occurs outside of it (and it's open)
         document.addEventListener('click', e => {
             if (nav.classList.contains('is-open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
                 closeMenu();
             }
         });
 
+        // Event listener for the close button inside the mobile menu
         nav.querySelector('.menu-close')?.addEventListener('click', closeMenu);
     };
 
@@ -351,84 +371,85 @@ document.addEventListener('DOMContentLoaded', () => {
         const dynamicCategoryList = document.getElementById('dynamic-category-list'); 
         const postCards = document.querySelectorAll('#all-posts-grid .post-card');
 
+        // Only proceed if one of the relevant containers exists on the current page
         if (!blogFiltersContainer && !dynamicCategoryList) return;
 
         const allTags = new Set();
-        // Collect all unique tags from existing post cards
+        // Collect all unique tags from existing post cards' data-tags attributes
         postCards.forEach(p => {
             p.dataset.tags?.split(',').map(tag => tag.trim()).filter(Boolean).forEach(tag => allTags.add(tag));
         });
-        const sortedTags = [...allTags].sort((a,b) => a.localeCompare(b, 'zh-CN')); 
+        const sortedTags = [...allTags].sort((a,b) => a.localeCompare(b, 'zh-CN')); // Sort tags alphabetically
 
-        if (blogFiltersContainer) { 
+        if (blogFiltersContainer) { // If on blog.html, create interactive filter buttons
             let filterButtonsHTML = `<button class="filter-tag-button button active" data-filter="all">全部文章</button>`;
             sortedTags.forEach(tag => { 
                 filterButtonsHTML += `<button class="filter-tag-button button" data-filter="${tag}">#${tag}</button>`; 
             });
             blogFiltersContainer.innerHTML = filterButtonsHTML;
 
+            // Attach click event listeners for filter functionality
             blogFiltersContainer.addEventListener('click', e => {
                 const targetButton = e.target.closest('.filter-tag-button');
-                if (targetButton) {
+                if (targetButton) { // Ensure a filter button was clicked
                     const filter = targetButton.dataset.filter;
                     postCards.forEach(card => {
                         const cardTags = card.dataset.tags?.split(',').map(t => t.trim()) || [];
                         if (filter === 'all' || cardTags.includes(filter)) {
-                            card.style.display = ''; 
-                            // Add 'is-visible' class if it's supposed to animate and not yet visible
-                            if (!card.classList.contains('is-visible')) {
-                                card.classList.add('is-visible'); 
+                            card.style.display = ''; // Show the card
+                            // Ensure the 'is-visible' class is re-added if it was animated out or hidden
+                            if(!card.classList.contains('is-visible')) {
+                                card.classList.add('is-visible');
                             }
                         } else {
-                            card.style.display = 'none'; 
-                             card.classList.remove('is-visible'); // Also remove visibility class if hidden
+                            card.style.display = 'none'; // Hide the card
+                            card.classList.remove('is-visible'); // Also remove visibility class if hidden
                         }
                     });
+                    // Update the 'active' state among filter buttons
                     document.querySelectorAll('.filter-tag-button').forEach(btn => btn.classList.remove('active'));
                     targetButton.classList.add('active');
                 }
             });
-            const urlParams = new URLSearchParams(window.location.search);
-            const initialTag = urlParams.get('tag'); // Get 'tag' query parameter
-            if (initialTag) { // If there's an initial tag, try to click the corresponding filter button
-                const buttonToClick = blogFiltersContainer.querySelector(`[data-filter="${initialTag}"]`);
-                if (buttonToClick) {
-                    buttonToClick.click();
-                } else {
-                    blogFiltersContainer.querySelector(`[data-filter="all"]`)?.click(); // Fallback to 'All'
-                }
-            } else {
-                 blogFiltersContainer.querySelector(`[data-filter="all"]`)?.click(); // Default to 'All'
+
+            // Handle initial page load with a 'tag' query parameter (e.g., blog.html?tag=电影)
+            const urlParams = new URL(window.location.href);
+            const initialTag = urlParams.searchParams.get('tag'); 
+            const buttonToClick = blogFiltersContainer.querySelector(`[data-filter="${initialTag || 'all'}"]`);
+            if (buttonToClick) {
+                buttonToClick.click(); // Simulate click to activate initial filter
             }
         }
 
-        if (dynamicCategoryList) { // If on categories.html, create dynamic category list
+        if (dynamicCategoryList) { // If on categories.html, populate the list with links
             dynamicCategoryList.innerHTML = sortedTags.map((tag, i) => 
+                // Each category link goes to blog.html and passes the tag as a query parameter
                 `<a href="blog.html?tag=${encodeURIComponent(tag)}" class="filter-tag-button button animate__slide-up" data-delay="${i * 50}"># ${tag}</a>`
             ).join('');
         }
     };
 
-    // Function to calculate and update current year in the footer and visitor count
+    // Function to calculate and update current year in the footer and fetch visitor count from Netlify Function
     const setupFooter = () => {
         const yearSpan = document.getElementById('current-year');
         if (yearSpan) yearSpan.textContent = new Date().getFullYear();
 
         const visitorSpan = document.getElementById('visitor-count');
         if (visitorSpan) {
+            // Fetch visitor count from the Netlify Function backend
             fetch(`${backendBaseUrl}handleVisitCount`)
                 .then(res => {
-                    if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+                    if (!res.ok) throw new Error(`Network response was not ok, status: ${res.status}`);
                     return res.json();
                 })
                 .then(data => {
-                    if (data.count !== undefined) { // Check for undefined, not just truthy to allow 0 visitors
+                    if (data.count !== undefined) { // Check specifically for 'undefined' to allow 0 visitors
                         visitorSpan.textContent = data.count;
                     }
                 })
                 .catch(err => {
-                    console.error("[Footer] Failed to fetch visitor count:", err);
-                    visitorSpan.textContent = '???'; 
+                    console.error("[Footer] Failed to fetch visitor count:", err.message);
+                    visitorSpan.textContent = '???'; // Display placeholder on error
                 });
         }
     };
@@ -436,23 +457,22 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===================================================================
     // 6. MASTER INITIALIZATION FUNCTION
     // This orchestrates all features to ensure proper load order.
-    // ===================================================================
+    // =================================== ===============================
 
     function initializeAllFeatures() {
         initializeDynamicImages();        // Load images (background & thumbnails)
         setupMainMenu();                  // Enable hamburger menu interactions
-        setupFooter();                    // Populate footer details
-        setupReadProgressBar();           // Activate read progress bar
+        setupFooter();                    // Populate footer details & fetch visitor count
+        setupReadProgressBar();           // Activate read progress bar (only on article pages with #read-progress-bar)
         setupBackToTopButton();           // Enable scroll-to-top button
         setupPostCategoryFilters();       // Setup blog categories and filters
-        // Any other non-critical, page-specific feature initializations can go here safely.
         
-        console.log("✅ [Final Version 6.0] All page features initialized.");
+        console.log("✅ [FINAL Version] All essential page features initialized.");
     }
     
-    // Initialize all features.
+    // Call the master initialization function once the DOM is fully loaded.
     initializeAllFeatures();
 
-    console.log("✅ [Final Version 6.0 - ERROR-FREE & ULTIMATE STABILITY] script.js COMPLETED all execution. Site should be fully functional now.");
+    console.log("✅ [FINAL Version: BUG-FREE & ULTIMATE STABILITY] script.js COMPLETED all execution. Site should be fully functional now.");
 });
 
