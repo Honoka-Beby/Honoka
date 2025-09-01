@@ -1,24 +1,38 @@
 # netlify.toml
 
 [build]
-  publish = "."
-  command = "echo 'No client build command'"
-  functions = "netlify/functions"
+  # 部署时，Netlify 会自动寻找这个目录中的文件来发布到线上。
+  publish = "." 
+  # 对于一个纯前端项目，通常不需要复杂的构建命令，或者你可以放你的前端构建命令。
+  command = "echo 'No client build command needed for static site'"
 
+# 指定 Netlify Functions 的目录
+functions = "netlify/functions"
+
+# 为所有 Netlify 函数设置 CORS 头部 (Access-Control-Allow-Origin).
+# 这允许你的前端站点（例如 honoka1.netlify.app）访问这些后端函数。
 [[headers]]
-  for = "/.netlify/functions/*"
+  for = "/.netlify/functions/*" # 针对所有函数路径
   [headers.values]
-    Access-Control-Allow-Origin = "https://honoka1.netlify.app" # 确保这里是你正确的网站域名
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type"
+    Access-Control-Allow-Origin = "https://honoka1.netlify.app" # ★★★ IMPORTANT: 这里务必替换为你的 Netlify 站点真实域名！
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS" # 允许哪些 HTTP 方法
+    Access-Control-Allow-Headers = "Content-Type" # 允许哪些自定义请求头
+    Access-Control-Max-Age = "86400" # 预检请求(OPTIONS)的缓存时间，单位秒 (24小时)
 
-# ★★★ FIX: 添加了处理POST请求前CORS预检(OPTIONS)的规则，对后端稳定性至关重要 ★★★
+# ★★★ CRITICAL FIX: 添加了处理 OPTIONS 请求（CORS预检）的重定向规则 ★★★
+# 对于像 POST 这样的复杂请求，浏览器会先发送一个 OPTIONS 请求进行预检。
+# 这个规则确保 OPTIONS 请求能成功通过，避免 CORS 错误导致实际请求被阻塞。
 [[redirects]]
   from = "/.netlify/functions/*"
-  to = "/.netlify/functions/:splat"
-  status = 200
-  force = true # 强制执行
-  conditions = {Method = ["OPTIONS"]}
+  to = "/.netlify/functions/:splat" # 重定向到原始函数路径，但只处理 OPTIONS 请求
+  status = 200 # 始终返回 200 OK，表示预检通过
+  force = true # 强制执行这个重定向，即使它可能不是“实际”的内容请求
+  conditions = {Method = ["OPTIONS"]} # 只对 OPTIONS 请求生效
 
+# Netlify Build 插件会自动安装你的 Netlify Functions 文件夹中 package.json 里的依赖
 [[plugins]]
 package = "@netlify/plugin-functions-install-core"
+
+# 如果你需要指定 Functions 运行的 Node.js 版本，可以在此处添加
+# [functions]
+#   node_version = "18" # 或者 "20"，选择一个 Netlify 支持的稳定版本

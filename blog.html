@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-    <!-- LXGW WenKai Screen 字体的预加载链接已删除，因为 CDN 路径已失效且通过 @import style.css 导入更为稳定和避免重复加载 -->
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -16,20 +15,21 @@
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
 
-    <!-- 顶部导航栏结构 - 统一每个 HTML 文件 -->
     <header class="main-header">
         <div class="container">
-            <!-- 网站标题，点击返回主页 -->
-            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
-            <!-- 汉堡包菜单切换按钮 -->
-            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
+            <h1 class="blog-title blog-title--animated is-header-title">
+                <!-- ★★★ FIX: 修复了 invarndex.html 的拼写错误 ★★★ -->
+                <a href="index.html">Honoka的小屋</a>
+            </h1>
+            <!-- 桌面端和手机端都使用汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-label="Toggle navigation" aria-controls="main-nav-menu">
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
                 <span class="icon-bar"></span>
             </button>
-            <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
-            <nav id="main-nav-menu" class="main-nav">
-                <button class="menu-close" title="关闭">✕</button>
+            <nav id="main-nav-menu" class="main-nav" role="navigation" aria-expanded="false">
+                <!-- 手机端关闭菜单按钮 -->
+                <button class="menu-close" aria-label="Close navigation">×</button>
                 <ul>
                     <li><a href="index.html">主页</a></li>
                     <li><a href="blog.html" class="active">文章</a></li>
@@ -47,14 +47,14 @@
 
             <!-- 新增：文章分类（标签）筛选区域 -->
             <div id="blog-category-filters" class="category-filters animate__fade-in">
-                <!-- 标签按钮会由 JavaScript (script.js) 动态生成 -->
                 <button class="filter-tag-button active" data-filter="all">全部文章</button>
+                <!-- 标签按钮会由 JavaScript (script.js) 动态生成 -->
             </div>
 
             <div class="posts-grid" id="all-posts-grid">
                 <!-- 第一篇文章卡片 -->
                 <div class="post-card animate__slide-up" data-tags="影评,治愈,新海诚">
-                    <a href="posts/first-post.html" data-delay="0">
+                    <a href="posts/first-post.html">
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="「你的名字」影评" class="post-thumbnail">
                         <div class="post-info">
                             <h3>我与《你的名字》的初次邂逅：情感的交织与时间的奇迹</h3>
@@ -65,8 +65,8 @@
                     </a>
                 </div>
                 <!-- 第二篇文章卡片 -->
-                <div class="post-card animate__slide-up" data-tags="手办,分享,waifu,收藏">
-                    <a href="posts/second-post.html" data-delay="100">
+                <div class="post-card animate__slide-up" data-delay="100" data-tags="手办,分享,waifu,收藏">
+                    <a href="posts/second-post.html">
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="手办收藏" class="post-thumbnail">
                         <div class="post-info">
                             <h3>手办坑里的那些趣事和我最爱的waifu：我的次元收藏之旅</h3>
@@ -76,9 +76,9 @@
                         </div>
                     </a>
                 </div>
-                <!-- 新增第三篇文章卡片： 四月新番速览 (使用 article-template.html) -->
-                <div class="post-card animate__slide-up" data-tags="新番,推荐,动画">
-                    <a href="posts/article-template.html" data-delay="200"> 
+                <!-- 新增第三篇文章卡片： 四月新番速览 -->
+                <div class="post-card animate__slide-up" data-delay="200" data-tags="新番,推荐,动画">
+                    <a href="posts/article-template.html"> 
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="新番推荐" class="post-thumbnail">
                         <div class="post-info">
                             <h3>四月新番速览：不容错过的几部神作预定！</h3>
@@ -89,8 +89,8 @@
                     </a>
                 </div>
                 <!-- 新增第四篇文章卡片： 编程心情 -->
-                <div class="post-card animate__slide-up" data-tags="编程,杂谈,日常,前端">
-                    <a href="posts/third-post.html" data-delay="300"> 
+                <div class="post-card animate__slide-up" data-delay="300" data-tags="编程,杂谈,日常,前端">
+                    <a href="posts/third-post.html"> 
                         <img src="img/post-thumbnail-fallback.png" data-src-type="wallpaper" alt="代码与诗意" class="post-thumbnail">
                         <div class="post-info">
                             <h3>代码与我的诗和远方：一个关于前端开发的独白</h3>
