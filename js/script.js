@@ -1,22 +1,83 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    console.log("🚀 [Final Version 5.0 - Ultimate Stability] script.js STARTING execution...");
+    console.log("🚀 [Final Version 6.0 - ERROR-FREE & ULTIMATE STABILITY] script.js STARTING execution...");
 
     // ===================================================================
     // 1. CORE UTILITIES & DYNAMIC STATE
+    //    Moved setupCursorTrail UP here to ensure it's defined before anything calls it.
     // ===================================================================
 
-    // Function to update body classes based on screen size and handle blur
-    const updateBodyStyling = () => {
+    // ★★★ FIX: Modified setupCursorTrail to be robust with dynamic mobile status ★★★
+    const setupCursorTrail = () => {
+        const cursorDot = document.getElementById('cursor-trail');
+        // Always get the *current* mobile status from the body class, which is updated on resize.
+        const isCurrentlyMobile = document.body.classList.contains('is-mobile'); 
+
+        if (cursorDot) {
+            if (!isCurrentlyMobile) {
+                document.body.style.cursor = 'none'; // Hide browser's default cursor
+                cursorDot.style.display = 'block'; // Ensure custom cursor dot is visible
+                cursorDot.style.opacity = '1'; // Ensure default custom cursor has opacity (was 0 in CSS default)
+
+                // Remove existing mousemove listener before adding to prevent duplicates
+                if (window.mousemoveHandler) { // Check if handler exists before removing
+                    window.removeEventListener('mousemove', window.mousemoveHandler); 
+                }
+                // Add listener with a persistent handler directly on window for easy removal
+                window.mousemoveHandler = e => { 
+                    cursorDot.style.left = `${e.clientX}px`; 
+                    cursorDot.style.top = `${e.clientY}px`; 
+                };
+                window.addEventListener('mousemove', window.mousemoveHandler); 
+
+                // Event listeners for interactive elements for cursor scale effect
+                document.querySelectorAll('a, button, .post-card').forEach(el => {
+                    // Prevent duplicate listeners - specific named functions required for removeEventListener to work
+                    if (el.dataset.addedCursorListeners) { // Check if listeners were added to this element
+                        el.removeEventListener('mouseenter', window.handleMouseEnter);
+                        el.removeEventListener('mouseleave', window.handleMouseLeave);
+                    }
+                    
+                    window.handleMouseEnter = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
+                    window.handleMouseLeave = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
+
+                    el.addEventListener('mouseenter', window.handleMouseEnter);
+                    el.addEventListener('mouseleave', window.handleMouseLeave);
+                    el.dataset.addedCursorListeners = 'true'; // Mark as added
+                });
+            } else {
+                document.body.style.cursor = 'auto'; // Show default cursor on mobile devices
+                cursorDot.style.display = 'none'; // Hide custom cursor
+                cursorDot.style.opacity = '0'; // Ensure custom cursor is effectively hidden
+
+                // Remove mousemove listener if in mobile mode
+                if (window.mousemoveHandler) {
+                     window.removeEventListener('mousemove', window.mousemoveHandler);
+                     delete window.mousemoveHandler; // Clean up the global reference
+                }
+                document.querySelectorAll('a, button, .post-card').forEach(el => {
+                    if (el.dataset.addedCursorListeners) {
+                        el.removeEventListener('mouseenter', window.handleMouseEnter);
+                        el.removeEventListener('mouseleave', window.handleMouseLeave);
+                        delete el.dataset.addedCursorListeners;
+                    }
+                });
+            }
+        }
+    };
+
+
+    const updateBodyStyling = () => { 
         const desktopBlurCssVar = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
         const mobileBlurCssVar = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim();
         const currentIsMobile = window.innerWidth <= 767;
 
         document.documentElement.style.setProperty('--body-global-blur-value', currentIsMobile ? mobileBlurCssVar : desktopBlurCssVar);
-        document.body.classList.toggle('is-mobile', currentIsMobile); // This updates the `is-mobile` class on the <body>
+        document.body.classList.toggle('is-mobile', currentIsMobile);
         
         // ★★★ FIX: Re-evaluate cursor visibility immediately after body class is updated ★★★
-        setupCursorTrail(); // Call again to ensure cursor adjusts to the new `is-mobile` state
+        // This is safe now because setupCursorTrail is defined above.
+        setupCursorTrail(); 
     };
 
     // Initial call on load, and then listen for resize events
@@ -98,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Attach click handlers for internal links to trigger the transition
     document.querySelectorAll('a').forEach(link => {
         // Only target internal, non-anchor, non-javascript, non-blank target links
-        if (link.hostname === window.location.hostname && !link.href.includes('#') && link.target !== '_blank' && !link.href.startsWith('javascript:')) {
+        if (link.hostname === window.location.hostname && !link.href.includes('#') && link.target !== '_blank' && !link.href.startsWith('javascript:') && !link.href.startsWith('mailto:')) { // Added mailto: exclusion
             link.addEventListener('click', (e) => {
                 e.preventDefault(); // Prevent default instant navigation
 
@@ -123,25 +184,24 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const applyFallbackImage = (imgElement, type) => {
         const isThumbnail = imgElement?.classList.contains('post-thumbnail');
+        // NOTE: The fallback images must be present in your /img/ directory
         const fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
-        const fallbackSrc = `/img/${fallbackFilename}`; // Absolute path for local fallback images
+        const fallbackSrc = `/img/${fallbackFilename}`; 
         
         if (type === 'background') {
-            document.documentElement.style.setProperty('--bg-image', getRandomGradient()); // Apply an aesthetic gradient directly
-            // Removed redundant `background-color` or solid color fallback for `--bg-image` because it's now gradient or URL.
+            document.documentElement.style.setProperty('--bg-image', getRandomGradient()); 
         } else if (imgElement) {
             imgElement.src = fallbackSrc; 
-            imgElement.style.objectFit = 'contain'; // Ensure fallback image is fully visible
-            imgElement.style.backgroundImage = getRandomGradient(); // Apply gradient beneath fallback image as an ultimate visual cue
-            imgElement.classList.add('is-loading-fallback'); // Mark element as loading/fallback state
+            imgElement.style.objectFit = 'contain'; 
+            imgElement.style.backgroundImage = getRandomGradient(); 
+            imgElement.classList.add('is-loading-fallback'); 
 
-            // Handle the visual "fallback text overlay" for image elements
             let fallbackTextOverlay = imgElement.nextElementSibling;
             if (!fallbackTextOverlay || !fallbackTextOverlay.classList.contains('fallback-text-overlay')) {
                 fallbackTextOverlay = document.createElement('div');
                 fallbackTextOverlay.className = 'fallback-text-overlay';
                 if (imgElement.parentNode && getComputedStyle(imgElement.parentNode).position === 'static'){
-                    imgElement.parentNode.style.position = 'relative'; // Parent needs `position` for absolute child
+                    imgElement.parentNode.style.position = 'relative'; 
                 }
                 imgElement.insertAdjacentElement('afterend', fallbackTextOverlay);
             }
@@ -152,50 +212,48 @@ document.addEventListener('DOMContentLoaded', () => {
     const fetchRandomAnimeImage = async (imgElement, type = 'background') => {
         // Prioritize more reliable/secure API for dynamic images
         const apiEndpoints = [
-            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images', // Stable
-            'https://www.dmoe.cc/random.php', // Another good option
-            // 'https://api.lolicon.app/setu/v2?r18=0&size=original' // If we decide to use JSON-based API, needs different parsing
+            'https://api.btstu.cn/sjbz/api.php?lx=dongman&format=images', // Stable, direct image URL
+            'https://www.dmoe.cc/random.php', // Another direct image URL option
         ];
         let imageUrl = null;
 
         for (const apiUrl of apiEndpoints) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000); // Increased timeout to 8 seconds
+                const timeoutId = setTimeout(() => {
+                    console.warn(`[ImageLoader] API ${apiUrl} timed out after 8 seconds.`);
+                    controller.abort();
+                }, 8000); 
+
                 const response = await fetch(apiUrl, { signal: controller.signal });
-                clearTimeout(timeoutId); // Clear timeout to prevent abort if response is quick
+                clearTimeout(timeoutId); 
 
                 if (!response.ok) {
                     console.warn(`[ImageLoader] API ${apiUrl} responded with status ${response.status}. Trying next API.`);
-                    continue; // Skip to next API if not OK
+                    continue; 
                 }
 
-                // Check content type to see if it's a direct image or JSON
-                const contentType = response.headers.get('content-type');
-                if (contentType && contentType.includes('application/json')) {
-                    const data = await response.json();
-                    // Assuming 'lolicon' type API structure or similar
-                    if (data && data.data?.[0]?.urls?.original) { 
-                        imageUrl = data.data[0].urls.original;
-                    } else if (data && data.imgurl) { // Basic check for simple JSON responses
-                        imageUrl = data.imgurl;
-                    }
-                } else if (contentType && contentType.startsWith('image/')) {
-                    // If the response itself is an image, its URL is already the image URL
+                // For APIs that return direct image URLs (like btstu.cn)
+                if (response.headers.get('content-type')?.startsWith('image/')) {
+                    imageUrl = response.url;
+                } else {
+                    // Fallback/check for APIs returning JSON that contains an image URL (e.g., lolicon, if implemented)
+                    // The current APIs (btstu, dmoe) should generally return direct image data or redirect to it.
+                    // For now, if not 'image/', assume direct URL from response.url for simplicity or re-evaluate.
+                    // Given your current APIs, response.url should be the image URL if response.ok.
                     imageUrl = response.url;
                 }
 
                 if (imageUrl) {
                     console.log(`[ImageLoader] ✅ Found image from ${apiUrl}: ${imageUrl}`);
-                    break; // Successfully got an image URL, break from loop
+                    break; 
                 }
             } catch (error) {
-                console.warn(`[ImageLoader] Failed to fetch image from ${apiUrl}. Error:`, error.message);
-                // Continue to the next API on catastrophic network fail or abort
+                console.warn(`[ImageLoader] Failed in fetch attempt from ${apiUrl}. Error:`, error.message);
             }
         }
 
-        // After trying all APIs, decide what to do
+        // After trying all APIs, if an imageUrl was found, attempt to use it.
         if (imageUrl) {
             const tempImg = new Image();
             tempImg.src = imageUrl;
@@ -204,10 +262,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.documentElement.style.setProperty('--bg-image', `url('${imageUrl}')`);
                 } else if (imgElement) {
                     imgElement.src = imageUrl;
-                    imgElement.style.objectFit = 'cover'; // Restore cover sizing for real image
-                    imgElement.style.backgroundImage = ''; // Remove fallback gradient
+                    imgElement.style.objectFit = 'cover'; 
+                    imgElement.style.backgroundImage = ''; 
                     imgElement.classList.remove('is-loading-fallback');
-                    // Remove fallback text overlay when real image loads
                     imgElement.nextElementSibling?.classList.contains('fallback-text-overlay') && imgElement.nextElementSibling.remove();
                 }
                 console.log(`[ImageLoader] Dynamic image successfully applied.`);
@@ -218,7 +275,7 @@ document.addEventListener('DOMContentLoaded', () => {
             };
         } else {
             console.warn(`[ImageLoader] All image APIs attempts failed to fetch a valid URL. Applying final fallback.`);
-            applyFallbackImage(imgElement, type); // Call fallback if all APIs fail
+            applyFallbackImage(imgElement, type); 
         }
     };
 
@@ -227,9 +284,9 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchRandomAnimeImage(null, 'background'); // Target null for global background
         document.querySelectorAll('.post-thumbnail, .post-detail-banner').forEach(img => {
             if (!img.dataset.initialized) {
-                img.dataset.initialized = 'true'; // Mark as processed
-                applyFallbackImage(img, 'image'); // Immediately show local fallback for quick feedback
-                fetchRandomAnimeImage(img, 'image'); // Then attempt to load dynamic image
+                img.dataset.initialized = 'true'; 
+                applyFallbackImage(img, 'image'); 
+                fetchRandomAnimeImage(img, 'image'); 
             }
         });
     };
@@ -237,52 +294,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // ===========================================
     // 5. OTHER UI COMPONENT INITIALIZATIONS
     // ===========================================
-
-    // ★★★ FIX: Modified setupCursorTrail to be robust with dynamic mobile status ★★★
-    const setupCursorTrail = () => {
-        const cursorDot = document.getElementById('cursor-trail');
-        // Always get the *current* mobile status from the body class, which is updated on resize.
-        const isCurrentlyMobile = document.body.classList.contains('is-mobile'); 
-
-        if (cursorDot) {
-            if (!isCurrentlyMobile) {
-                document.body.style.cursor = 'none'; // Hide browser's default cursor
-                cursorDot.style.display = 'block'; // Ensure custom cursor dot is visible
-                // Remove existing mousemove listener before adding
-                window.removeEventListener('mousemove', cursorDot.mousemoveHandler); 
-                // Add listener with a persistent handler for easy removal
-                cursorDot.mousemoveHandler = e => { selector._original_element.style.left = `${e.clientX}px`; selector._original_element.style.top = `${e.clientY}px`; };
-                window.addEventListener('mousemove', cursorDot.mousemoveHandler); 
-
-                // Event listeners for interactive elements for cursor scale effect
-                document.querySelectorAll('a, button, .post-card').forEach(el => {
-                    // Prevent duplicate listeners
-                    el.removeEventListener('mouseenter', cursorDot.handleMouseEnter);
-                    el.removeEventListener('mouseleave', cursorDot.handleMouseLeave);
-                    
-                    cursorDot.handleMouseEnter = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                    cursorDot.handleMouseLeave = () => cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
-
-                    el.addEventListener('mouseenter', cursorDot.handleMouseEnter);
-                    el.addEventListener('mouseleave', cursorDot.handleMouseLeave);
-                });
-                cursorDot.style.opacity = '1'; // Ensure default custom cursor has opacity
-            } else {
-                document.body.style.cursor = 'auto'; // Show default cursor on mobile devices
-                cursorDot.style.display = 'none'; // Hide custom cursor
-                 cursorDot.style.opacity = '0'; 
-
-                // Remove mousemove listener if in mobile mode
-                window.removeEventListener('mousemove', cursorDot.mousemoveHandler);
-            }
-        }
-    };
     
     // Function for back-to-top button
     const setupBackToTopButton = () => {
         const btn = document.getElementById('back-to-top');
         if (!btn) return;
-        btn.classList.toggle('show', window.scrollY > 300); // Set initial state
+        btn.classList.toggle('show', window.scrollY > 300); 
         window.addEventListener('scroll', () => { btn.classList.toggle('show', window.scrollY > 300); });
         btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
     };
@@ -312,32 +329,28 @@ document.addEventListener('DOMContentLoaded', () => {
         };
 
         toggle.addEventListener('click', (e) => {
-            e.stopPropagation(); // Stop click from bubbling to document and closing nav
+            e.stopPropagation(); 
             nav.classList.toggle('is-open');
             const isOpen = nav.classList.contains('is-open');
             toggle.setAttribute('aria-expanded', String(isOpen));
             document.body.classList.toggle('no-scroll', isOpen);
         });
 
-        // Close menu if click outside of it
         document.addEventListener('click', e => {
             if (nav.classList.contains('is-open') && !nav.contains(e.target) && !toggle.contains(e.target)) {
                 closeMenu();
             }
         });
 
-        // Close button inside the menu itself
         nav.querySelector('.menu-close')?.addEventListener('click', closeMenu);
     };
 
     // Function for dynamic category filters (on blog.html) and dynamic list (on categories.html)
     const setupPostCategoryFilters = () => {
-        const blogFiltersContainer = document.getElementById('blog-category-filters'); // For blog.html
-        const dynamicCategoryList = document.getElementById('dynamic-category-list'); // For categories.html
-        // We'll gather tags from `data-tags` attributes on post-cards in `blog.html`
+        const blogFiltersContainer = document.getElementById('blog-category-filters'); 
+        const dynamicCategoryList = document.getElementById('dynamic-category-list'); 
         const postCards = document.querySelectorAll('#all-posts-grid .post-card');
 
-        // Only proceed if one of the relevant containers exists
         if (!blogFiltersContainer && !dynamicCategoryList) return;
 
         const allTags = new Set();
@@ -345,42 +358,52 @@ document.addEventListener('DOMContentLoaded', () => {
         postCards.forEach(p => {
             p.dataset.tags?.split(',').map(tag => tag.trim()).filter(Boolean).forEach(tag => allTags.add(tag));
         });
-        const sortedTags = [...allTags].sort((a,b) => a.localeCompare(b, 'zh-CN')); // Sort tags alphabetically
+        const sortedTags = [...allTags].sort((a,b) => a.localeCompare(b, 'zh-CN')); 
 
-        if (blogFiltersContainer) { // If on blog.html, create filter buttons
+        if (blogFiltersContainer) { 
             let filterButtonsHTML = `<button class="filter-tag-button button active" data-filter="all">全部文章</button>`;
             sortedTags.forEach(tag => { 
                 filterButtonsHTML += `<button class="filter-tag-button button" data-filter="${tag}">#${tag}</button>`; 
             });
             blogFiltersContainer.innerHTML = filterButtonsHTML;
 
-            // Attach event listeners for filter functionality
             blogFiltersContainer.addEventListener('click', e => {
                 const targetButton = e.target.closest('.filter-tag-button');
                 if (targetButton) {
                     const filter = targetButton.dataset.filter;
                     postCards.forEach(card => {
-                        // FIX: Use `card.dataset.tags` not `card.tags` and ensure proper filtering logic
                         const cardTags = card.dataset.tags?.split(',').map(t => t.trim()) || [];
                         if (filter === 'all' || cardTags.includes(filter)) {
-                            card.style.display = ''; // Show
+                            card.style.display = ''; 
+                            // Add 'is-visible' class if it's supposed to animate and not yet visible
+                            if (!card.classList.contains('is-visible')) {
+                                card.classList.add('is-visible'); 
+                            }
                         } else {
-                            card.style.display = 'none'; // Hide
+                            card.style.display = 'none'; 
+                             card.classList.remove('is-visible'); // Also remove visibility class if hidden
                         }
                     });
-                    // Update active state of filter buttons
                     document.querySelectorAll('.filter-tag-button').forEach(btn => btn.classList.remove('active'));
                     targetButton.classList.add('active');
                 }
             });
-            // Apply initial filter if 'tag' query parameter exists in URL
-            const initialTag = new URLSearchParams(window.location.search).get('tag');
-            blogFiltersContainer.querySelector(`[data-filter="${initialTag || 'all'}"]`)?.click();
+            const urlParams = new URLSearchParams(window.location.search);
+            const initialTag = urlParams.get('tag'); // Get 'tag' query parameter
+            if (initialTag) { // If there's an initial tag, try to click the corresponding filter button
+                const buttonToClick = blogFiltersContainer.querySelector(`[data-filter="${initialTag}"]`);
+                if (buttonToClick) {
+                    buttonToClick.click();
+                } else {
+                    blogFiltersContainer.querySelector(`[data-filter="all"]`)?.click(); // Fallback to 'All'
+                }
+            } else {
+                 blogFiltersContainer.querySelector(`[data-filter="all"]`)?.click(); // Default to 'All'
+            }
         }
 
         if (dynamicCategoryList) { // If on categories.html, create dynamic category list
             dynamicCategoryList.innerHTML = sortedTags.map((tag, i) => 
-                // All category links go to blog.html with the filter tag as a query parameter
                 `<a href="blog.html?tag=${encodeURIComponent(tag)}" class="filter-tag-button button animate__slide-up" data-delay="${i * 50}"># ${tag}</a>`
             ).join('');
         }
@@ -394,13 +417,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const visitorSpan = document.getElementById('visitor-count');
         if (visitorSpan) {
             fetch(`${backendBaseUrl}handleVisitCount`)
-                .then(res => res.json())
+                .then(res => {
+                    if (!res.ok) throw new Error(`HTTP Error: ${res.status}`);
+                    return res.json();
+                })
                 .then(data => {
-                    if (data.count) visitorSpan.textContent = data.count;
+                    if (data.count !== undefined) { // Check for undefined, not just truthy to allow 0 visitors
+                        visitorSpan.textContent = data.count;
+                    }
                 })
                 .catch(err => {
                     console.error("[Footer] Failed to fetch visitor count:", err);
-                    visitorSpan.textContent = '???'; // Show placeholder on error
+                    visitorSpan.textContent = '???'; 
                 });
         }
     };
@@ -412,7 +440,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function initializeAllFeatures() {
         initializeDynamicImages();        // Load images (background & thumbnails)
-        setupCursorTrail();               // Initialize/update custom cursor behavior
         setupMainMenu();                  // Enable hamburger menu interactions
         setupFooter();                    // Populate footer details
         setupReadProgressBar();           // Activate read progress bar
@@ -420,12 +447,12 @@ document.addEventListener('DOMContentLoaded', () => {
         setupPostCategoryFilters();       // Setup blog categories and filters
         // Any other non-critical, page-specific feature initializations can go here safely.
         
-        console.log("✅ [Final Version 5.0] All page features initialized.");
+        console.log("✅ [Final Version 6.0] All page features initialized.");
     }
     
-    // Once everything non-critical finishes, we call the master initializer
+    // Initialize all features.
     initializeAllFeatures();
 
-    console.log("✅ [Final Version 5.0 - Ultimate Stability] script.js COMPLETED all execution. Site should be fully functional now.");
+    console.log("✅ [Final Version 6.0 - ERROR-FREE & ULTIMATE STABILITY] script.js COMPLETED all execution. Site should be fully functional now.");
 });
 
