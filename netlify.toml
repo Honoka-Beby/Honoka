@@ -17,7 +17,7 @@ functions = "netlify/functions"
     Access-Control-Allow-Origin = "https://honoka1.netlify.app" # ★★★ IMPORTANT: 这里务必替换为你的 Netlify 站点真实域名！
     Access-Control-Allow-Methods = "GET, POST, OPTIONS" # 允许哪些 HTTP 方法
     Access-Control-Allow-Headers = "Content-Type" # 允许哪些自定义请求头
-    Access-Control-Max-Age = "86400" # 预检请求(OPTIONS)的缓存时间，单位秒 (24小时)
+    Access-Control-Max-Age = "86400" # 预检请求(OPTIONS)的缓存时间，单位秒 (24小时或者更长，例如3600)
 
 # ★★★ CRITICAL FIX: 添加了处理 OPTIONS 请求（CORS预检）的重定向规则 ★★★
 # 对于像 POST 这样的复杂请求，浏览器会先发送一个 OPTIONS 请求进行预检。

@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
+    <!-- 优化字体加载速度：通过style.css @import 安全加载，移除重复的 preload 标签 -->
 </head>
 <body class="theme-cosmic-dream is-homepage">
 
@@ -15,6 +16,31 @@
     <div id="global-page-transition-overlay"></div>
     <!-- 动态鼠标指针容器 -->
     <div id="cursor-trail"></div>
+
+    <!-- 顶部导航栏结构 - 统一每个 HTML 文件 -->
+    <header class="main-header">
+        <div class="container">
+            <!-- 网站标题，点击返回主页 -->
+            <a href="index.html" class="blog-title blog-title--animated is-header-title">Honoka的小屋</a>
+            <!-- 汉堡包菜单切换按钮 -->
+            <button class="menu-toggle" aria-controls="main-nav-menu" aria-expanded="false" title="菜单">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
+            <nav id="main-nav-menu" class="main-nav">
+                <button class="menu-close" title="关闭">✕</button>
+                <ul>
+                    <li><a href="index.html" class="active">主页</a></li>
+                    <li><a href="blog.html">文章</a></li>
+                    <li><a href="about.html">关于我</a></li>
+                    <li><a href="comments.html">留言板</a></li>
+                    <li><a href="categories.html">分类</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
 
     <main class="main-content">
         <!-- 全屏封面区域 -->
@@ -30,20 +56,11 @@
                     <a href="comments.html" class="nav-link">留言</a>
                 </nav>
             </div>
-            <!-- "探索更多"按钮已由你的指示删除 -->
         </section>
     </main>
 
     <!-- 返回顶部按钮 -->
     <button id="back-to-top" title="返回顶部">↑</button>
-
-    <!-- ★★★ FIX: 为主页添加了和其他页面一致的页脚（旧版缺失此部分） ★★★ -->
-    <footer class="main-footer">
-        <div class="container">
-            <p>&copy; <span id="current-year"></span> Honoka的小屋. All rights reserved.</p>
-            <p>QQ: 3203418940 | 访问量: <span id="visitor-count">0</span></p>
-        </div>
-    </footer>
 
     <!-- 网站主脚本 -->
     <script src="js/script.js"></script>

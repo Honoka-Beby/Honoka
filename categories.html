@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-    <!-- LXGW WenKai Screen 字体的预加载链接已删除，因为 CDN 路径已失效且通过 @import style.css 导入更为稳定和避免重复加载 -->
+    <!-- 优化字体加载速度：通过style.css @import 安全加载，移除重复的 preload 标签 -->
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -52,7 +52,7 @@
             </div>
             <p class="animate__slide-up button-container" data-delay="300">
                 <p>
-                  <a href="blog.html" class="button">← 返回所有文章</a>
+                    <a href="blog.html" class="button">← 返回所有文章</a>
                 </p>
             </p>
         </section>

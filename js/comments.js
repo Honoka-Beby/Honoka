@@ -3,9 +3,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("💬 [Comments Module] comments.js STARTING execution...");
 
     const commentForm = document.getElementById('comment-form');
+    // Ensure commentsList is retrieved again after potential DOM changes in displayComments
     let commentsList = document.getElementById('comments-list'); 
 
-    // ★★★ 请再次确认这里的URL与你部署的Netlify站点域名一致 ★★★
+    // ★★★ IMPORTANT: Replace with YOUR ACTUAL NETLIFY SITE'S DOMAIN !!! ★★★
     const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; 
 
     /**
@@ -15,20 +16,26 @@ document.addEventListener('DOMContentLoaded', () => {
      * @returns {Promise<string>} A user-friendly error message.
      */
     const handleFetchError = async (response, context) => {
-        const errorDetail = await response.text(); // Get raw error response
+        let errorDetail = '';
+        try {
+            errorDetail = await response.text(); // Attempt to get raw error text
+        } catch (e) {
+            console.warn(`[CommentsAPI] ${context} Could not read error response text:`, e);
+        }
+        
         console.error(`[CommentsAPI] ${context} Error (HTTP ${response.status}): ${response.statusText}`, errorDetail);
         
         if (response.headers.get('content-type')?.includes('application/json')) {
             try {
-                const errorJson = JSON.parse(errorDetail);
-                // Return specific backend message if available
+                const errorJson = JSON.parse(errorDetail); // Try parsing as JSON
+                // Prefer message from backend, then generic error, then fallback
                 return `服务器错误 (${response.status}): ${errorJson.message || errorJson.error || '后端返回未知JSON错误。'}`;
             } catch (jsonErr) {
-                // If it claims to be JSON but fails to parse
+                // If it claims to be JSON but fails to parse, return raw text as potentially malformed JSON
                 return `服务器错误 (${response.status}): 无法解析后端JSON，原始响应: "${errorDetail.substring(0, 100)}..."`;
             }
         } else {
-            // Fallback for non-JSON or generic errors
+            // Fallback for non-JSON or generic network errors
             return `请求失败 (${response.status}): ${errorDetail || '网络或服务器错误，无法连接到留言板服务。'}`;
         }
     };
@@ -41,26 +48,25 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("[CommentsAPI] Attempting to fetch comments from", backendBaseUrl + 'getComments');
         try {
             const response = await fetch(`${backendBaseUrl}getComments`, {
-                method: 'GET',
-                // Explicitly ask for JSON, though Netlify Functions typically default.
-                headers: { 'Accept': 'application/json' } 
+                method: "GET",
+                 headers: { "Accept": "application/json" } 
             });
 
-            if(!response.ok) { // Check for HTTP status outside of 200 series (e.g., 404, 500)
+            if(!response.ok) { 
                 const errorMessage = await handleFetchError(response, 'getComments');
                 throw new Error(errorMessage);
             }
 
-            const comments = await response.json(); // Safely parse the successful JSON response
+            const comments = await response.json(); 
             console.log(`[CommentsAPI] Successfully fetched ${comments.length} comments.`);
             return comments;
         } catch (error) {
-            console.error('[CommentsAPI] Failed to fetch comments. (Possibly Firebase backend config or Netlify Function deployment issue.):', error);
+            console.error('[CommentsAPI] Failed to fetch comments: Firebase backend config or Netlify Function deployment issue. Details:', error);
             // Display an error message directly on the page if list container exists
             if(commentsList) {
                 commentsList.innerHTML = `<p class="no-comments-message is-visible">呀，加载留言列表失败了... (${error.message})</p>`;
             }
-            return []; // Always return an empty array on error to prevent further script issues
+            return []; 
         }
     };
 
@@ -72,27 +78,28 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     const postNewComment = async (author, text) => {
         console.log("[CommentsAPI] Attempting to post new comment to", backendBaseUrl + 'createComment');
-        const submitButton = commentForm.querySelector('button[type="submit"]');
+        const submitButton = commentForm?.querySelector('button[type="submit"]');
 
         // ★★★ FIX: Temporarily disable button and provide feedback during submission ★★★
         if (submitButton) {
             submitButton.disabled = true;
-            submitButton.textContent = '提交中...'; // Inform user that action is pending
+            submitButton.textContent = '提交中...'; 
+            submitButton.style.cursor = 'wait'; // Change cursor to indicate waiting state
         }
 
         try {
             const response = await fetch(`${backendBaseUrl}createComment`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ author, text }), 
             });
 
-            if (!response.ok) { // Check for non-200 OK responses
+            if (!response.ok) { 
                 const errorMessage = await handleFetchError(response, 'createComment');
                 throw new Error(errorMessage);
             }
 
-            const result = await response.json(); // Parse successful JSON response
+            const result = await response.json(); 
             console.log('[CommentsAPI] Comment posted successfully:', result); 
             alert('留言提交成功，感谢您的来访！'); 
             return true; 
@@ -105,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (submitButton) {
                 submitButton.disabled = false;
                 submitButton.textContent = '提交留言'; 
+                submitButton.style.cursor = 'pointer'; // Restore cursor
             }
         }
     };
@@ -114,7 +122,6 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {Array<Object>} comments - An array of comment objects.
      */
     const displayComments = (comments) => {
-        // Ensure commentsList is the correct current element (important for dynamic updates)
         commentsList = document.getElementById('comments-list'); 
         if (!commentsList) {
             console.error("[CommentsDisplay] Comments list container element not found (ID 'comments-list'). Cannot display comments.");
@@ -125,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!comments || comments.length === 0) {
             const noCommentsMessage = document.createElement('p');
-            noCommentsMessage.classList.add('no-comments-message', 'is-visible'); // Directly add `is-visible` to show immediately
+            noCommentsMessage.classList.add('no-comments-message', 'is-visible'); // Immediately visible
             noCommentsMessage.textContent = "还没有留言呢，成为第一个留下足迹的人吧！";
             commentsList.appendChild(noCommentsMessage);
             console.log("[CommentsDisplay] No comments to display. Showing placeholder text.");
@@ -142,13 +149,12 @@ document.addEventListener('DOMContentLoaded', () => {
         sortedComments.forEach((comment, index) => {
             const commentCard = document.createElement('div');
             // Ensure the class names correctly activate initial CSS `opacity:0` and subsequent `transition`. Plus `is-visible`.
-            commentCard.classList.add('post-card', 'comments-card', 'animate__slide-up'); 
+            commentCard.classList.add('post-card', 'comment-card', 'animate__slide-up'); 
 
-            // Format timestamp for display
-             const date = new Date(comment.timestamp); // Assuming timestamp is always valid per backend fix
+            const date = new Date(comment.timestamp);
             const formattedDate = date.toLocaleString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-            // ★★★ FIX: HTML escape author and text to prevent XSS vulnerabilities ★★★
+            // ★★★ CRITICAL FIX: HTML escape author and text to prevent XSS vulnerabilities ★★★
             const escapedAuthor = comment.author ? comment.author.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '匿名访客';
             const escapedText = comment.text ? comment.text.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
 
@@ -158,17 +164,16 @@ document.addEventListener('DOMContentLoaded', () => {
                    <div class="comment-meta">留言于 <strong>${formattedDate}</strong> by <strong>${escapedAuthor}</strong></div>
                </div>
             `;
-            // Stagger animation with a small delay for each card
-            // We rely on the initial applyImmediateVisibilityFix in script.js to make sure the elements are found (in viewport or not)
-            setTimeout(() => { commentCard.classList.add('is-visible'); }, index * 80 + 100); 
             commentsList.appendChild(commentCard);
+            // Stagger animation with a small delay for each card
+            setTimeout(() => { commentCard.classList.add('is-visible'); }, index * 80 + 100); 
         });
         console.log(`[CommentsDisplay] Displayed ${sortedComments.length} comments.`);
 
-        // Ensure the main container holding the comments list also gets its animation triggered/is visible.
+        // Ensure the main parent container for comments also gets visible
         const parentContainer = commentsList.closest('.comments-list-container');
         if(parentContainer && !parentContainer.classList.contains('is-visible')) {
-            parentContainer.classList.add('is-visible'); // Force parent visible too
+            parentContainer.classList.add('is-visible'); 
             console.log("[CommentsDisplay] Main comments list container set to visible for animation.");
         }
     };
@@ -178,13 +183,13 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {Event} event - The form submission event.
      */
     const commentFormSubmitHandler = async (event) => {
-        event.preventDefault(); // Prevent default browser form submission
+        event.preventDefault(); 
 
         const authorInput = document.getElementById('comment-author');
         const commentTextInput = document.getElementById('comment-text');
 
-        const author = authorInput?.value.trim(); 
-        const text = commentTextInput?.value.trim();
+        const author = authorInput?.value.trim() || ''; 
+        const text = commentTextInput?.value.trim() || '';
 
         // Client-side validation: basic checks before sending to server
         if (!author) { alert('名字不能为空哦！'); authorInput?.focus(); return; }
@@ -198,14 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear form fields only on successful submission
             if(authorInput) authorInput.value = ''; 
             if(commentTextInput) commentTextInput.value = ''; 
-            // Reload and re-display all comments, including the new one
-            await loadAndDisplayComments(); 
+            await loadAndDisplayComments(); // Reload and re-display all comments
         } 
     };
 
     /**
-     * Initializes the comments board functionality.
-     * This function will be called by `script.js` directly or when `comments.html` is visited.
+     * Initializes the comments board functionality for comments.html.
      */
     const initCommentsPage = async () => {
         if(commentForm) {
@@ -215,15 +218,15 @@ document.addEventListener('DOMContentLoaded', () => {
              console.warn("[CommentsForm] Comment Form element (ID 'comment-form') not found. Skipping submission setup. (Expected on non-comments.html pages)");
         }
         
-        if (commentsList) { // Only load/display comments if the comments list container exists
-            await loadAndDisplayComments(); // Load comments initially on page
+        // Only load/display comments if the comments list container exists (i.e. on comments.html)
+        if (commentsList) { 
+            await loadAndDisplayComments(); 
         } else {
              console.warn("[Comments] Comments list element (ID 'comments-list') not found. Skipping comment display. (Expected on non-comments.html pages)");
         }
     };
     
     // Call the initializer. This will be triggered once on comments.html via DOMContentLoaded
-    // or by script.js when all global features initialize.
     initCommentsPage();
 
     console.log("✅ [Comments Module] comments.js FINISHED execution.");

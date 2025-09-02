@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-    <!-- LXGW WenKai Screen 字体的预加载链接已删除，因为 CDN 路径已失效且通过 @import style.css 导入更为稳定和避免重复加载 -->
+    <!-- 优化字体加载速度：通过style.css @import 安全加载，移除重复的 preload 标签 -->
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -64,7 +64,7 @@
             <div class="comments-list-container animate__fade-in" data-delay="300">
                 <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
                 <div id="comments-list" class="posts-grid comments-list">
-                     <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
+                    <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
                 </div>
             </div>
         </section>
