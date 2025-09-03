@@ -6,19 +6,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // 1. CORE UTILITIES & DYNAMIC STATE (including Cursor Trail definition)
     // ===================================================================
 
-    // Renamed for clarity, using function declaration for full hoisting safety
+    // Function declaration for full hoisting safety to avoid ReferenceErrors
     function setupCursorTrail() {
         const cursorDot = document.getElementById('cursor-trail');
-        // Re-evaluate isCurrentlyMobile within the function
         const isCurrentlyMobile = document.body.classList.contains('is-mobile'); 
 
         if (!cursorDot) {
             console.log("[CursorTrail] Cursor trail element (ID: 'cursor-trail') not found. Skipping setup.");
-            document.body.style.cursor = 'auto'; // Ensure default cursor is on
+            document.body.style.cursor = 'auto'; 
             return;
         }
 
-        // Clean up any old listeners before conditionally re-applying
+        // Clean up any old listeners before conditionally re-applying to prevent duplicates/memory leaks
         if (window._currentMousemoveHandler) {
             window.removeEventListener('mousemove', window._currentMousemoveHandler);
             delete window._currentMousemoveHandler;
@@ -28,15 +27,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.removeEventListener('mouseenter', el._currentHoverEnterHandler);
                 delete el._currentHoverEnterHandler;
             }
-            if (el._currentHoverLeaveHandler) { // Potential fix related
+            if (el._currentHoverLeaveHandler) {
                 el.removeEventListener('mouseleave', el._currentHoverLeaveHandler);
                 delete el._currentHoverLeaveHandler;
             }
         });
 
-        // Only enable custom cursor for non-mobile devices
         if (!isCurrentlyMobile) {
-            document.body.style.cursor = 'none'; // Hide browser's default cursor
+            document.body.style.cursor = 'none'; 
             cursorDot.style.display = 'block'; 
             cursorDot.style.opacity = '1'; 
 
@@ -45,35 +43,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 cursorDot.style.top = `${e.clientY}px`;
             };
             window.addEventListener('mousemove', mousemoveHandler);
-            window._currentMousemoveHandler = mousemoveHandler; // Storing reference to remove properly
+            window._currentMousemoveHandler = mousemoveHandler; // Storing reference
 
-            // Event listeners for interactive elements for cursor scale/color effect
             document.querySelectorAll('a, button, .post-card, .menu-toggle, .main-nav a, .filter-tag-button').forEach(el => {
                 const handleMouseEnter = () => { 
                     cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
-                    cursorDot.style.backgroundColor = 'var(--secondary-color)'; // Use theme property
+                    cursorDot.style.backgroundColor = 'var(--secondary-color)'; 
                 };
-                // ★★★ CRITICAL FIX: Corrected typo 'handleLeaveHandler' to 'handleMouseLeave' ★★★
+                // ★★★ CRITICAL FIX: Corrected typo from 'handleLeaveHandler' to 'handleMouseLeave' ★★★
                 const handleMouseLeave = () => { 
                     cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
-                    cursorDot.style.backgroundColor = 'var(--primary-color)';   // Use theme property
+                    cursorDot.style.backgroundColor = 'var(--primary-color)';   
                 };
                 
                 el.addEventListener('mouseenter', handleMouseEnter);
                 el.addEventListener('mouseleave', handleMouseLeave); // CORRECTED line
-                el._currentHoverEnterHandler = handleMouseEnter; // Store reference
-                el._currentHoverLeaveHandler = handleMouseLeave; // Store reference
+                el._currentHoverEnterHandler = handleMouseEnter; 
+                el._currentHoverLeaveHandler = handleMouseLeave; 
             });
             console.log("[CursorTrail] Initialized for desktop browsing.");
 
-        } else { // On mobile: hide custom cursor, restore default OS cursor
+        } else { // On mobile devices, disable custom cursor
             document.body.style.cursor = 'auto'; 
             cursorDot.style.display = 'none'; 
             cursorDot.style.opacity = '0'; 
-            console.log("[CursorTrail] Disabled because device detected as mobile.");
+            console.log("[CursorTrail] Disabled because device is mobile.");
         }
     } // End of setupCursorTrail function
 
+    // Function declaration for full hoisting safety
     function updateBodyStyling() { 
         const desktopBlurCssVar = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur').trim();
         const mobileBlurCssVar = getComputedStyle(document.documentElement).getPropertyValue('--body-backdrop-blur-mobile').trim();
@@ -82,46 +80,49 @@ document.addEventListener('DOMContentLoaded', () => {
         document.documentElement.style.setProperty('--body-global-blur-value', currentIsMobile ? mobileBlurCssVar : desktopBlurCssVar);
         document.body.classList.toggle('is-mobile', currentIsMobile);
         
-        // CRITICAL FIX: Ensure cursor setup runs AFTER is-mobile class is applied and after a microtask.
-        // This mitigates race conditions between class addition and media query evaluation.
+        // Ensure cursor setup runs AFTER is-mobile class is applied and after a microtask for accuracy
         setTimeout(setupCursorTrail, 0); 
     }
 
     // Initial call on load, and then listen for resize events
-    updateBodyStyling(); 
+    updateBodyStyling(); // Initial setup on DOMContentLoaded
     let resizeTimer;
     window.addEventListener('resize', () => {
         clearTimeout(resizeTimer);
-        resizeTimer = setTimeout(updateBodyStyling, 200); // Debounce resize event for performance
+        resizeTimer = setTimeout(updateBodyStyling, 200); // Debounce resize event
     }); 
 
     // ################### IMPORTANT: backendBaseUrl Configuration ###################
     const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; 
 
 
-    // --- Global Page Transition Overlay Management ---
-    const pageTransitionOverlay = document.getElementById('global-page-transition-overlay');
-    if (pageTransitionOverlay) {
-        if (!pageTransitionOverlay.querySelector('.loader')) {
-            pageTransitionOverlay.innerHTML = `
-                <div class="loader"></div>
-                <p class="overlay-text">加载中...</p>
-            `;
-        }
-        setTimeout(() => { 
-            if (pageTransitionOverlay) { 
-                pageTransitionOverlay.classList.remove('visible');
-                setTimeout(() => { 
-                    if (pageTransitionOverlay) pageTransitionOverlay.style.display = 'none';
-                    document.body.classList.remove('no-scroll'); 
-                }, 500); 
+    // --- Global Page Transition Overlay Management --- // Function declaration for full hoisting safety
+    function setupPageTransition() {
+        const pageTransitionOverlay = document.getElementById('global-page-transition-overlay');
+        if (pageTransitionOverlay) {
+            if (!pageTransitionOverlay.querySelector('.loader')) {
+                pageTransitionOverlay.innerHTML = `<div class="loader"></div><p class="overlay-text">加载中...</p>`;
             }
-        }, 100); 
-        console.log("[PageTransition] Overlay initialized for first load.");
+            setTimeout(() => { 
+                if (pageTransitionOverlay) { 
+                    pageTransitionOverlay.classList.remove('visible');
+                    // Longer delay here to ensure fade-out completes aesthetically
+                    setTimeout(() => { 
+                        if (pageTransitionOverlay) pageTransitionOverlay.style.display = 'none';
+                        document.body.classList.remove('no-scroll'); 
+                    }, 500); 
+                }
+            }, 100); 
+            console.log("[PageTransition] Overlay initialized for first load.");
+        }
     }
 
-    // Function declaration for full hoisting safety
+    /**
+     * Triggers a smooth page transition overlay and then navigates to the target URL.
+     * Function declaration for full hoisting safety
+     */
     function activatePageTransition(urlToNavigate) {
+        const pageTransitionOverlay = document.getElementById('global-page-transition-overlay'); // Re-get inside function
         if (!pageTransitionOverlay) { 
             window.location.href = urlToNavigate; 
             return; 
@@ -133,34 +134,40 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`[PageTransition] Activating transition to: ${urlToNavigate}`);
     }
 
-    // Intercepts all internal link clicks to apply a smooth page transition effect.
-    document.querySelectorAll('a').forEach(link => {
-        if (link.target === '_blank' || link.href.startsWith('mailto:') || link.href.startsWith('javascript:void(0)')) {
-            return; // Skip these links for transition
-        }
+    /**
+     * Intercepts all internal link clicks to apply a smooth page transition effect.
+     * Function declaration for full hoisting safety
+     */
+    function setupLinkInterceptor() {
+        document.querySelectorAll('a').forEach(link => {
+            if (link.target === '_blank' || link.href.startsWith('mailto:') || link.href.startsWith('javascript:void(0)')) {
+                return; // Skip these links for transition
+            }
 
-        let hrefURL;
-        try { 
-            hrefURL = new URL(link.href, window.location.href); 
-        } catch (e) {
-            console.warn(`[LinkInterceptor] Invalid URL encountered for link "${link.href}", skipping event listener.`, e);
-            return; 
-        }
+            let hrefURL;
+            try { 
+                hrefURL = new URL(link.href, window.location.href); 
+            } catch (e) {
+                console.warn(`[LinkInterceptor] Invalid URL encountered for link "${link.href}", skipping event listener.`, e);
+                return; 
+            }
 
-        const isInternalAnchor = hrefURL.hash && hrefURL.pathname === window.location.pathname && hrefURL.origin === window.location.origin;
+            const isInternalAnchor = hrefURL.hash && hrefURL.pathname === window.location.pathname && hrefURL.origin === window.location.origin;
 
-        if (hrefURL.origin === window.location.origin && !isInternalAnchor) {
-            link.addEventListener('click', (e) => {
-                e.preventDefault(); 
-                activatePageTransition(link.href);
-            });
-        }
-    });
+            if (hrefURL.origin === window.location.origin && !isInternalAnchor) {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault(); 
+                    activatePageTransition(link.href);
+                });
+            }
+        });
+        console.log("[LinkInterceptor] Internal link click interception initialized.");
+    }
+
 
     // --- Dynamic Image Loading & Fallback ---
     // Function declaration for full hoisting safety
     function getRandomGradient() {
-        // Generate aesthetically pleasing gradients
         const h1 = Math.floor(Math.random() * 360); 
         const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; 
         const s = Math.floor(Math.random() * 30) + 70; 
@@ -180,11 +187,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const extractImageUrl = async (response, apiDebugName) => {
             const contentType = response.headers.get('content-type');
             if (contentType && contentType.startsWith('image/')) {
-                return response.url; 
+                return response.givenUrl || response.url; // Use givenUrl if available, else response.url
             } else if (contentType && contentType.includes('json')) { 
-                const data = await response.json();
-                if (data && (data.imgurl || data.url) && typeof (data.imgurl || data.url) === 'string' && (data.imgurl || data.url).match(/\.(jpeg|jpg|gif|png|webp|bmp|avif|svg)$/i)) { 
-                    return data.imgurl || data.url;
+                try {
+                    const data = await response.json();
+                    if (data && (data.imgurl || data.url) && typeof (data.imgurl || data.url) === 'string' && (data.imgurl || data.url).match(/\.(jpeg|jpg|gif|png|webp|bmp|avif|svg)$/i)) { 
+                        return data.imgurl || data.url;
+                    }
+                } catch (e) {
+                    console.warn(`[ImageLoader-${apiDebugName}] JSON parsing failed. Content-Type: ${contentType}.`, e);
                 }
             }
             console.warn(`[ImageLoader-${apiDebugName}] 🔄 Could not extract image URL from response (Content-Type: ${contentType}). Trying next API.`);
@@ -222,7 +233,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const imgToLoad = new Image(); 
             imgToLoad.src = imageUrl;
             imgToLoad.onload = () => {
-                if (type === 'background') {
+                if (type === 'background' && document.documentElement) {
                     document.documentElement.style.setProperty('--bg-image', `url("${imageUrl}")`); 
                     console.log(`[ImageLoader] ✅ Dynamic background applied: ${imageUrl.substring(0, 50)}...`);
                 } else if (type === 'image' && targetElement) {
@@ -230,18 +241,18 @@ document.addEventListener('DOMContentLoaded', () => {
                     targetElement.style.opacity = '1'; 
                     targetElement.style.objectFit = 'cover'; 
                 }
-                if (targetElement) {
+                if (targetElement) { // targetElement exists
                     targetElement.classList.remove('is-loading-fallback'); 
                     targetElement.style.filter = ''; 
                     const fallbackText = targetElement.nextElementSibling;
                     if (fallbackText && fallbackText.classList.contains('fallback-text-overlay')) {
-                        fallbackText.classList.remove('is-visible'); // Hide the overlay
-                        // Short delay to fully animate out, then remove
+                        fallbackText.classList.remove('is-visible'); 
                         setTimeout(() => fallbackText.remove(), 300); 
                     }
                 }
                 console.log(`[ImageLoader] ✅ Real image from API loaded: ${imageUrl.substring(0, 50)}...`);
             };
+            // Use local fallback if preloading fails *after* receiving a valid URL
             imgToLoad.onerror = () => { 
                 console.warn(`[ImageLoader] 🚫 Preloading image "${imageUrl}" failed *after* receiving valid URL. Applying local fallback.`);
                 applyFallbackImage(targetElement, type); 
@@ -254,18 +265,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function declaration for full hoisting safety
     function applyFallbackImage(targetElement, type, srcOverride = null) {
+        const isAvatar = targetElement && targetElement.classList.contains('my-avatar');
         const isThumbnail = targetElement && targetElement.classList.contains('post-thumbnail');
-        const fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
+        
+        // Define fallback filename based on context
+        let fallbackFilename;
+        if (isAvatar) { // Special avatar fallback
+            fallbackFilename = 'avatar.png';
+        } else {
+            fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
+        }
         
         // ★★★ CRITICAL FIX: Always use root-relative path for local assets on the webserver ★★★
-        const localFallbackSrc = srcOverride || `/img/${fallbackFilename}`; // This ensures the path is consistently correct from the root.
+        const localFallbackSrc = srcOverride || `/img/${fallbackFilename}`; 
         
-        if (type === 'background') {
+        if (type === 'background' && document.documentElement) {
             document.documentElement.style.setProperty('--bg-image', getRandomGradient());
             console.log(`[ImageLoader] 🖼️ Applied gradient background fallback for body.`);
         } else if (type === 'image' && targetElement) {
             targetElement.src = localFallbackSrc; 
-            targetElement.style.objectFit = 'contain'; 
+            targetElement.style.objectFit = isAvatar ? 'cover' : 'contain'; // Avatar still covers, others contain
             targetElement.classList.add('is-loading-fallback'); 
             targetElement.style.opacity = '1'; 
             
@@ -279,29 +298,31 @@ document.addEventListener('DOMContentLoaded', () => {
             const parentPositionedRelative = targetElement.parentNode && getComputedStyle(targetElement.parentNode).position === 'static';
 
             if (!fallbackTextOverlay || !fallbackTextOverlay.classList.contains('fallback-text-overlay')) {
-                // If overlay doesn't exist, create it and ensure it becomes visible fast.
                 fallbackTextOverlay = document.createElement('div');
                 fallbackTextOverlay.classList.add('fallback-text-overlay'); 
                 if (parentPositionedRelative) {
                     targetElement.parentNode.style.position = 'relative'; 
                 }
                 targetElement.insertAdjacentElement('afterend', fallbackTextOverlay);
-                console.log(`[ImageLoader] Fallback overlay created for ${targetElement.alt || 'Unnamed Image Title'}.`);
+                console.log(`[ImageLoader] Fallback overlay created for ${targetElement.alt || '(Unnamed Image)'}.`);
             }
             // Always set text content and make it visible for feedback
-            fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-            fallbackTextOverlay.classList.add('is-visible'); // Force overlay to show
+            fallbackTextOverlay.textContent = isAvatar ? "头像加载失败 :(" : (isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(");
+            
+            // Immediately add 'is-visible' to the overlay for a quick fade-in
+            setTimeout(() => fallbackTextOverlay.classList.add('is-visible'), 50); 
+            
 
-            // Secondary check: if the local fallback image itself is broken, hide the `<img>` tag content (leave background gradient) and enforce showing overlay.
+            // Secondary check: if the local fallback image itself is broken, hide the `<img>` tag picture, only show overlay + gradient.
             const testLocalImage = new Image();
             testLocalImage.src = localFallbackSrc;
             testLocalImage.onload = () => {
-                targetElement.style.visibility = 'visible'; // Show img itself
+                targetElement.style.visibility = 'visible'; 
                 if (fallbackTextOverlay) fallbackTextOverlay.classList.add('is-visible');
             };
             testLocalImage.onerror = () => {
-                targetElement.style.visibility = 'hidden'; // Hide the broken img content
-                if (fallbackTextOverlay) fallbackTextOverlay.classList.add('is-visible');
+                targetElement.style.visibility = 'hidden'; // Hide the `<img>` content, leave background gradient
+                if (fallbackTextOverlay) setTimeout(() => fallbackTextOverlay.classList.add('is-visible'), 50); // Ensure visible
                 console.warn(`[ImageLoader] 🚫 Local fallback image (path: "${localFallbackSrc}") itself failed to load. Displaying only text overlay over gradient.`);
             };
 
@@ -311,20 +332,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function declaration for full hoisting safety
     function setupDynamicPostImages() {
-        // Updated to use document.documentElement for consistency with CSS vars where global background image is set
         fetchRandomAnimeImage(document.documentElement, 'background'); 
-        console.log("[Background] Dynamic body background initiated.");
 
-        document.querySelectorAll('.my-avatar, .post-thumbnail[data-src-type="wallpaper"]').forEach(img => { // Include my-avatar for dynamic loading
-            applyFallbackImage(img, 'image'); 
-            fetchRandomAnimeImage(img, 'image'); 
+        // ★★★ CRITICAL FIX: Include .my-avatar for dynamic loading if present ★★★
+        document.querySelectorAll('.my-avatar, .post-thumbnail[data-src-type="wallpaper"]').forEach(img => {
+            if (img.dataset.srcType === 'wallpaper' || img.classList.contains('my-avatar')) { // explicit check
+                applyFallbackImage(img, 'image'); 
+                fetchRandomAnimeImage(img, 'image'); 
+            }
         });
         console.log("[ImageLoader] Post thumbnails and avatar initiated.");
 
         const detailBanner = document.querySelector('.post-detail-banner[data-src-type="wallpaper"]');
         if (detailBanner) {
             applyFallbackImage(detailBanner, 'image'); 
-            fetchRandomAnimeImage(detailBanner, 'image'); 
+            fetchRandomAnimeImage(detailBanner, 'image'); // Try to fetch a new one
             console.log("[ImageLoader] Post detail banner initiated.");
         }
     }
@@ -333,9 +355,10 @@ document.addEventListener('DOMContentLoaded', () => {
     /**
      * Initializes and triggers entrance animations for elements across the page.
      * This function now unifies all content visibility, ensuring everything appears.
+     * Function declaration for full hoisting safety
      */
     function applyImmediateVisibilityFix() {
-        // STEP 1: Force critical structural elements to be display-visible using `force-visible` utility class.
+        // STEP 1: Force critical structural elements to be display-visible immediately (lowest level CSS override)
         // This is a direct style override to ensure layout containers are present.
         const structuralElements = document.querySelectorAll(
             '.main-header, .hero-section, .content-page-wrapper, .main-footer, #global-page-transition-overlay'
@@ -343,46 +366,55 @@ document.addEventListener('DOMContentLoaded', () => {
         structuralElements.forEach(el => {
             el.classList.add('force-visible'); 
         });
-        console.log("[VisibilityFix] Top-level structural UI elements immediately 'force-visible' to ensure base layout.");
+        console.log("[VisibilityFix] Top-level structural UI elements immediately 'force-visible' in CSS.");
 
 
         // STEP 2: The most comprehensive selector for all content elements that are designed to animate
         // or that start at `opacity: 0` and need `is-visible` to properly display.
         const elementsToAnimateOrReveal = document.querySelectorAll(
+            // Everything that explicitly has an `animate__` class.
             '[class*="animate__"], ' + 
+            // Generic content elements within the main section and content wrappers that might start hidden
             'main.main-content h1, main.main-content p, main.main-content ul, main.main-content ol, ' +
             'main.container.content-page-wrapper h1, main.container.content-page-wrapper h2, ' +
             'main.container.content-page-wrapper h3, main.container.content-page-wrapper h4, ' +
             'main.container.content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message), ' +
-            'main.container.content-page-wrapper ul:not(.menu-nav ul), ' + // Exclude menu ul (main-nav .ul is already managed by mainNav.is-open)
+            'main.container.content-page-wrapper ul:not(.main-nav ul), ' + // Exclude main navigation menus
             'main.container.content-page-wrapper ol, ' +
-            '.hero-subtitle, .hero-nav a, .hero-content, ' + 
-            '.blog-title.is-header-title > a, .menu-toggle, .main-nav ul li a, ' + 
-            '.my-avatar, .about-me-section p, .contact-info, .contact-info h3, .contact-info ul li, ' +
-            '#blog-category-filters .filter-tag-button, #all-posts-grid .post-card, ' + 
-            '.post-card .post-info h3, .post-card .post-excerpt, .post-card time, .post-card .post-tags, .post-card .tag, ' + 
-            '.blog-post-detail .post-detail-title, .blog-post-detail .post-meta, .blog-post-detail .post-detail-banner, ' + 
-            '.blog-post-detail .post-content, .blog-post-detail .post-content h3, ' + 
-            '.post-share-buttons, .post-share-buttons span, .share-button, .read-more .button, ' +
-            '.comment-section .page-title, .comment-form-container, .comment-form-container h3, ' + 
+            // Specific elements across different pages that need explicit visibility
+            '.hero-subtitle, .hero-nav a, .hero-content, ' + // Homepage specific
+            '.blog-title.is-header-title > a, .menu-toggle, .main-nav ul li a, ' + // Header & Navigation
+            '.my-avatar, .about-me-section p, .contact-info, .contact-info h3, .contact-info ul li, ' + // About page
+            '#blog-category-filters .filter-tag-button, #all-posts-grid .post-card, ' + // Blog filters & post cards
+            '.post-card .post-info h3, .post-card .post-excerpt, .post-card time, .post-card .post-tags, .post-card .tag, ' + // Inside post cards
+            '.blog-post-detail .post-detail-title, .blog-post-detail .post-meta, .blog-post-detail .post-detail-banner, ' + // Article details
+            '.blog-post-detail .post-content, .blog-post-detail .post-content h3, ' + // Article content
+            '.post-share-buttons, .post-share-buttons span, .share-button, .read-more .button, ' + // Engagement buttons
+            '.comment-section .page-title, .comment-form-container, .comment-form-container h3, ' + // Comments page specific
+            // Form elements need explicit show:
             '.form-group, .form-group label, .form-group input, .form-group textarea, .form-hint, ' + 
-            '.comments-list-container, .comments-list-container h3, ' + 
+            '.comments-list-container, .comments-list-container h3, ' + // Comments list elements
             '#comments-list .post-card, #comments-list .comment-info, #comments-list .comment-text, ' +
             '#comments-list .comment-meta, .no-comments-message, ' + 
+            // Categories page
             '.categories-section .page-title, .categories-section p, #dynamic-category-list .filter-tag-button, .categories-section .button-container .button, ' + 
+            // Global utility UI
             '#back-to-top, .main-footer p, #current-year, #visitor-count ' 
         );
 
         elementsToAnimateOrReveal.forEach(el => {
             const delay = parseInt(el.dataset.delay || '0', 10);
             setTimeout(() => {
+                // Ensure 'is-visible' is added only if not already present or forced
                 if (!el.classList.contains('is-visible') && !el.classList.contains('force-visible')) {
                     el.classList.add('is-visible');
                 }
-            }, delay + 50); 
+            }, delay + 50); // Small base delay for smoother initial render
         });
-        console.log(`[VisibilityFix] Forcibly applied 'is-visible' to ${elementsToAnimateOrReveal.length} content elements.`);
+        console.log(`[VisibilityFix] Applied 'is-visible' to ${elementsToAnimateOrReveal.length} content elements for guaranteed display.`);
 
+        // STEP 3: Fallback IntersectionObserver for dynamically added elements or missed items.
+        // It's a safety net, less critical with comprehensive STEP 2.
         const observer = new IntersectionObserver((entries, observerInstance) => {
             entries.forEach(entry => {
                 const isElementAlreadyVisible = entry.target.classList.contains('is-visible') || entry.target.classList.contains('force-visible');
@@ -390,16 +422,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (entry.isIntersecting && !isElementAlreadyVisible) {
                     const delay = parseInt(entry.target.dataset.delay || '0', 10);
                     setTimeout(() => {
-                        if (!entry.target.classList.contains('is-visible')) {
+                        if (!entry.target.classList.contains('is-visible')) { 
                             entry.target.classList.add('is-visible');
                         }
+                        // Unobserve once visible, unless it's the rotating blog title (continuous animation)
                         if (!entry.target.classList.contains('blog-title--animated')) { 
                             observerInstance.unobserve(entry.target); 
                         }
                     }, delay + 50); 
                 }
             });
-        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+        }, { 
+            threshold: 0.1, 
+            rootMargin: "0px 0px -50px 0px" 
+        });
 
         document.querySelectorAll(
             '[class*="animate__"], ' + 
@@ -410,7 +446,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     observer.observe(el);
                 }
             });
-        console.log("[VisibilityFix] IntersectionObserver re-initialized for dynamic/late-loading elements.");
+        console.log("[VisibilityFix] IntersectionObserver re-initialized as additional fallback.");
     } // End of applyImmediateVisibilityFix
 
 
@@ -462,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const menuClose = document.querySelector('.main-nav .menu-close');
         
         if (!menuToggle || !mainNav || !menuClose) {
-            console.warn('[MainMenu] Menu elements not found. Menu features disabled. Ensure .menu-toggle, #main-nav-menu, .main-nav .menu-close are in HTML.');
+            console.warn('[MainMenu] Menu elements not found. Features disabled. Check HTML.');
             document.body.classList.remove('no-scroll'); 
             return;
         }
@@ -493,17 +529,15 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         mainNav.querySelectorAll('a').forEach(link => { 
-            // Remove any old event listeners first
-            if (link._menuTransitionHandler) {
+            if (link._menuTransitionHandler) { // Remove old listeners
                 link.removeEventListener('click', link._menuTransitionHandler);
             }
 
             let hrefURL;
             try { 
-                // Using 'javascript:void(0)' as base for invalid/missing href will prevent URL constructor errors
                 hrefURL = new URL(link.href || 'javascript:void(0)', window.location.href); 
             } catch (e) {
-                const simpleCloser = () => { closeMenu(); }; // Fallback to just close menu
+                const simpleCloser = () => { closeMenu(); }; 
                 link.addEventListener('click', simpleCloser); 
                 link._menuTransitionHandler = simpleCloser;
                 return; 
@@ -716,6 +750,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- MAIN GLOBAL INITIALIZATION SEQUENCE ---
     function initializeAllFeatures() {
+        // Critical initializations should happen as soon as possible after DOM parsing
+        setupPageTransition(); // Before any links are clicked
+        setupLinkInterceptor(); // Before page renders properly and users can click
+        updateBodyStyling(); // Sets up mobile class and calls setupCursorTrail
+
+        // Key UI/Content Features can follow. Call `applyImmediateVisibilityFix` early with a small delay.
         setTimeout(() => {
             applyImmediateVisibilityFix(); 
         }, 50); 
@@ -726,7 +766,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupBackToTopButton();         
         setupReadProgressBar();         
         setupFooterAndVisitorCount();   
-        setupPostCategoryFilters();     
+        setupPostCategoryFilters();     // Filters and categories depend on DOM-loaded post cards
 
         console.log("✅ [FINAL Version: MEGA-FIX & ULTIMATE STABILITY] All page features initialization sequence triggered.");
     }

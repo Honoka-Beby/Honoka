@@ -653,7 +653,7 @@ main.container.content-page-wrapper.is-visible {
 
 
 /* --- Posts Grid (Blog Page & Comments List) --- */
-.posts-grid { 
+.posts-grid  { 
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 30px; 
@@ -963,7 +963,7 @@ textarea { resize: vertical; min-height: 120px; }
     font-size: 1.8rem;
 }
 
-#comments-list {
+#comments-list  {
     margin-top: 1em; 
     text-align: left; 
     display: grid; 
@@ -1154,18 +1154,16 @@ main .blog-post-detail.is-visible {
     text-align: left; 
     width: 100%; 
 }
-.post-content p, .post-content ul, .post-content ol { 
+/* IMPORTANT: CSS bug fix: '.post-content ot li' was missing */
+.post-content p, .post-content ul, .post-content ol, .post-content ul li, .post-content ol li { 
     font-size: 1.05em;
-    margin-bottom: 1.5em;
+    margin-bottom: 1.5em; /* Ensure sufficient spacing below paragraphs/list items */
     line-height: 1.8;
     text-align: justify; 
     padding: 0 0.5rem; 
-
-    /* Removed specific opacity/transform for p/ul/ol here, defer to parent .post-content's .is-visible for now */
-    /* If more granular control needed, re-add child fade-ins with suitable delays */
 }
 .post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} 
-.post-content ul li, .post-content ot li {margin-bottom: 0.5em;}
+.post-content ul li, .post-content ol li {margin-bottom: 0.5em;}
 
 
 /* --- Post Share Buttons --- */
@@ -1399,7 +1397,8 @@ main .blog-post-detail.is-visible {
     .content-page-wrapper .form-group input, 
     .content-page-wrapper .form-group textarea,
     .post-content h3, 
-    .post-content p, .post-content ul, .post-content ol { 
+    /* IMPORTANT: Fixed CSS typo "ot li" to "ol li" */
+    .post-content p, .post-content ul, .post-content ol, .post-content ul li, .post-content ol li { 
         padding: 0 0.5em; 
         font-size: 0.90em; /* Reduced font size */
         text-align: justify; 
