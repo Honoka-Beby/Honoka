@@ -1,42 +1,1435 @@
-/* --- Global Initial State for Animated Elements --- */
-/* Elements with `animate__` class will start invisible and transform, controlled by JS `is-visible` */
-[class*="animate__"] {
-    opacity: 0;
-    transform: translateY(20px); /* Default slide up from a bit below */
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out;
-    will-change: opacity, transform; /* Optimize for animation performance */
+/* --- Reset & Base Styles --- */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
+/* 'LXGW WenKai Screen' is from lxgw-wenkai-screen-webfont@1.1.0/style.css */
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
+
+* { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+}
+html { scroll-behavior: smooth; } /* 平滑滚动 */
+
+body {
+    background-color: var(--bg-fallback-color); /* Fallback solid color */
+    background-image: var(--bg-image); /* Dynamic background image, set by JS */
+    background-size: cover;          /* 覆盖整个背景区域 */
+    background-position: center center; /* 图片居中 */
+    background-repeat: no-repeat;    /* 不重复 */
+    background-attachment: fixed;    /* 背景固定，实现视差滚动效果 */
+    color: var(--text-color);
+    font-family: var(--font-primary);
+    line-height:1.7;
+    -webkit-font-smoothing: antialiased; /* 抗锯齿，平滑文字 */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    cursor: none; /* 隐藏默认鼠标指针，交由JS控制自定义指针 */
+    touch-action: pan-y; /* 优化移动端滚动性能 */
+    /* 当移动菜单打开时，body不允许滚动 */
+     &.no-scroll { overflow: hidden; }
 }
 
-/* This class will be added by JS to trigger animation for elements in viewport */
-[class*="animate__"].is-visible {
+/* 全局固定模糊叠加层：位于body背景之上，所有内容之下，提供统一的背景模糊和颜色基调 */
+body::before {
+    content: '';
+    position: fixed; /* 固定在视口 */
+    top: 0; left: 0; right: 0; bottom: 0;
+    /* 使用 JS 动态设置的 `--body-global-blur-value` 变量来控制模糊强度 */
+    background: var(--body-overlay-bg); /* 半透明深色叠加层，允许背景图透出 */
+    backdrop-filter: blur(var(--body-global-blur-value)); 
+    -webkit-backdrop-filter: blur(var(--body-global-blur-value)); /* Webkit 兼容 */
+    z-index: -1; /* 位于正常内容之下，body背景图之上 */
+    transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); /* 强制开启 GPU 加速，避免 backdrop-filter 问题 */
+}
+
+a { color: var(--link-color); text-decoration: none; transition: all 0.3s ease; }
+a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-color); }
+.container { max-width: 1000px; margin: 0 auto; padding: 1.5rem; }
+
+/* Global buttons */
+.button {
+    display: inline-block;
+    background-color: var(--primary-color);
+    color: #fff;
+    padding: 0.8em 1.8em;
+    border-radius: var(--border-radius-lg);
+    transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+    border: none;
+    cursor: pointer;
+    font-size: 1em;
+    font-family: var(--font-primary);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    -webkit-tap-highlight-color: transparent; 
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+}
+.button:hover {
+    background-color: var(--primary-hover-color);
+    transform: translateY(-3px) scale(1.02);
+    box-shadow: 0 5px 15px rgba(var(--primary-color-rgb), 0.4);
+}
+
+
+/* --- Custom Cursor Trail --- */
+#cursor-trail {
+    position: fixed;
+    width: 0; height: 0; 
+    background: var(--primary-color);
+    border-radius: 50%;
+    pointer-events: none; 
+    z-index: 9999;
+    transform: translate(-50%, -50%); 
+    transition: width 0.2s, height 0.2s, background-color 0.3s, transform 0.2s;
+    opacity: 0;
+    will-change: top, left, width, height, opacity, transform;
+}
+/* 鼠标进入body时，在非移动端显示自定义指针 */
+body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px;} 
+
+.cursor-trail-dot {
+    position: fixed;
+    width: 6px; height: 6px;
+    background: var(--primary-color);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%, -50%);
+    opacity: 0.7; 
+    animation: fadeOutTrail 0.5s forwards; 
+    will-change: top, left, opacity, transform;
+}
+@keyframes fadeOutTrail {
+    from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+}
+
+
+/* --- Global Page Transition Overlay --- */
+#global-page-transition-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100vw; height: 100vh;
+    background-color: var(--bg-fallback-color); 
+    z-index: 9999; 
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    color: var(--primary-color);
+    font-size: 1.5rem;
+    font-family: var(--font-primary);
+    text-shadow: 0 0 8px rgba(0,0,0,0.5); /* 防止纯白在某些背景下丢失，保持跟CSS里一样 */
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+}
+#global-page-transition-overlay.visible {
+    opacity: 1; 
+    visibility: visible;
+    transition: opacity 0.4s ease-in, visibility 0s linear; 
+}
+#global-page-transition-overlay .loader {
+    position: relative; 
+    border: 4px solid rgba(var(--primary-color-rgb), 0.2);
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    animation: spin 1s linear infinite; 
+}
+#global-page-transition-overlay .loader::before { 
+    content: '';
+    position: absolute;
+    top: -2px; left: -2px; right: -2px; bottom: -2px;
+    border-radius: 50%;
+    box-shadow: 0 0 10px 2px var(--primary-color), inset 0 0 10px 2px var(--primary-color);
+    animation: pulse-glow 1.5s infinite alternate; 
+}
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.overlay-text {
+    margin-top: 0.8em;
+    font-family: var(--font-display);
+    font-size: 2em;
+    animation: pulse 1.5s infinite alternate; 
+}
+@keyframes pulse {
+    0% { color: var(--primary-color); text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); }
+    100% { color: var(--secondary-color); text-shadow: 0 0 10px rgba(var(--secondary-color-rgb), 0.5); }
+}
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 5px 1px var(--primary-color), inset 0 0 5px 1px var(--primary-color); }
+    100% { box-shadow: 0 0 15px 3px var(--secondary-color), inset 0 0 15px 3px var(--secondary-color); }
+}
+
+
+/* --- Homepage (hero-section) --- */
+.hero-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+    overflow: hidden;
+}
+/* 主页Hero区域的背景叠加层，比全局overlay更深，确保文字可读性 */
+.hero-section::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: var(--hero-overlay-bg); 
+    backdrop-filter: blur(5px); 
+    -webkit-backdrop-filter: blur(5px);
+    z-index: 1; 
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2; 
+    /* The children elements will have their own animations; this ensures the container is visible first */
+    opacity: 0;
+    transform: translateY(20px);
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out; /* Smooth entrance for the main group of content */
+}
+.hero-content.is-visible { /* Add is-visible to this by JS before its children animate */
     opacity: 1;
     transform: translateY(0);
 }
 
-/* Specific Animation Overrides */
 
-/* Fade In (no initial transform) */
-.animate__fade-in {
-    transform: none; /* Only change opacity */
+/* 核心：主页标题 “Honoka的小屋” 的文字渐变发光走马灯动画 */
+.blog-title--animated.is-homepage-title > a { 
+    color: var(--text-color); 
+    font-family: var(--font-display);
+    font-size: clamp(2.5rem, 10vw, 5rem); 
+    font-weight: 700;
+    text-shadow: none; 
+    position: relative;
+    display: inline-block; 
+    vertical-align: top;
+    line-height: 1.2;
+    padding: 0 10px; 
+    overflow: hidden; 
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+
+    background-image: linear-gradient(90deg, 
+        #ffffff 0%, 
+        rgba(255, 255, 255, 0.9) 10%, 
+        rgba(var(--primary-color-rgb), 0.7) 30%, 
+        rgba(var(--primary-color-rgb), 1) 50%, 
+        rgba(var(--primary-color-rgb), 0.7) 70%, 
+        rgba(255, 255, 255, 0.9) 90%, 
+        #ffffff 100% 
+    );
+     background-size: 300% 100%; 
+     background-position: -150% 0; 
+     background-repeat: no-repeat;
+    
+    -webkit-background-clip: text; 
+    background-clip: text; 
+    -webkit-text-fill-color: transparent; 
+    
+    animation: homepage-title-flow-gradient 4s linear infinite; 
+    filter: drop-shadow(0 0 5px rgba(var(--primary-color-rgb), 0.8)) 
+             drop-shadow(0 0 15px rgba(var(--primary-color-rgb), 0.5)); 
+    will-change: background-position, filter; 
 }
 
-/* Pop In (scale effect) */
-.animate__pop-in {
-    transform: scale(0.8);
+
+/* 核心动画：让背景渐变从左到右滑动 */
+@keyframes homepage-title-flow-gradient {
+    0% { background-position: -200% 0; } 
+    100% { background-position: 200% 0; } 
 }
-.animate__pop-in.is-visible {
+
+
+/* 导航栏 "Honoka的小屋" 标题的粉色慢速呼吸式辉光动画 (仅发光，不滑动) */
+.main-header .blog-title--animated.is-header-title > a { 
+    font-size: 1.8rem; 
+    color: var(--heading-color); 
+    position: relative; 
+    display: inline-block; 
+    vertical-align: middle;
+    line-height: 1.2;
+    padding: 0 5px; 
+    animation: header-text-pulse-glow 2s ease-in-out infinite alternate; 
+    will-change: text-shadow, filter; 
+
+    -webkit-background-clip: border-box; 
+    background-clip: border-box;
+    -webkit-text-fill-color: initial; 
+    background-image: none;
+    background-color: transparent; 
+    filter: none; 
+    text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); 
+}
+
+@keyframes header-text-pulse-glow {
+    0% { text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.4), 0 0 10px rgba(var(--secondary-color-rgb), 0.2); }
+    100% { text-shadow: 0 0 10px var(--primary-color), 0 0 20px rgba(var(--secondary-color-rgb), 0.5); }
+}
+
+
+.hero-subtitle {
+    font-size: clamp(1rem, 3vw, 1.2rem);
+    margin: 1rem 0 2rem;
+    color: var(--text-color);
+    text-shadow: 0 0 10px rgba(0,0,0,0.5);
+    opacity: 0; 
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Controlled by JS .is-visible */
+}
+.hero-subtitle.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.hero-nav {
+    display: flex; 
+    justify-content: center; 
+    flex-wrap: wrap; 
+    gap: 1rem;
+    opacity: 0; 
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Controlled by JS .is-visible */
+}
+.hero-nav.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.hero-nav .nav-link {
+    margin: 0; 
+    font-size: 1.1rem;
+    font-weight: 500;
+    padding: 0.5rem 1.2rem;
+    border: 1px solid rgba(var(--primary-color-rgb), 0.4);
+    border-radius: var(--border-radius);
+    background-color: rgba(var(--bg-secondary-color-rgb), 0.4);
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+     -webkit-backdrop-filter: blur(5px);
+}
+.hero-nav .nav-link:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(var(--primary-color-rgb), 0.2);
+    box-shadow: 0 0 15px rgba(var(--primary-color-rgb), 0.5);
+    transform: translateY(-2px);
+}
+
+
+/* --- General Header and Navigation with Mini-Panel Menu --- */
+.main-header { 
+    padding: 0.3rem 0.5rem; 
+    min-height: var(--header-min-height, 50px); 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    background: var(--header-bg-color); 
+    border-bottom: 
+    1px solid var(--border-color); 
+    position: sticky; 
+    top: 0; 
+    z-index: 100;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.3); 
+    width: 100%; 
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+    opacity: 0; /* Hidden by default, explicit fadeIn by JS */
+    transition: opacity 0.5s ease-out;
+}
+.main-header.is-visible {
+    opacity: 1;
+}
+
+.main-header .container { 
+    width: 100%; 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    flex-wrap: nowrap; 
+}
+
+/* 汉堡包菜单和关闭按钮 */
+.menu-toggle {
+    display: block; 
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px; 
+    position: relative;
+    z-index: 210; 
+    -webkit-tap-highlight-color: transparent;
+}
+.menu-toggle .icon-bar {
+    display: block;
+    width: 30px; 
+    height: 3px;
+    background-color: var(--primary-color);
+    margin: 5px 0; 
+    transition: all 0.3s ease;
+    border-radius: 2px;
+}
+/* 当菜单打开或关闭时，汉堡包图标的动画效果 */
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-7px, 7px); }
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(2) { opacity: 0; }
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-7px, -7px); }
+
+
+/* 全新：圆润的导航菜单小框样式 */
+.main-nav {
+    display: flex; 
+    position: fixed; 
+/*
+    之前我这里纠结了一下响应式高度问题。
+    经仔细检查，你的 `top: calc(var(--header-min-height, 50px) + 15px);` 和后面 media query 里 `top: calc(var(--header-min-height-mobile, 45px) + 10px);` 的写法是完全正确的，并且通过覆盖 `--header-min-height-mobile` 变量可以在移动端正确应用，不需要额外的 `max()` 函数。
+    因此，这个 `top` 属性不需要修改。
+*/
+    top: calc(var(--header-min-height, 50px) + 15px); 
+    
+    right: 20px; 
+    width: 250px; 
+    max-height: calc(100vh - 85px); /* 保持原样，与你之前的截图一致 */
+    box-sizing: border-box; 
+
+    background-color: var(--card-bg-color); 
+    -webkit-backdrop-filter: blur(var(--content-backdrop-blur)); 
+    backdrop-filter: blur(var(--content-backdrop-blur));
+    border-radius: var(--border-radius-lg); 
+    border: 1px solid var(--border-color); 
+    box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); 
+    
+    transform: translateX(110%); 
+    opacity: 0; 
+    visibility: hidden;
+    pointer-events: none; 
+    
+    transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out; 
+    
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+
+    padding: 1.5rem; 
+    flex-direction: column;
+    justify-content: flex-start; 
+    align-items: center;
+    text-align: center; 
+    overflow-y: auto; 
+}
+.main-nav.is-open { 
+    transform: translateX(0); 
+     opacity: 1; 
+    visibility: visible;
+    pointer-events: auto; 
+}
+.main-nav ul { 
+    list-style: none; display: flex; flex-direction: column; 
+    gap: 1.2rem; 
+    margin: 0; align-items: center; 
+    padding: 0.5rem 0 0; 
+    width: 100%;
+}
+.main-nav ul li { width: 100%;} 
+.main-nav a { 
+    font-weight: 500; 
+    padding: 0.8em 1.5em; 
+    border-radius: var(--border-radius-lg); 
+    font-size: 1.2em; 
+    width: 100%; 
+    max-width: 200px; 
+    color: var(--primary-color); 
+    background-color: transparent; 
+    white-space: nowrap; 
+    overflow: hidden; 
+    text-overflow: ellipsis; 
+
+    border: 1px solid rgba(var(--primary-color-rgb), 0.3); 
+    text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.3); 
+    transition: all 0.3s ease; 
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+}
+.main-nav a:hover, .main-nav a.active { 
+    color: var(--heading-color); 
+    background-color: var(--primary-color); 
+    transform: translateY(-2px); 
+    box-shadow: 0 4px 15px rgba(var(--primary-color-rgb), 0.6), 
+                inset 0 0 10px rgba(var(--heading-color-rgb), 0.7); 
+    border-color: var(--primary-color); 
+     text-shadow: 0 0 10px rgba(var(--heading-color-rgb), 0.8), 0 0 20px rgba(var(--primary-color-rgb), 0.5); 
+} 
+ .main-nav .menu-close {
+    display: block; 
+    position: absolute;
+    top: 10px; 
+    right: 1rem; 
+    font-size: 1.8em; 
+    font-weight: normal; 
+    color: var(--meta-text-color); 
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+    -webkit-tap-highlight-color: transparent;
+    z-index: 202; 
+    transition: color 0.2s ease, transform 0.2s ease;
+     border-radius: 50%; 
+     line-height:1; 
+     width: 1.5em; 
+     height: 1.5em; 
+}
+.main-nav .menu-close:hover {
+    color: var(--primary-color); 
+    transform: scale(1.2) rotate(90deg); 
+}
+
+
+/* --- Page & Section Titles for inner pages --- */
+.section-title, .page-title {
+    font-family: var(--font-display); 
+    font-weight: 700;
+    color: #fff;
+    text-align: center; 
+    margin-bottom: 2rem;
+    font-size: 2.5rem;
+    position: relative;
+    display: block; 
+    width: 100%; 
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+    opacity: 0; /* Default hidden */
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.section-title.is-visible, .page-title.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.section-title::after, .page-title::after {
+    content: '';
+    position: absolute; 
+    bottom: -0.5rem; 
+    left: 50%;
+    transform: translateX(-50%);
+    width: 50%; 
+    max-width: 300px;
+    height: 3px;
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    border-radius: 2px;
+}
+/* 模块内的子标题 */
+.comment-form-container h3, .comments-list-container h3, .contact-info h3 { 
+    text-align: center;
+    width: 100%;
+}
+
+/* 新增：文章分类筛选区域 */
+.category-filters {
+    margin-bottom: 2rem;
+    display: flex;
+    flex-wrap: wrap; 
+    justify-content: center; 
+    gap: 0.8rem; 
+    width: 100%;
+    padding: 0 1rem;
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+    opacity: 0; /* Default hidden */
+    transform: translateY(10px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.category-filters.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.filter-tag-button {
+    font-size: 0.95em;
+    padding: 0.6em 1.2em;
+    border-radius: 20px; 
+    background-color: rgba(var(--secondary-color-rgb), 0.15);
+    color: var(--secondary-color);
+    border: 1px solid rgba(var(--secondary-color-rgb), 0.3);
+    cursor: pointer;
+    transition: all 0.3s ease;
+     -webkit-tap-highlight-color: transparent; 
+}
+.filter-tag-button:hover, .filter-tag-button.active {
+    background-color: var(--secondary-color);
+    color: var(--heading-color);
+    box-shadow: 0 2px 8px rgba(var(--secondary-color-rgb), 0.5);
+    border-color: var(--secondary-color);
+    transform: translateY(-2px);
+}
+/* 分类归档页的网格布局 */
+.category-grid {
+    margin-top: 1.5rem;
+    padding-bottom: 2rem; 
+    width: 100%;
+    justify-items: center; 
+}
+/* 分类归档页的分类项按钮样式(基于 filter-tag-button 稍微调整) */
+.category-grid .filter-tag-button {
+    font-size: 1em;
+    padding: 0.8em 1.5em;
+    min-width: 120px;
+    background-color: rgba(var(--primary-color-rgb), 0.1);
+    color: var(--primary-color);
+    border-color: rgba(var(--primary-color-rgb), 0.4);
+}
+.category-grid .filter-tag-button:hover {
+     background-color: var(--primary-color);
+     color: var(--heading-color);
+     border-color: var(--primary-color);
+     box-shadow: 0 2px 10px rgba(var(--primary-color-rgb), 0.6);
+}
+.categories-section .button-container {margin-top: 2rem; text-align: center;}
+
+
+
+/* --- Content Page Wrapper (for blog, about, comments, posts) --- */
+main.container.content-page-wrapper { 
+    background-color: var(--content-bg-color); 
+    -webkit-backdrop-filter: blur(var(--content-backdrop-blur)); 
+    backdrop-filter: blur(var(--content-backdrop-blur)); 
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 6px 25px rgba(0,0,0,0.25); 
+    max-width: 900px;
+    margin: 3rem auto;
+    padding: 2.5rem 1.5rem;
+    flex-grow: 1; 
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Ensures central alignment for block children */
+    justify-content: flex-start; 
+    text-align: initial; 
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+
+     opacity: 0; /* Set initial opacity for main wrapper to ensure proper entrance via JS */
+     transition: opacity 0.6s ease-out; /* Main fadeIn for the wrapper content itself */
+}
+main.container.content-page-wrapper.is-visible {
+    opacity: 1;
+}
+
+/* ★★★ CRITICAL FIX: 修正 CSS 选择器，将 content-pages-wrapper 正确改为 content-page-wrapper ★★★ */
+/* 所有的 `<p>` 标签默认也隐藏，配合 JS 动画 */
+.content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message),
+.content-page-wrapper ul,
+.content-page-wrapper ol {
+    opacity: 0;
+    transform: translateY(10px); /* Slight slide up effect */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Apply to non-card paragraphs */
+}
+/* When .is-visible is added to these elements by JS, then they animate in */
+.content-page-wrapper p.is-visible,
+.content-page-wrapper ul.is-visible,
+.content-page-wrapper ol.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* --- Posts Grid (Blog Page & Comments List) --- */
+.posts-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 30px; 
+    width: 100%; 
+    max-width: 900px; 
+}
+.post-card {
+    background-color: var(--card-bg-color); 
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius-lg);
+    overflow: hidden;
+    -webkit-backdrop-filter: blur(var(--card-backdrop-blur)); 
+    backdrop-filter: blur(var(--card-backdrop-blur)); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    height: 100%; 
+    display: flex;
+    flex-direction: column;
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+
+    opacity: 0; /* Default hidden, controlled by JS and data-delay */
+    transform: translateY(20px); 
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s ease; 
+}
+.post-card.is-visible { /* Class added by JS to reveal with animation */
+    opacity: 1;
+    transform: translateY(0);
+}
+.post-card a { 
+    color: inherit; 
+    display: flex; 
+    flex-direction: column; 
+    height: 100%;
+    position: relative; 
+} 
+.post-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(var(--primary-color-rgb), 0.3); }
+.post-thumbnail { 
+    width: 100%; 
+    height: 200px; 
+    object-fit: cover; 
+    transition: filter 0.3s ease, transform 0.3s ease; 
+    font-size: 0; 
+    flex-shrink: 0; 
+    /* The gradient fallback will be set directly via JS as background-image, making these fallback only if that itself fails */
+    background: var(--bg-fallback-color) no-repeat center center / cover; 
+    filter: none; 
+}
+
+/* Image loading/fallback states */
+.post-thumbnail.is-loading-fallback {
+    /* object-fit: contain ensures entire fallback image is seen, even if it leaves bars */
+    object-fit: contain; 
+    filter: saturate(0) brightness(0.5) blur(1px); /* Visually transform fallback image to indicate processing/failure */
+} 
+
+/* Global fallback-text-overlay for all images */
+.fallback-text-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%); 
+    width: 100%;
+    height: 100%; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.8);
+    text-shadow: 0 0 5px rgba(0,0,0,0.8);
+    background: rgba(0,0,0,0.5); 
+    pointer-events: none; 
+    z-index: 5;
+    font-family: var(--font-primary); 
+    padding: 0 10px; 
+    text-align: center;
+    border-radius: inherit; 
+    opacity: 0; 
+    transition: opacity 0.3s ease; /* For fade in/out */
+}
+.fallback-text-overlay.is-visible {
+    opacity: 1; /* Explicitly visible when JS sets it */
+}
+
+
+.post-info { 
+    padding: 1.5rem; 
+    flex-grow: 1; 
+    display: flex; 
+    flex-direction: column; 
+    text-align: left; 
+    align-self:stretch; 
+} 
+.post-info h3 { 
+    margin: 0 0 0.5rem; 
+    font-family: var(--font-display); 
+    font-size: 1.4rem; 
+    color: #fff; 
+    
+    display: -webkit-box;
+    -webkit-line-clamp: 2; 
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.post-info h3:hover { color: var(--primary-color); } 
+.post-excerpt { 
+    font-size: 0.9em; 
+    margin-bottom: 1rem; 
+    color: var(--text-color); 
+    flex-grow: 1; 
+    text-align: justify; 
+    z-index: 1;
+    
+    display: -webkit-box;
+    -webkit-line-clamp: 3; 
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+} 
+.post-info time { font-size: 0.8em; color: var(--meta-text-color); margin-top: auto;} 
+.post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
+.post-tags .tag {
+    display: inline-block;
+    background-color: rgba(var(--secondary-color-rgb), 0.15); 
+    color: var(--secondary-color);
+    padding: 0.25em 0.8em; 
+    border-radius: 5px;
+    font-size: 0.75em;
+    opacity: 0.9; 
+    border: 1px solid rgba(var(--secondary-color-rgb), 0.2);
+    cursor: pointer; 
+    transition: all 0.2s ease;
+}
+.post-tags .tag:hover {
+    background-color: var(--secondary-color);
+    color: var(--heading-color);
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(var(--secondary-color-rgb), 0.5);
+}
+
+
+/* --- Layout for About, Comments, Categories pages --- */
+.about-me-section, .comment-section, .categories-section { 
+    width: 100%; 
+    text-align: center; 
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+
+     opacity: 0; 
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.about-me-section.is-visible, .comment-section.is-visible, .categories-section.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+.about-me-section p, .comment-section p, .categories-section p { 
+    font-size: 1.05em;
+    max-width: 760px; 
+    margin-left: auto; 
+    margin-right: auto; 
+    text-align: justify; 
+    padding: 0 0.5rem; 
+}
+.comment-form-container .form-hint { /* Ensure form hint is also set to opacity 0 on load and handled by its parent's js/css to reveal */
+    opacity: 0;
+    transition: opacity 0.5s ease-out;
+}
+/* This is no longer controlled by parent, but by the same visibility fix later. */
+/* .comment-form-container.is-visible .form-hint { opacity: 1; } */
+
+
+/* 对列表也应用max-width和margin auto */
+.content-page-wrapper ul, .content-page-wrapper ol { 
+    max-width: 760px;
+    margin-left: auto;
+    margin-right: auto;
+    text-align: left; 
+    padding-left: 2em; 
+    /* Use for reveal via JS class later */
+}
+/* 对分类页的按钮容器确保居中 */
+.categories-section .button-container {
+    padding: 0 0.5rem;
+}
+
+.about-me-section .my-avatar {
+    width: 150px; height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    margin: 0 auto 1.5em; 
+    border: 4px solid var(--primary-color);
+    box-shadow: 0 0 0 8px rgba(var(--primary-color-rgb), 0.2); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+     opacity: 0; /* Hide avatar initially */
+     transform: scale(0.8); /* Scale in from smaller */
+}
+.about-me-section .my-avatar.is-visible { /* Animate separately but ensure parent is visible first */
+    opacity: 1;
     transform: scale(1);
 }
-
-/* Slide Up (default animation, defined in `[class*="animate__"]`) */
-.animate__slide-up {
-    /* Inherits transform: translateY(20px) from generic rule */
+.about-me-section .my-avatar:hover {
+    transform: scale(1.05) rotate(5deg);
+    box-shadow: 0 0 0 12px rgba(var(--primary-color-rgb), 0.3);
+}
+.about-me-section .contact-info {
+    text-align: left; 
+    max-width: 480px;
+    margin: 2em auto;
+    padding: 1.5em; 
+    background: rgba(var(--bg-secondary-color-rgb), 0.6); 
+    border-radius: var(--border-radius);
+    border: 1px solid var(--border-color);
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+     -webkit-backface-visibility: Hidden; 
+    backface-visibility: Hidden;
+    transform: translateZ(0); 
+     opacity: 0; /* Hide contact info initially */
+     transform: translateY(10px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.about-me-section .contact-info.is-visible {
+    opacity: 1;
+    transform: translateY(0);
 }
 
-/* --- Delay for staggering Animations --- */
-[data-delay="100"] { transition-delay: 0.1s; }
-[data-delay="200"] { transition-delay: 0.2s; }
-[data-delay="300"] { transition-delay: 0.3s; }
-[data-delay="400"] { transition-delay: 0.4s; }
-[data-delay="500"] { transition-delay: 0.5s; }
-[data-delay="600"] { transition-delay: 0.6s; }
+/* Comments Form */
+.comment-form-container {
+    background-color: var(--card-bg-color); 
+    padding: 2.5rem;
+    border-radius: var(--border-radius-lg);
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    width: 100%; 
+    max-width: 700px;
+    text-align: left; 
+    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
+    backdrop-filter: blur(var(--card-backdrop-blur));
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+     opacity: 0; /* Default hidden, controlled by JS & parent's is-visible */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.comment-form-container.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.comment-form-container h3 {
+    text-align: center; 
+    color: var(--primary-color);
+    margin-bottom: 1.5rem;
+    font-family: var(--font-display); 
+    font-size: 1.8rem;
+}
+.form-group { margin-bottom: 1.5em; width: 100%; }
+.form-group label { display: block; margin-bottom: 0.5em; font-weight: 500; color: var(--heading-color); }
+.form-group input[type="text"], .form-group textarea {
+    width: 100%;
+    padding: 0.8em 1em;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    background-color: var(--input-bg-color);
+    outline: none; 
+    color: var(--text-color);
+    font-size: 1em;
+    font-family: var(--font-primary);
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+.form-group input[type="text"]:focus, .form-group textarea:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.3);
+}
+textarea { resize: vertical; min-height: 120px; }
+.form-hint { font-size: 0.85em; color: var(--meta-text-color); margin-top: 1em; text-align: center; width: 100%;}
+.form-hint.is-visible { opacity: 1; } /* Explicitly make form hint visible if needed later */
+
+
+/* Comments List (基于 posts-grid 的 flex 或 grid 效果) */
+.comments-list-container {
+    margin-top: 3em;
+    padding-top: 2em;
+    border-top: 1px dashed var(--border-color);
+    width: 100%; 
+    max-width: 900px; 
+    text-align: center; 
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+     opacity: 0; /* Default hidden */
+     transition: opacity 0.5s ease-out; /* Controlled by JS is-visible */
+}
+.comments-list-container.is-visible {
+    opacity: 1;
+}
+.comments-list-container h3 {
+    text-align: center; 
+    margin-bottom: 1.5em;
+    color: var(--secondary-color);
+    font-family: var(--font-display); 
+    font-size: 1.8rem;
+}
+
+#comments-list {
+    margin-top: 1em; 
+    text-align: left; 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
+    gap: 20px; 
+    width: 100%; 
+    max-width: 100%; 
+    margin-left: auto; 
+    margin-right: auto;
+}
+/* Re-style post-card specific to comment list */
+#comments-list.comments-list .post-card { /* Target more specifically */
+    padding: 1.5em; 
+    height: auto; 
+    font-size: 1em;
+    opacity: 0;
+    transform: translateY(20px);
+}
+#comments-list.comments-list .post-card.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/* Comment text and meta info classes */
+.comment-info { /* Wrapper for text and meta inside comment card */
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+}
+.comment-text {
+    margin-bottom: 0.5em; /* Specific for comments text */
+    font-size: 1em;
+    color: var(--text-color);
+    max-width: 100%;
+    text-align: left; /* Ensure comment text is left-aligned */
+    word-wrap: break-word; /* Ensure long words wrap */
+    overflow-wrap: break-word;
+}
+.comment-meta {
+    font-size: 0.85em;
+    color: var(--meta-text-color);
+    border-top: 1px dashed var(--border-color);
+    padding-top: 0.8em;
+    margin-top: 1em;
+    text-align: left; /* Ensure meta text is left-aligned */
+}
+.comment-meta strong { color: var(--primary-color); }
+
+.no-comments-message { 
+    text-align: center;
+    color: var(--meta-text-color); 
+    font-style: italic; 
+    padding: 2em; 
+    font-family: var(--font-primary); 
+    grid-column: 1 / -1; 
+    width: 100%; 
+     opacity: 0; /* Initially hidden */
+     transform: translateY(10px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.no-comments-message.is-visible { /* Reveal when JS explicitly adds `is-visible` */
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+/* Articles Detail Page */
+main .blog-post-detail { 
+    background-color: var(--card-bg-color); 
+    padding: 3em;
+    border-radius: var(--border-radius-lg);
+    box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+    text-align: left; 
+    width: 100%; 
+    max-width: 900px; 
+    -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
+    backdrop-filter: blur(var(--card-backdrop-blur));
+    display: flex; 
+    flex-direction: column;
+    align-items: center; 
+     -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+
+     opacity: 0; /* Default hidden, controlled by JS for Entrance animation */
+     transition: opacity 0.6s ease-out; 
+}
+main .blog-post-detail.is-visible {
+    opacity: 1;
+}
+
+.post-detail-title {
+    font-size: 2.8em;
+    text-align: center; 
+    color: var(--primary-color);
+    line-height: 1.3;
+    display: block; 
+    width: 100%; 
+    opacity: 0; /* Hidden by default, controlled by JS for Entrance animation */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.post-detail-title.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.post-detail-title::after {
+    content: '';
+    position: absolute; 
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 60%;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--primary-color), var(--secondary-color), transparent);
+    border-radius: 2px;
+}
+.post-meta {
+    color: var(--meta-text-color);
+    font-size: 0.9em;
+    text-align: center;
+    margin-top: 1em;
+    margin-bottom: 2em;
+    padding-bottom: 1.5em;
+    border-bottom: 1px dashed var(--border-color);
+    width: 100%; 
+     opacity: 0; /* Hidden by default, controlled by JS for Entrance animation */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.post-meta.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+
+.post-detail-banner {
+    width: 100%;
+    height: 380px;
+    object-fit: cover;
+    border-radius: var(--border-radius);
+    margin-bottom: 2em;
+    box-shadow: 0 5px 15px rgba(var(--shadow-rgb), 0.3);
+    font-size: 0; 
+    position: relative; 
+    /* Gradient fallback default */
+    background: var(--bg-fallback-color) no-repeat center center / cover;
+    filter: none; 
+    opacity: 0; /* Hidden by default, controlled by JS and data-delay */
+    transition: opacity 0.5s ease-out, filter 0.3s ease, transform 0.3s ease;
+}
+.post-detail-banner.is-visible {
+    opacity: 1;
+}
+.post-detail-banner.is-loading-fallback {
+    filter: saturate(0) brightness(0.6) blur(1px); 
+    object-fit: contain; 
+}
+/* Post detail banner fallback text style, matching img height */
+.post-detail-banner + .fallback-text-overlay { 
+    height: 380px; 
+    border-radius: var(--border-radius); 
+    font-size: 1.4rem; 
+}
+
+
+.post-content { 
+    width: 100%; 
+    max-width: 760px; 
+    text-align: justify; 
+     opacity: 0; /* Hidden by default, controlled by JS for Entrance animation */
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.post-content.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.post-content h3 {
+    margin-top: 2.5em;
+    margin-bottom: 1em;
+    border-left: 5px solid var(--secondary-color);
+    padding-left: 1em;
+    color: var(--heading-color);
+    font-family: var(--font-display);
+    font-size: 1.8em;
+    text-align: left; 
+    width: 100%; 
+}
+.post-content p, .post-content ul, .post-content ol { 
+    font-size: 1.05em;
+    margin-bottom: 1.5em;
+    line-height: 1.8;
+    text-align: justify; 
+    padding: 0 0.5rem; 
+
+    /* Removed specific opacity/transform for p/ul/ol here, defer to parent .post-content's .is-visible for now */
+    /* If more granular control needed, re-add child fade-ins with suitable delays */
+}
+.post-content ul, .post-content ot li { list-style-position: inside; padding-left: 2em; text-align: left;} 
+.post-content ul li, .post-content ox li {margin-bottom: 0.5em;}
+
+
+/* --- Post Share Buttons --- */
+.post-share-buttons {
+    text-align: center;
+    margin-top: 3em;
+    padding-top: 2em;
+    border-top: 1px dashed var(--border-color);
+    width: 100%; 
+    max-width: 700px; 
+     opacity: 0; 
+     transform: translateY(20px);
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+}
+.post-share-buttons.is-visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+.post-share-buttons span {
+    color: var(--meta-text-color);
+    margin-right: 1em;
+    font-size: 0.95em;
+    vertical-align: middle;
+}
+.share-button {
+    display: inline-block;
+    padding: 0.6em 1.2em;
+    border-radius: 5px;
+    margin: 0 0.5em;
+    color: #fff;
+    font-weight: 500;
+    transition: transform 0.2s ease;
+}
+.share-button.wechat { background-color: #27CA74; }
+.share-button.weibo { background-color: #E2413E; }
+.share-button.qq { background-color: #3AA9E2; }
+.share-button:hover { transform: translateY(-3px); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
+
+
+/* --- Main Footer --- */
+.main-footer {
+    padding: 1.5rem 0;
+    background: var(--footer-bg-color);
+    border-top: 1px solid var(--border-color);
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
+    color: var(--meta-text-color);
+    font-size: 0.9em;
+    text-align: center;
+    margin-top: auto; 
+    -webkit-backface-visibility: hidden; 
+    backface-visibility: hidden;
+    transform: translateZ(0); 
+
+     opacity: 0; /* Hidden by default, reveal via JS */
+     transition: opacity 0.5s ease-out;
+}
+.main-footer.is-visible { /* Add this class by JS on script end */
+    opacity: 1;
+}
+.main-footer .container {
+    padding: 0 1.5rem; 
+}
+
+
+/* --- Back to Top Button --- */
+#back-to-top {
+    position: fixed;
+    bottom: 2.5rem;
+    right: 2.5rem;
+    width: 45px;
+    height: 45px;
+    background-color: rgba(var(--primary-color-rgb), 0.85);
+    color: #fff;
+    border: none;
+    border-radius: 50%;
+    font-size: 1.6rem;
+    cursor: pointer;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+}
+#back-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+#back-to-top:hover {
+    background-color: var(--primary-hover-color);
+    box-shadow: 0 5px 15px rgba(var(--primary-color-rgb), 0.5);
+    transform: translateY(-5px) scale(1.05); 
+}
+
+
+/* --- Read Progress Bar --- */
+#read-progress-bar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%; 
+    height: 4px; 
+    background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
+    box-shadow: 0 0 10px var(--primary-color);
+    transition: width 0.1s linear; 
+    z-index: 1001; 
+}
+
+
+/* --- Responsive Adjustments - Mobile Specific (max-width: 767px) --- */
+@media (max-width: 767px) {
+    /* 通用移动端样式覆盖 */
+    body {
+        cursor: auto; 
+        opacity: 1; 
+        transform: none; 
+    }
+    body::before { 
+        backdrop-filter: blur(var(--body-global-blur-value)); 
+        -webkit-backdrop-filter: blur(var(--body-global-blur-value));
+    }
+    body.is-mobile #cursor-trail { 
+        display: none !important; 
+    }
+    .container {padding: 0.8rem;} /* Slightly less padding to gain space */
+
+    /* ------------- 头部导航栏适配 ------------- */
+    .main-header { padding: 0.3rem 0.5rem; min-height: var(--header-min-height-mobile, 45px);} 
+    .main-header .container { padding: 0 0.5rem; } 
+    .main-header .blog-title--animated.is-header-title > a { 
+        font-size: 1.2rem; 
+    }
+    .menu-toggle .icon-bar { width: 22px; margin: 3px 0;} 
+    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-4px, 4px); }
+    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-4px, -4px); }
+    
+    /* 缩小菜单小框在手机端更紧凑 */
+    .main-nav {
+        top: calc(var(--header-min-height-mobile, 45px) + 10px); 
+        right: 0.8rem; /* Slightly less margin for smaller screens */
+        width: 170px; /* Reduced width */
+        max-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 10px + 10px)); 
+        padding: 0.6rem; /* Reduced padding */
+    }
+    .main-nav.is-open { 
+        transform: translateX(0); 
+    }
+    .main-nav .menu-close { font-size: 1.4em; top: 3px; right: 0.6rem; } /* Further reduced size/position */
+    .main-nav ul { gap: 0.6rem; padding: 0.2rem 0;} 
+    .main-nav a { font-size: 0.9em; padding: 0.4em 0.7em; width: 95%; max-width: 160px;}
+    
+    /* ------------- 英雄区域适配 (首页) ------------- */
+    .hero-content { padding: 0.5rem; margin-top: -15px;} 
+    .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem; padding: 0;} /* Ensure padding is 0 */
+    .hero-nav .nav-link { margin: 0; padding: 0.5rem 0.8em; font-size: 0.9em; width: unset; flex-grow: 1;} 
+    .hero-nav { gap: 0.5rem;}
+
+
+    /* ------------- 内容区域适配 （包括博客列表和留言板！）------------- */
+    main.container.content-page-wrapper { 
+        margin: 0.4rem auto; /* Less vertical margin */
+        padding: 0.8rem 0.6rem; /* Adjusted internal padding */
+        display: flex; 
+        flex-direction: column; 
+        align-items: center; 
+    }
+
+    .page-title, .section-title { font-size: 1.5rem; margin-bottom: 0.8rem; } /* Reduced margins */
+     .section-title::after, .page-title::after {
+        bottom: -0.2rem; /* Adjusted position */
+        width: 60%; 
+     }
+    .comment-form-container h3, 
+    .comments-list-container h3,
+    .categories-section h3,
+    .about-me-section .contact-info h3 { font-size: 1.2rem; margin-top: 0.6rem;}
+    
+    .category-filters {
+        gap: 0.5rem; 
+        padding: 0 0.5rem; 
+         margin-bottom: 1rem; /* Reduced margin */
+    }
+    .filter-tag-button {
+        font-size: 0.8em; /* Smaller font for tags */
+        padding: 0.4em 0.8em; 
+        border-radius: 12px; 
+         white-space: nowrap; 
+    }
+    .category-grid {
+        grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
+        gap: 10px; /* Reduced gap */
+         max-width: 100%; 
+    }
+    .category-grid .filter-tag-button {
+        padding: 0.5em 0.8em; 
+        min-width: unset; 
+        width: 100%;
+        font-size: 0.9em; /* slightly larger for categories page buttons */
+    }
+
+
+    /* **FIX: 博客文章列表网格强制单列且内容自适应** */
+    .posts-grid, #comments-list { 
+        grid-template-columns: 1fr; 
+        gap: 12px; /* Reduced gap */
+        margin-left: 0; 
+        margin-right: 0;
+        max-width: 100%;
+    }
+    .post-card {
+        transform: translateY(10px); /* Smaller animation offset */
+    }
+    /* **FIX: 文章卡片内容自适应** */
+    .post-card .post-info {
+        padding: 0.6rem; /* Reduced padding */
+        width: 100%; 
+        align-items: flex-start; 
+    }
+    .post-card .post-thumbnail { 
+        height: 140px; /* Reduced height */
+    }
+
+    .post-info h3 { font-size: 1.2rem; -webkit-line-clamp: 2; text-align: left;} 
+    .post-excerpt { font-size: 0.8em; -webkit-line-clamp: 3; text-align: justify; }
+
+    /* **FIX: 详情页和留言板段落/表单内容适配** */
+    .about-me-section p, 
+    .comment-section p, 
+    /* THIS SELECTOR WAS FIXED: .content-pages-wrapper input, .content-pages-wrapper textarea, */
+    .content-page-wrapper .form-group input, 
+    .content-page-wrapper .form-group textarea,
+    .post-content h3, 
+    .post-content p, .post-content ul, .post-content ol { 
+        padding: 0 0.5em; 
+        font-size: 0.90em; /* Reduced font size */
+        text-align: justify; 
+    }
+     .post-content h3 { font-size: 1.2em; padding-left: 0.5em; text-align: left; border-left: 3px solid var(--secondary-color);} 
+    .post-share-buttons {margin-top: 1em; padding-top: 0.8em;} /* Reduced margins */
+    .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; border-radius: 4px; } 
+
+    .comment-form-container, .about-me-section .contact-info { 
+        padding: 1rem 0.8em; /* Further adjustment for small-screens for input area */
+        margin: 0.8rem auto; /* Less margin */
+    }
+    /* FIX: 确保留言板的表单组完全自适应 */
+    .comment-form-container .form-group { padding: 0;}
+    .comment-form-container label, .comment-form-container .form-hint { text-align: left; padding: 0.2rem;}
+
+    .comments-list-container { padding: 0.8em 0.5em; margin-top: 1.5em;}
+    #comments-list.comments-list .post-card { /* Reduced initial transform for comments on mobile */
+        transform: translateY(10px);
+    }
+    
+     .post-detail-banner { height: 140px; margin-bottom: 0.8em; } /* Reduced height */
+    .post-detail-banner + .fallback-text-overlay { height: 140px; font-size: 1em;} 
+
+
+    /* Footer on mobile */
+    .main-footer { padding: 0.6rem 0.5rem;}
+    .main-footer .container { padding: 0 0.5rem; flex-direction: column; gap: 0.3rem;} 
+    .main-footer p {font-size: 0.7em;}
+
+    #back-to-top { bottom: 0.2rem; right: 0.2rem; width: 25px; height: 25px; font-size: 0.8em; }
+
+}

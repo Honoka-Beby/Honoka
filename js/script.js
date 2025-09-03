@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 el.removeEventListener('mouseenter', el._currentHoverEnterHandler);
                 delete el._currentHoverEnterHandler;
             }
-            if (el._currentHoverLeaveHandler) {
+            if (el._currentHoverLeaveHandler) { // Potential fix related
                 el.removeEventListener('mouseleave', el._currentHoverLeaveHandler);
                 delete el._currentHoverLeaveHandler;
             }
@@ -53,15 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     cursorDot.style.transform = 'translate(-50%, -50%) scale(1.5)';
                     cursorDot.style.backgroundColor = 'var(--secondary-color)'; // Use theme property
                 };
+                // ★★★ CRITICAL FIX: Corrected typo 'handleLeaveHandler' to 'handleMouseLeave' ★★★
                 const handleMouseLeave = () => { 
                     cursorDot.style.transform = 'translate(-50%, -50%) scale(1)';
                     cursorDot.style.backgroundColor = 'var(--primary-color)';   // Use theme property
                 };
                 
                 el.addEventListener('mouseenter', handleMouseEnter);
-                el.addEventListener('mouseleave', handleLeaveHandler); // Use separate handleLeaveHandler
+                el.addEventListener('mouseleave', handleMouseLeave); // CORRECTED line
                 el._currentHoverEnterHandler = handleMouseEnter; // Store reference
-                el._currentHoverLeaveHandler = handleLeaveHandler;
+                el._currentHoverLeaveHandler = handleMouseLeave; // Store reference
             });
             console.log("[CursorTrail] Initialized for desktop browsing.");
 
@@ -257,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
         
         // ★★★ CRITICAL FIX: Always use root-relative path for local assets on the webserver ★★★
-        const localFallbackSrc = srcOverride || `/img/${fallbackFilename}`; // This is the robust path!
+        const localFallbackSrc = srcOverride || `/img/${fallbackFilename}`; // This ensures the path is consistently correct from the root.
         
         if (type === 'background') {
             document.documentElement.style.setProperty('--bg-image', getRandomGradient());
@@ -278,25 +279,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const parentPositionedRelative = targetElement.parentNode && getComputedStyle(targetElement.parentNode).position === 'static';
 
             if (!fallbackTextOverlay || !fallbackTextOverlay.classList.contains('fallback-text-overlay')) {
-                // Create overlay if it doesn't exist or is the wrong type
+                // If overlay doesn't exist, create it and ensure it becomes visible fast.
                 fallbackTextOverlay = document.createElement('div');
-                fallbackTextOverlay.classList.add('fallback-text-overlay', 'is-visible'); // Add is-visible to ensure it shows!
-                if (!targetElement.src || targetElement.src === window.location.href) { // if no src or broken src
-                    fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                } else {
-                    // This message is for generic local fallback (e.g., specific image not found)
-                     fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                }
-                 if (parentPositionedRelative) {
+                fallbackTextOverlay.classList.add('fallback-text-overlay'); 
+                if (parentPositionedRelative) {
                     targetElement.parentNode.style.position = 'relative'; 
                 }
                 targetElement.insertAdjacentElement('afterend', fallbackTextOverlay);
                 console.log(`[ImageLoader] Fallback overlay created for ${targetElement.alt || 'Unnamed Image Title'}.`);
-            } else {
-                // If overlay exists, update its content and ensure visiblity
-                fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
-                fallbackTextOverlay.classList.add('is-visible'); 
             }
+            // Always set text content and make it visible for feedback
+            fallbackTextOverlay.textContent = isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(";
+            fallbackTextOverlay.classList.add('is-visible'); // Force overlay to show
 
             // Secondary check: if the local fallback image itself is broken, hide the `<img>` tag content (leave background gradient) and enforce showing overlay.
             const testLocalImage = new Image();
@@ -317,14 +311,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function declaration for full hoisting safety
     function setupDynamicPostImages() {
-        fetchRandomAnimeImage(document.documentElement, 'background'); // Target document.documentElement for global background
+        // Updated to use document.documentElement for consistency with CSS vars where global background image is set
+        fetchRandomAnimeImage(document.documentElement, 'background'); 
         console.log("[Background] Dynamic body background initiated.");
 
-        document.querySelectorAll('.post-thumbnail[data-src-type="wallpaper"]').forEach(img => {
+        document.querySelectorAll('.my-avatar, .post-thumbnail[data-src-type="wallpaper"]').forEach(img => { // Include my-avatar for dynamic loading
             applyFallbackImage(img, 'image'); 
             fetchRandomAnimeImage(img, 'image'); 
         });
-        console.log("[ImageLoader] Post thumbnails initiated.");
+        console.log("[ImageLoader] Post thumbnails and avatar initiated.");
 
         const detailBanner = document.querySelector('.post-detail-banner[data-src-type="wallpaper"]');
         if (detailBanner) {
@@ -346,39 +341,36 @@ document.addEventListener('DOMContentLoaded', () => {
             '.main-header, .hero-section, .content-page-wrapper, .main-footer, #global-page-transition-overlay'
         );
         structuralElements.forEach(el => {
-            el.classList.add('force-visible'); // CSS should handle force-visible with !important
+            el.classList.add('force-visible'); 
         });
         console.log("[VisibilityFix] Top-level structural UI elements immediately 'force-visible' to ensure base layout.");
 
 
         // STEP 2: The most comprehensive selector for all content elements that are designed to animate
         // or that start at `opacity: 0` and need `is-visible` to properly display.
-         const elementsToAnimateOrReveal = document.querySelectorAll(
-            // Anything with an animate__ class (covered by generic rule in animations.css)
+        const elementsToAnimateOrReveal = document.querySelectorAll(
             '[class*="animate__"], ' + 
-            // All basic HTML elements likely to contain content, anywhere in the MAIN area
             'main.main-content h1, main.main-content p, main.main-content ul, main.main-content ol, ' +
             'main.container.content-page-wrapper h1, main.container.content-page-wrapper h2, ' +
             'main.container.content-page-wrapper h3, main.container.content-page-wrapper h4, ' +
             'main.container.content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message), ' +
-            'main.container.content-page-wrapper ul:not(.menu-toggle), ' + // Exclude menu ul
+            'main.container.content-page-wrapper ul:not(.menu-nav ul), ' + // Exclude menu ul (main-nav .ul is already managed by mainNav.is-open)
             'main.container.content-page-wrapper ol, ' +
-            // Specific key elements and containers on different pages
-            '.hero-subtitle, .hero-nav a, .hero-content, ' + // Homepage
-            '.blog-title.is-header-title > a, .menu-toggle, .main-nav ul li a, ' + // Header/Nav
-            '.my-avatar, .about-me-section p, .contact-info, .contact-info h3, .contact-info ul li, ' + // About page
-            '#blog-category-filters .filter-tag-button, #all-posts-grid .post-card, ' + // Blog page
-            '.post-card .post-info h3, .post-card .post-excerpt, .post-card time, .post-card .post-tags, .post-card .tag, ' + // Post card internals
-            '.blog-post-detail .post-detail-title, .blog-post-detail .post-meta, .blog-post-detail .post-detail-banner, ' + // Article detail page
+            '.hero-subtitle, .hero-nav a, .hero-content, ' + 
+            '.blog-title.is-header-title > a, .menu-toggle, .main-nav ul li a, ' + 
+            '.my-avatar, .about-me-section p, .contact-info, .contact-info h3, .contact-info ul li, ' +
+            '#blog-category-filters .filter-tag-button, #all-posts-grid .post-card, ' + 
+            '.post-card .post-info h3, .post-card .post-excerpt, .post-card time, .post-card .post-tags, .post-card .tag, ' + 
+            '.blog-post-detail .post-detail-title, .blog-post-detail .post-meta, .blog-post-detail .post-detail-banner, ' + 
             '.blog-post-detail .post-content, .blog-post-detail .post-content h3, ' + 
             '.post-share-buttons, .post-share-buttons span, .share-button, .read-more .button, ' +
-            '.comment-section .page-title, .comment-form-container, .comment-form-container h3, ' + // Comments page
-            '.form-group, .form-group label, .form-group input, .form-group textarea, .form-hint, ' + // Form elements
+            '.comment-section .page-title, .comment-form-container, .comment-form-container h3, ' + 
+            '.form-group, .form-group label, .form-group input, .form-group textarea, .form-hint, ' + 
             '.comments-list-container, .comments-list-container h3, ' + 
             '#comments-list .post-card, #comments-list .comment-info, #comments-list .comment-text, ' +
-            '#comments-list .comment-meta, .no-comments-message, ' + // Comment listing
-            '.categories-section .page-title, .categories-section p, #dynamic-category-list .filter-tag-button, .categories-section .button-container .button, ' + // Categories page
-            '#back-to-top, .main-footer p, #current-year, #visitor-count ' // Footer and global UI
+            '#comments-list .comment-meta, .no-comments-message, ' + 
+            '.categories-section .page-title, .categories-section p, #dynamic-category-list .filter-tag-button, .categories-section .button-container .button, ' + 
+            '#back-to-top, .main-footer p, #current-year, #visitor-count ' 
         );
 
         elementsToAnimateOrReveal.forEach(el => {
@@ -386,17 +378,11 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 if (!el.classList.contains('is-visible') && !el.classList.contains('force-visible')) {
                     el.classList.add('is-visible');
-                    // For static content like paragraphs, no need to keep observing or manage animation loop
-                    if (!el.classList.contains('blog-title--animated')) {
-                         // Potentially unobserve here if `IntersectionObserver` is also used for these elements
-                    }
                 }
-            }, delay + 50); // Small base delay for smoother initial render
+            }, delay + 50); 
         });
         console.log(`[VisibilityFix] Forcibly applied 'is-visible' to ${elementsToAnimateOrReveal.length} content elements.`);
 
-
-        // Fallback using IntersectionObserver if any element is still missed (unlikely with above selector)
         const observer = new IntersectionObserver((entries, observerInstance) => {
             entries.forEach(entry => {
                 const isElementAlreadyVisible = entry.target.classList.contains('is-visible') || entry.target.classList.contains('force-visible');
@@ -404,28 +390,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (entry.isIntersecting && !isElementAlreadyVisible) {
                     const delay = parseInt(entry.target.dataset.delay || '0', 10);
                     setTimeout(() => {
-                        if (!entry.target.classList.contains('is-visible')) { // Double-check before adding
+                        if (!entry.target.classList.contains('is-visible')) {
                             entry.target.classList.add('is-visible');
                         }
-                        // Unobserve once visible, unless it's a specific element meant for continuous animation
                         if (!entry.target.classList.contains('blog-title--animated')) { 
                             observerInstance.unobserve(entry.target); 
                         }
                     }, delay + 50); 
                 }
             });
-        }, { 
-            threshold: 0.1, 
-            rootMargin: "0px 0px -50px 0px" 
-        });
+        }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
 
-        // Observe all potentially animatable/revealable containers
         document.querySelectorAll(
             '[class*="animate__"], ' + 
             '.comments-list-container, .comment-form-container, .about-me-section, .categories-section, .blog-post-detail'
             )
             .forEach(el => {
-                // Ensure we don't re-observe elements already guaranteed visible by Step 2.
                 if (!el.classList.contains('force-visible') && !el.classList.contains('is-visible')) {
                     observer.observe(el);
                 }
@@ -533,13 +513,13 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (hrefURL.origin === window.location.origin && hrefURL.pathname !== window.location.pathname) {
                     e.preventDefault(); 
                     activatePageTransition(link.href); 
-                    setTimeout(() => { closeMenu(); }, 400); // Close menu after transition starts
-                 } else { // External links, same old anchors, mailto:
+                    setTimeout(() => { closeMenu(); }, 400); 
+                 } else { 
                     closeMenu(); 
                  }
             };
             link.addEventListener('click', newMenuClickHandler);
-            link._menuTransitionHandler = newMenuClickHandler; // Store handler for future removal
+            link._menuTransitionHandler = newMenuClickHandler; 
         });
 
         document.body.addEventListener('click', (event) => {
@@ -548,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
         console.log("[MainMenu] Navigation menu initialized.");
-    } // End of setupMainMenu
+    } 
 
 
     // Function declaration for full hoisting safety
@@ -569,7 +549,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN')); 
 
         if (categoryFiltersContainer && blogPostsGrid) {
-            categoryFiltersContainer.innerHTML = ''; // Clear existing buttons
+            categoryFiltersContainer.innerHTML = ''; 
             const allButton = document.createElement('button');
             allButton.classList.add('filter-tag-button', 'button', 'active'); 
             allButton.textContent = `全部文章`;
@@ -594,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         return;
                     }
                     const postTagsLower = tagsAttr.split(',').map(tag => tag.trim().toLowerCase()); 
-                    const filterTagLower = filterTag?.toLowerCase(); // Make filterTag optional chaining
+                    const filterTagLower = filterTag?.toLowerCase(); 
 
                     if (filterTagLower === 'all' || postTagsLower.includes(filterTagLower)) { 
                         post.style.display = 'block'; 
@@ -647,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 buttonLink.href = `blog.html?tag=${encodeURIComponent(tag)}`; 
                 buttonLink.classList.add('filter-tag-button', 'button', 'animate__slide-up'); 
                 buttonLink.textContent = ` # ${tag}`;
-                            buttonLink.setAttribute('aria-label', `查看所有分类为 ${tag} 的文章`);
+                buttonLink.setAttribute('aria-label', `查看所有分类为 ${tag} 的文章`);
 
                 buttonLink.dataset.filter = tag; 
                 buttonLink.dataset.delay = String(index * 50); 
@@ -661,8 +641,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 setTimeout(() => contentWrapper.classList.add('is-visible'), 150); 
             }
         }
-    } // End of setupPostCategoryFilters
-
+    } 
 
     // Function declaration for full hoisting safety
     function setupShareButtons() {
@@ -691,7 +670,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         });
         console.log("[ShareButtons] Share buttons initialized.");
-    } // End of setupShareButtons
+    } 
     
     // Function declaration for full hoisting safety
     function setupFooterAndVisitorCount() { 
@@ -732,27 +711,22 @@ document.addEventListener('DOMContentLoaded', () => {
                 visitorCountSpan.textContent = '???'; 
             });
         console.log("[VisitorCount] Footer current year and visitor count feature initialized.");
-    } // End of setupFooterAndVisitorCount
+    } 
 
 
     // --- MAIN GLOBAL INITIALIZATION SEQUENCE ---
-    // All functions are now 'function' declarations, so hoisting correctly ensures they are available
-    // regardless of their order here, as long as they are within the DOMContentLoaded scope.
     function initializeAllFeatures() {
-        // CRITICAL: Ensure visibility fixes happen very early, but allow DOM to paint first.
         setTimeout(() => {
             applyImmediateVisibilityFix(); 
-        }, 50); // Small, vital delay
+        }, 50); 
 
-        // Dynamic images and cursor should also apply on initial DOM ready
         setupDynamicPostImages(); 
 
-        // All UI features run
         setupMainMenu();                 
         setupBackToTopButton();         
         setupReadProgressBar();         
         setupFooterAndVisitorCount();   
-        setupPostCategoryFilters();     // Filters and categories depend on DOM-loaded post cards
+        setupPostCategoryFilters();     
 
         console.log("✅ [FINAL Version: MEGA-FIX & ULTIMATE STABILITY] All page features initialization sequence triggered.");
     }
