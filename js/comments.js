@@ -1,4 +1,4 @@
-// js/comments.js
+// js/comments.js 
 document.addEventListener('DOMContentLoaded', () => {
     console.log("💬 [Comments Module] comments.js STARTING execution...");
 
@@ -11,11 +11,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     /**
      * Helper function to handle fetch API errors and generate user-friendly messages.
+     * 使用 function 声明，确保完全提升。
      * @param {Response} response - The raw Fetch API response object.
      * @param {string} context - A string describing the API call (e.g., 'getComments', 'createComment').
      * @returns {Promise<string>} A user-friendly error message.
      */
-    const handleFetchError = async (response, context) => {
+    async function handleFetchError(response, context) {
         let errorDetail = '';
         try {
             errorDetail = await response.text(); // Attempt to get raw error text
@@ -38,13 +39,14 @@ document.addEventListener('DOMContentLoaded', () => {
             // Fallback for non-JSON or generic network errors
             return `请求失败 (${response.status}): ${errorDetail || '网络或服务器错误，无法连接到留言板服务。'}`;
         }
-    };
+    }
 
     /**
      * Fetches all comments from the backend Netlify Function.
+     * 使用 function 声明，确保完全提升。
      * @returns {Promise<Array<Object>>} An array of comment objects, or empty array on error.
      */
-    const getAllComments = async () => {
+    async function getAllComments() {
         console.log("[CommentsAPI] Attempting to fetch comments from", backendBaseUrl + 'getComments');
         try {
             const response = await fetch(`${backendBaseUrl}getComments`, {
@@ -64,19 +66,21 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error('[CommentsAPI] Failed to fetch comments: Firebase backend config or Netlify Function deployment issue. Details:', error);
             // Display an error message directly on the page if list container exists
             if(commentsList) {
+                // Also ensures the error message itself triggers the 'is-visible' class for animations
                 commentsList.innerHTML = `<p class="no-comments-message is-visible">呀，加载留言列表失败了... (${error.message})</p>`;
             }
-            return []; 
+            return []; // Always return empty array on error to prevent further issues downstream
         }
-    };
+    }
 
     /**
      * Posts a new comment to the backend Netlify Function.
+     * 使用 function 声明，确保完全提升。
      * @param {string} author - The author's name.
      * @param {string} text - The comment text.
      * @returns {Promise<boolean>} True if successful, false otherwise.
      */
-    const postNewComment = async (author, text) => {
+    async function postNewComment(author, text) {
         console.log("[CommentsAPI] Attempting to post new comment to", backendBaseUrl + 'createComment');
         const submitButton = commentForm?.querySelector('button[type="submit"]');
 
@@ -115,13 +119,14 @@ document.addEventListener('DOMContentLoaded', () => {
                 submitButton.style.cursor = 'pointer'; // Restore cursor
             }
         }
-    };
+    }
 
     /**
      * Dynamically renders and displays a list of comments in the DOM.
+     * 使用 function 声明，确保完全提升。
      * @param {Array<Object>} comments - An array of comment objects.
      */
-    const displayComments = (comments) => {
+    function displayComments(comments) { // This function doesn't need to be async
         commentsList = document.getElementById('comments-list'); 
         if (!commentsList) {
             console.error("[CommentsDisplay] Comments list container element not found (ID 'comments-list'). Cannot display comments.");
@@ -132,14 +137,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!comments || comments.length === 0) {
             const noCommentsMessage = document.createElement('p');
-            noCommentsMessage.classList.add('no-comments-message', 'is-visible'); // Immediately visible
+            noCommentsMessage.classList.add('no-comments-message', 'is-visible'); // Immediately visible and trigger any animation
             noCommentsMessage.textContent = "还没有留言呢，成为第一个留下足迹的人吧！";
             commentsList.appendChild(noCommentsMessage);
             console.log("[CommentsDisplay] No comments to display. Showing placeholder text.");
+            // Ensure parent container also visible
+            const parentContainer = commentsList.closest('.comments-list-container');
+            parentContainer?.classList.add('is-visible'); // Use optional chaining to be safe
             return;
         } 
 
-        // Sort comments by timestamp (newest first)
+        // Sort comments by timestamp (newest first) for consistent display order
         const sortedComments = [...comments].sort((a,b) => {
             const dateA = a.timestamp ? new Date(a.timestamp) : new Date(0); 
             const dateB = b.timestamp ? new Date(b.timestamp) : new Date(0);
@@ -176,13 +184,24 @@ document.addEventListener('DOMContentLoaded', () => {
             parentContainer.classList.add('is-visible'); 
             console.log("[CommentsDisplay] Main comments list container set to visible for animation.");
         }
-    };
+    } // End of displayComments function
+
+    /**
+     * Helper function to load and display comments.
+     * 使用 function 声明，确保完全提升。
+     */
+    async function loadAndDisplayComments() {
+        console.log("[Comments] Initiating load and display of comments...");
+        const comments = await getAllComments();
+        displayComments(comments);
+    }
 
     /**
      * Main handler for comment form submission.
+     * 使用 function 声明，确保完全提升。
      * @param {Event} event - The form submission event.
      */
-    const commentFormSubmitHandler = async (event) => {
+    async function commentFormSubmitHandler(event) {
         event.preventDefault(); 
 
         const authorInput = document.getElementById('comment-author');
@@ -205,12 +224,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if(commentTextInput) commentTextInput.value = ''; 
             await loadAndDisplayComments(); // Reload and re-display all comments
         } 
-    };
+    }
 
     /**
      * Initializes the comments board functionality for comments.html.
+     * This relies on all helper functions being defined prior (due to hoisting).
+     * 使用 function 声明，确保完全提升。
      */
-    const initCommentsPage = async () => {
+    async function initCommentsPage() {
         if(commentForm) {
             commentForm.addEventListener('submit', commentFormSubmitHandler);
             console.log("[CommentsForm] Comment form submission listener attached.");
@@ -224,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
              console.warn("[Comments] Comments list element (ID 'comments-list') not found. Skipping comment display. (Expected on non-comments.html pages)");
         }
-    };
+    }
     
     // Call the initializer. This will be triggered once on comments.html via DOMContentLoaded
     initCommentsPage();

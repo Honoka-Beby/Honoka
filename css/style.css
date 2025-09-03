@@ -1,7 +1,7 @@
 /* --- Reset & Base Styles --- */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
-/* 'LXGW WenKai Screen' will now be imported from jsdelivr @latest version. */
-@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@latest/style.css'); 
+/* 'LXGW WenKai Screen' is from lxgw-wenkai-screen-webfont@1.1.0/style.css */
+@import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
 
 * { 
     box-sizing: border-box; 
@@ -125,6 +125,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     color: var(--primary-color);
     font-size: 1.5rem;
     font-family: var(--font-primary);
+    text-shadow: 0 0 8px rgba(0,0,0,0.5); /* 防止纯白在某些背景下丢失，保持跟CSS里一样 */
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
@@ -633,15 +634,16 @@ main.container.content-page-wrapper.is-visible {
     opacity: 1;
 }
 
+/* ★★★ CRITICAL FIX: 修正 CSS 选择器，将 content-pages-wrapper 正确改为 content-page-wrapper ★★★ */
 /* 所有的 `<p>` 标签默认也隐藏，配合 JS 动画 */
 .content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message),
-.content-pages-wrapper ul,
-.content-pages-wrapper ol {
+.content-page-wrapper ul,
+.content-page-wrapper ol {
     opacity: 0;
     transform: translateY(10px); /* Slight slide up effect */
     transition: opacity 0.5s ease-out, transform 0.5s ease-out; /* Apply to non-card paragraphs */
 }
-/* When .is-visible is added to the parent wrapper, then these paragraphs animate in */
+/* When .is-visible is added to these elements by JS, then they animate in */
 .content-page-wrapper p.is-visible,
 .content-page-wrapper ul.is-visible,
 .content-page-wrapper ol.is-visible {
@@ -729,6 +731,11 @@ main.container.content-page-wrapper.is-visible {
     padding: 0 10px; 
     text-align: center;
     border-radius: inherit; 
+    opacity: 0; 
+    transition: opacity 0.3s ease; /* For fade in/out */
+}
+.fallback-text-overlay.is-visible {
+    opacity: 1; /* Explicitly visible when JS sets it */
 }
 
 
@@ -819,9 +826,9 @@ main.container.content-page-wrapper.is-visible {
     opacity: 0;
     transition: opacity 0.5s ease-out;
 }
-.comment-form-container.is-visible .form-hint {
-    opacity: 1;
-}
+/* This is no longer controlled by parent, but by the same visibility fix later. */
+/* .comment-form-container.is-visible .form-hint { opacity: 1; } */
+
 
 /* 对列表也应用max-width和margin auto */
 .content-page-wrapper ul, .content-page-wrapper ol { 
@@ -848,7 +855,7 @@ main.container.content-page-wrapper.is-visible {
      opacity: 0; /* Hide avatar initially */
      transform: scale(0.8); /* Scale in from smaller */
 }
-.about-me-section.is-visible .my-avatar.is-visible { /* Animate separately but ensure parent is visible first */
+.about-me-section .my-avatar.is-visible { /* Animate separately but ensure parent is visible first */
     opacity: 1;
     transform: scale(1);
 }
@@ -873,7 +880,7 @@ main.container.content-page-wrapper.is-visible {
      transform: translateY(10px);
      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
-.about-me-section.is-visible .contact-info.is-visible {
+.about-me-section .contact-info.is-visible {
     opacity: 1;
     transform: translateY(0);
 }
@@ -928,6 +935,7 @@ main.container.content-page-wrapper.is-visible {
 }
 textarea { resize: vertical; min-height: 120px; }
 .form-hint { font-size: 0.85em; color: var(--meta-text-color); margin-top: 1em; text-align: center; width: 100%;}
+.form-hint.is-visible { opacity: 1; } /* Explicitly make form hint visible if needed later */
 
 
 /* Comments List (基于 posts-grid 的 flex 或 grid 效果) */
@@ -958,7 +966,6 @@ textarea { resize: vertical; min-height: 120px; }
 #comments-list {
     margin-top: 1em; 
     text-align: left; 
-    box-sizing: border-box; /* IMPORTANT: Use border-box to handle padding correctly within flex/grid */
     display: grid; 
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 20px; 
@@ -1017,7 +1024,7 @@ textarea { resize: vertical; min-height: 120px; }
      transform: translateY(10px);
      transition: opacity 0.5s ease-out, transform 0.5s ease-out;
 }
-.comments-list-container.is-visible .no-comments-message.is-visible { /* Reveal when parent is visible OR when JS explicitly adds `is-visible` */
+.no-comments-message.is-visible { /* Reveal when JS explicitly adds `is-visible` */
     opacity: 1;
     transform: translateY(0);
 }
@@ -1388,6 +1395,7 @@ main .blog-post-detail.is-visible {
     /* **FIX: 详情页和留言板段落/表单内容适配** */
     .about-me-section p, 
     .comment-section p, 
+    /* THIS SELECTOR WAS FIXED: .content-pages-wrapper input, .content-pages-wrapper textarea, */
     .content-page-wrapper .form-group input, 
     .content-page-wrapper .form-group textarea,
     .post-content h3, 
@@ -1424,17 +1432,4 @@ main .blog-post-detail.is-visible {
 
     #back-to-top { bottom: 0.2rem; right: 0.2rem; width: 25px; height: 25px; font-size: 0.8em; }
 
-}
-
-
-/* =============================================== */
-/* == ULTIMATE FIX: Force Visibility Override == */
-/* =============================================== */
-/* This is the "sledgehammer" class. It overrides any animation
-   styles that might be stuck on opacity: 0 or transform.
-   The !important rule ensures it always wins. */
-.force-visible {
-    opacity: 1 !important;
-    transform: none !important;
-    visibility: visible !important;
 }
