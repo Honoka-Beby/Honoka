@@ -3,6 +3,17 @@
 /* 'LXGW WenKai Screen' is from lxgw-wenkai-screen-webfont@1.1.0/style.css */
 @import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
 
+/* 全局应用 */
+html, body {
+    /* ★★★ CRITICAL FIX: Ensure height and layout calculation are never zero/hidden by default ★★★ */
+    width: 100% !important;
+    min-height: 100vh !important; 
+    /* Force initial display property for body if it's default to nowhere */
+    display: flex !important;
+    flex-direction: column !important;
+    visibility: visible !important; /* Force initial visibility */
+}
+
 * { 
     box-sizing: border-box; 
     margin: 0; 
@@ -21,16 +32,12 @@ body {
     font-family: var(--font-primary);
     line-height:1.7;
     -webkit-font-smoothing: antialiased; /* 抗锯齿，平滑文字 */
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    cursor: none; /* 隐藏默认鼠标指针，交由JS控制自定义指针 */
-    touch-action: pan-y; /* 优化移动端滚动性能 */
     /* 当移动菜单打开时，body不允许滚动 */
-     &.no-scroll { overflow: hidden; }
+     &.no-scroll { overflow: hidden !important; } /* ★★★ CRITICAL FIX: Force `overflow: hidden` when menu is open */
 }
 
 /* 全局固定模糊叠加层：位于body背景之上，所有内容之下，提供统一的背景模糊和颜色基调 */
+/* ★★★ CRITICAL FIX: Ensure visibility is always on for this overlay itself ★★★ */
 body::before {
     content: '';
     position: fixed; /* 固定在视口 */
@@ -39,11 +46,12 @@ body::before {
     background: var(--body-overlay-bg); /* 半透明深色叠加层，允许背景图透出 */
     backdrop-filter: blur(var(--body-global-blur-value)); 
     -webkit-backdrop-filter: blur(var(--body-global-blur-value)); /* Webkit 兼容 */
-    z-index: -1; /* 位于正常内容之下，body背景图之上 */
+    z-index: -1; 
     transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
-    transform: translateZ(0); /* 强制开启 GPU 加速，避免 backdrop-filter 问题 */
+    transform: translateZ(0); 
+    visibility: visible !important; /* ★★★ CRITICAL FIX: Force visibility of the ::before overlay too */
 }
 
 a { color: var(--link-color); text-decoration: none; transition: all 0.3s ease; }
@@ -103,8 +111,11 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     animation: fadeOutTrail 0.5s forwards; 
     will-change: top, left, opacity, transform;
 }
-/* NO direct @keyframes needed here if animations.css handles it, but this is a fallback. */
-/* @keyframes fadeOutTrail { from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); } to { opacity: 0; transform: translate(-50%, -50%) scale(0.5); } } */
+/* All @keyframes are now centralized here (or in a dedicated, minimal animations.css if it's purely for keyframes) */
+@keyframes fadeOutTrail {
+    from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+    to { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+}
 
 
 /* --- Global Page Transition Overlay --- */
@@ -127,10 +138,11 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+    visibility: hidden !important; /* Force hidden until JS activates it */
 }
 #global-page-transition-overlay.visible {
-    opacity: 1; 
-    visibility: visible;
+    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
     transition: opacity 0.4s ease-in, visibility 0s linear; 
 }
 #global-page-transition-overlay .loader {
@@ -150,16 +162,23 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     box-shadow: 0 0 10px 2px var(--primary-color), inset 0 0 10px 2px var(--primary-color);
     animation: pulse-glow 1.5s infinite alternate; 
 }
-/* NO direct @keyframes needed here if animations.css handles it, but this is a fallback. */
-/* @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-@keyframes pulse { 0% { color: var(--primary-color); text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); } 100% { color: var(--secondary-color); text-shadow: 0 0 10px rgba(var(--secondary-color-rgb), 0.5); } }
-@keyframes pulse-glow { 0% { box-shadow: 0 0 5px 1px var(--primary-color), inset 0 0 5px 1px var(--primary-color); } 100% { box-shadow: 0 0 15px 3px var(--secondary-color), inset 0 0 15px 3px var(--secondary-color); } } */
-
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 .overlay-text {
     margin-top: 0.8em;
     font-family: var(--font-display);
     font-size: 2em;
     animation: pulse 1.5s infinite alternate; 
+}
+@keyframes pulse {
+    0% { color: var(--primary-color); text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.5); }
+    100% { color: var(--secondary-color); text-shadow: 0 0 10px rgba(var(--secondary-color-rgb), 0.5); }
+}
+@keyframes pulse-glow {
+    0% { box-shadow: 0 0 5px 1px var(--primary-color), inset 0 0 5px 1px var(--primary-color); }
+    100% { box-shadow: 0 0 15px 3px var(--secondary-color), inset 0 0 15px 3px var(--secondary-color); }
 }
 
 
@@ -174,19 +193,29 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     padding: 2rem;
     position: relative;
     overflow: hidden;
+    /* ★★★ CRITICAL FIX: Ensure main section is always visible and stretches ★★★ */
+    width: 100% !important;
+    flex-grow: 1 !important; /* Ensure it takes available vertical space */
+    visibility: hidden; /* Start hidden until JS reveals for animation */
 }
+.hero-section.is-visible, .hero-section.force-visible {
+    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
+}
+
 /* 主页Hero区域的背景叠加层，比全局overlay更深，确保文字可读性 */
-.hero-section::before {
+body.is-homepage .hero-section::before { /* Specifically target homepage hero section overlay */
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    background: var(--hero-overlay-bg); 
+    /* User wants homepage color "same as below". This value (0.8) provides good readability. */
+    arrière-plan: var(--hero-overlay-bg); 
     backdrop-filter: blur(5px); 
     -webkit-backdrop-filter: blur(5px);
     z-index: 1; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+    visibility: visible !important; /* ★★★ CRITICAL FIX: Ensure hero overlay is visible ★★★ */
 }
 
 .hero-content {
@@ -195,6 +224,11 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     opacity: 0;
     transform: translateY(20px);
     transition: opacity 0.8s ease-out, transform 0.8s ease-out; 
+    /* ★★★ CRITICAL FIX: Force basic display properties for core elements ★★★ */
+    display: flex !important; 
+    flex-direction: column !important; /* Flex children correctly */
+    align-items: center !important;
+    justify-content: center !important;
 }
 .hero-content.is-visible { 
     opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
@@ -204,7 +238,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* 核心：主页标题 “Honoka的小屋” 的文字渐变发光走马灯动画 */
 .blog-title--animated.is-homepage-title > a { 
-    color: var(--text-color); 
+    color: var(--text-color); /* Fallback color */
     font-family: var(--font-display);
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
@@ -240,8 +274,13 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     filter: drop-shadow(0 0 5px rgba(var(--primary-color-rgb), 0.8)) 
              drop-shadow(0 0 15px rgba(var(--primary-color-rgb), 0.5)); 
     will-change: background-position, filter; 
+    /* ★★★ CRITICAL FIX: Ensure font family is explicitly set so it doesn't vanish entirely if the @import fails. Provide generic fallback.★★★ */
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; 
 }
-/* @keyframes homepage-title-flow-gradient { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } } */
+@keyframes homepage-title-flow-gradient { 
+    0% { background-position: -200% 0; } 
+    100% { background-position: 200% 0; } 
+}
 
 
 /* 导航栏 "Honoka的小屋" 标题的粉色慢速呼吸式辉光动画 (仅发光，不滑动) */
@@ -263,8 +302,13 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     background-color: transparent; 
     filter: none; 
     text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); 
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
-/* @keyframes header-text-pulse-glow { 0% { text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.4), 0 0 10px rgba(var(--secondary-color-rgb), 0.2); } 100% { text-shadow: 0 0 10px var(--primary-color), 0 0 20px rgba(var(--secondary-color-rgb), 0.5); } } */
+
+@keyframes header-text-pulse-glow { 
+    0% { text-shadow: 0 0 5px rgba(var(--primary-color-rgb), 0.4), 0 0 10px rgba(var(--secondary-color-rgb), 0.2); }
+    100% { text-shadow: 0 0 10px var(--primary-color), 0 0 20px rgba(var(--secondary-color-rgb), 0.5); }
+}
 
 
 .hero-subtitle {
@@ -277,8 +321,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     transition: opacity 0.5s ease-out, transform 0.5s ease-out; 
 }
 .hero-subtitle.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
 }
 .hero-nav {
     display: flex; 
@@ -290,8 +334,8 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     transition: opacity 0.5s ease-out, transform 0.5s ease-out; 
 }
 .hero-nav.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
 }
 
 .hero-nav .nav-link {
@@ -323,33 +367,38 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     justify-content: center; 
     background: var(--header-bg-color); 
     border-bottom: 
-    1px solid var(--border-color); /* Updated to use border-color variable */
+    1px solid var(--border-color); 
     position: sticky; 
     top: 0; 
     z-index: 100;
     box-shadow: 0 2px 15px rgba(0,0,0,0.3); 
-    width: 100%; 
+    width: 100% !important; /* ★★★ CRITICAL FIX: Ensure header stretches */
+    min-height: 50px !important; /* Force minimum height */
+    
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
     opacity: 0; 
     transition: opacity 0.5s ease-out;
+    visibility: hidden; /* Start hidden until JS reveals */
 }
-.main-header.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+.main-header.is-visible, .main-header.force-visible {
+    opacity: 1 !important; 
+    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
+    display: flex !important; /* Ensure it is displayed */
 }
 
 .main-header .container { 
     width: 100%; 
-    display: flex; 
-    justify-content: space-between; 
-    align-items: center; 
+    display: flex !important; /* ★★★ CRITICAL FIX: Ensure container is flex to layout children */
+    justify-content: space-between !important; 
+    align-items: center !important; 
     flex-wrap: nowrap; 
 }
 
-/* 汉堡包菜单和关闭按钮 */
+/* 汉堡包菜单切换按钮 */
 .menu-toggle {
-    display: block; 
+    display: block !important; /* ★★★ CRITICAL FIX: Force hamburger menu to display ★★★ */
     background: none;
     border: none;
     cursor: pointer;
@@ -357,6 +406,10 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     position: relative;
     z-index: 210; 
     -webkit-tap-highlight-color: transparent;
+    visibility: hidden; /* Start hidden until JS init + reveal */
+}
+.menu-toggle.is-visible {
+    visibility: visible !important; /* ★★★ CRITICAL FIX: Force hamburger menu to visible ★★★ */
 }
 .menu-toggle .icon-bar {
     display: block;
@@ -368,9 +421,21 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     border-radius: 2px;
 }
 /* 当菜单打开或关闭时，汉堡包图标的动画效果 */
-.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-7px, 7px); }
-.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(2) { opacity: 0; }
-.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-7px, -7px); }
+@keyframes menuToggleBar1 {
+    to { transform: rotate(-45deg) translate(-7px, 7px); }
+}
+@keyframes menuToggleBar2 {
+    to { opacity: 0; }
+}
+@keyframes menuToggleBar3 {
+    to { transform: rotate(45deg) translate(-7px, -7px); }
+}
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { animation: menuToggleBar1 0.3s forwards; }
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(2) { animation: menuToggleBar2 0.3s forwards; }
+.menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { animation: menuToggleBar3 0.3s forwards; }
+.menu-toggle[aria-expanded="false"] .icon-bar:nth-child(1) { animation: menuToggleBar1 0.3s reverse forwards; }
+.menu-toggle[aria-expanded="false"] .icon-bar:nth-child(2) { animation: menuToggleBar2 0.3s reverse forwards; }
+.menu-toggle[aria-expanded="false"] .icon-bar:nth-child(3) { animation: menuToggleBar3 0.3s reverse forwards; }
 
 
 /* 全新：圆润的导航菜单小框样式 */
@@ -386,14 +451,14 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     
     right: 20px; 
     width: 250px; 
-    max-height: calc(100vh - 85px); /* 保持原样，与你之前的截图一致 */
+    max-height: calc(100vh - 85px); 
     box-sizing: border-box; 
 
     background-color: var(--card-bg-color); 
     -webkit-backdrop-filter: blur(var(--content-backdrop-blur)); 
     backdrop-filter: blur(var(--content-backdrop-blur));
     border-radius: var(--border-radius-lg); 
-    border: 1px solid var(--border-color); 
+    border: 1px solid var(--border-color); /* Updated to use border-color */
     box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); 
     
     transform: translateX(110%); 
@@ -415,9 +480,9 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     overflow-y: auto; 
 }
 .main-nav.is-open { 
-    transform: translateX(0) !important; /* ★★★ 重要修复：强制显示 */
-     opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
+    transform: translateX(0) !important; 
+     opacity: 1 !important; 
+    visibility: visible !important; 
     pointer-events: auto; 
 }
 .main-nav ul { 
@@ -429,6 +494,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 }
 .main-nav ul li { width: 100%;} 
 .main-nav a { 
+    font-family: var(--font-primary), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-weight: 500; 
     padding: 0.8em 1.5em; 
     border-radius: var(--border-radius-lg); 
@@ -485,7 +551,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 /* --- Page & Section Titles for inner pages --- */
 .section-title, .page-title {
-    font-family: var(--font-display); 
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-weight: 700;
     color: #fff;
     text-align: center; 
@@ -500,10 +566,13 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     opacity: 0; 
     transform: translateY(20px);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    visibility: hidden; /* Start hidden until JS reveals */
 }
-.section-title.is-visible, .page-title.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+.section-title.is-visible, .page-title.is-visible, 
+.section-title.force-visible, .page-title.force-visible {
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important; /* ★★★ CRITICAL FIX: Force visible */
 }
 .section-title::after, .page-title::after {
     content: '';
@@ -521,12 +590,13 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 .comment-form-container h3, .comments-list-container h3, .contact-info h3 { 
     text-align: center;
     width: 100%;
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
 
 /* 新增：文章分类筛选区域 */
 .category-filters {
     margin-bottom: 2rem;
-    display: flex;
+    display: flex; 
     flex-wrap: wrap; 
     justify-content: center; 
     gap: 0.8rem; 
@@ -538,12 +608,15 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
     opacity: 0; 
     transform: translateY(10px);
     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    visibility: hidden; /* Start hidden until JS reveals */
 }
 .category-filters.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important; /* ★★★ CRITICAL FIX: Force visible */
 }
 .filter-tag-button {
+    font-family: var(--font-primary), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-size: 0.95em;
     padding: 0.6em 1.2em;
     border-radius: 20px; 
@@ -588,8 +661,9 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1; width: 10px; height: 10px
 
 
 /* --- Content Page Wrapper (for blog, about, comments, posts) --- */
+/* ★★★ CRITICAL FIX: 主页面内容包裹器，必须强制可见和撑开布局 ★★★ */
 main.container.content-page-wrapper { 
-    background-color: var(--content-bg-color); 
+    background-color: var(--content-bg-color); /* Maintain slightly different background to distinguish content area */
     -webkit-backdrop-filter: blur(var(--content-backdrop-blur)); 
     backdrop-filter: blur(var(--content-backdrop-blur)); 
     border-radius: var(--border-radius-lg);
@@ -597,9 +671,9 @@ main.container.content-page-wrapper {
     max-width: 900px;
     margin: 3rem auto;
     padding: 2.5rem 1.5rem;
-    flex-grow: 1; 
-    display: flex;
-    flex-direction: column;
+    flex-grow: 1 !important; /* ★★★ CRITICAL FIX: Ensure it grows to take vertical space ★★★ */
+    display: flex !important; /* ★★★ CRITICAL FIX: Use flex to enforce layout on internal containers ★★★ */
+    flex-direction: column !important;
     align-items: center; 
     justify-content: flex-start; 
     text-align: initial; 
@@ -609,42 +683,52 @@ main.container.content-page-wrapper {
 
      opacity: 0; 
      transition: opacity 0.6s ease-out; 
+     visibility: hidden; /* Start hidden until JS reveals */
 }
-main.container.content-page-wrapper.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+main.container.content-page-wrapper.is-visible,
+main.container.content-page-wrapper.force-visible {
+    opacity: 1 !important; 
+    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
+    display: flex !important; /* Ensure content is display flexibly when visible */
 }
 
-/* ★★★ CRITICAL CSS FIX: 修正 CSS 选择器 (content-pages-wrapper -> content-page-wrapper) 已于上次完成 ★★★ */
-/* 所有的 `<p>` 标签默认也隐藏，配合 JS 动画 */
+/* 所有的内容性标签默认也隐藏，配合 JS 动画 */
 .content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message),
 .content-page-wrapper ul,
 .content-page-wrapper ol,
-.content-page-wrapper ul li,
-.content-page-wrapper ol li /* Added list item direct targeting for robustness */
+.content-page-wrapper ul li, 
+.content-page-wrapper ol li 
 {
     opacity: 0;
     transform: translateY(10px); 
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out; 
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s; 
+    visibility: hidden; /* Start hidden until JS controls */
+     font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
 /* When .is-visible is added to these elements by JS, then they animate in */
 .content-page-wrapper p.is-visible,
 .content-page-wrapper ul.is-visible,
 .content-page-wrapper ol.is-visible,
-.content-page-wrapper ul li.is-visible, /* Targeted list items too */
-.content-page-wrapper ol li.is-visible /* Targeted list items too */
+.content-page-wrapper ul li.is-visible, 
+.content-page-wrapper ol li.is-visible 
 {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
 }
 
 
 /* --- Posts Grid (Blog Page & Comments List) --- */
-.posts-grid  { 
-    display: grid; 
+.posts-grid { 
+    display: grid !important; /* ★★★ CRITICAL FIX: Ensure grid layout */
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 30px; 
     width: 100%; 
     max-width: 900px; 
+    visibility: hidden; /* Start hidden until JS reveals */
+}
+.posts-grid.is-visible {
+    visibility: visible !important; /* Force visible */
 }
 .post-card {
     background-color: var(--card-bg-color); 
@@ -664,15 +748,17 @@ main.container.content-page-wrapper.is-visible {
     opacity: 0; 
     transform: translateY(20px); 
     transition: opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s ease; 
+    visibility: hidden; /* Start hidden until JS reveals */
 }
 .post-card.is-visible { 
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
 }
 .post-card a { 
     color: inherit; 
-    display: flex; 
-    flex-direction: column; 
+    display: flex !important; /* ★★★ CRITICAL FIX: Ensure link itself is display flex to contain content */
+    flex-direction: column !important; 
     height: 100%;
     position: relative; 
 } 
@@ -686,12 +772,14 @@ main.container.content-page-wrapper.is-visible {
     flex-shrink: 0; 
     background: var(--bg-fallback-color) no-repeat center center / cover; 
     filter: none; 
+    visibility: visible !important; /* ★★★ CRITICAL FIX: Ensure img is always visibly */
 }
 
 /* Image loading/fallback states */
 .post-thumbnail.is-loading-fallback {
     object-fit: contain; 
     filter: saturate(0) brightness(0.5) blur(1px); 
+    visibility: visible !important; /* Remain visible during fallback loading state */
 } 
 
 /* Global fallback-text-overlay for all images */
@@ -717,23 +805,29 @@ main.container.content-page-wrapper.is-visible {
     border-radius: inherit; 
     opacity: 0; 
     transition: opacity 0.3s ease; 
+    visibility: hidden; /* Start hidden */
 }
 .fallback-text-overlay.is-visible {
-    opacity: 1; 
+    opacity: 1 !important; /* Force visible */
+    visibility: visible !important; /* Force visible */
 }
 
 
 .post-info { 
     padding: 1.5rem; 
     flex-grow: 1; 
-    display: flex; 
-    flex-direction: column; 
+    display: flex !important; /* ★★★ CRITICAL FIX: Ensure flex display */
+    flex-direction: column !important; 
     text-align: left; 
     align-self:stretch; 
+    visibility: hidden; /* Start hidden until JS reveals */
 } 
+.post-info.is-visible {
+    visibility: visible !important; /* Force visible */
+}
 .post-info h3 { 
     margin: 0 0 0.5rem; 
-    font-family: var(--font-display); 
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-size: 1.4rem; 
     color: #fff; 
     
@@ -742,9 +836,14 @@ main.container.content-page-wrapper.is-visible {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    visibility: hidden; /* Start hidden until JS reveals */
+}
+.post-info h3.is-visible {
+    visibility: visible !important;
 }
 .post-info h3:hover { color: var(--primary-color); } 
 .post-excerpt { 
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-size: 0.9em; 
     margin-bottom: 1rem; 
     color: var(--text-color); 
@@ -757,9 +856,19 @@ main.container.content-page-wrapper.is-visible {
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
+    visibility: hidden;
 } 
-.post-info time { font-size: 0.8em; color: var(--meta-text-color); margin-top: auto;} 
-.post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap;}
+.post-excerpt.is-visible { visibility: visible !important; }
+.post-info time { 
+    font-size: 0.8em; 
+    color: var(--meta-text-color); 
+    margin-top: auto;
+    visibility: hidden;
+} 
+.post-info time.is-visible { visibility: visible !important; }
+
+.post-tags {margin-top: 0.8em; display: flex; gap: 0.5em; flex-wrap: wrap; visibility: hidden; }
+.post-tags.is-visible { visibility: visible !important;}
 .post-tags .tag {
     display: inline-block;
     background-color: rgba(var(--secondary-color-rgb), 0.15); 
@@ -771,7 +880,11 @@ main.container.content-page-wrapper.is-visible {
     border: 1px solid rgba(var(--secondary-color-rgb), 0.2);
     cursor: pointer; 
     transition: all 0.2s ease;
+    visibility: hidden;
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
+.post-tags .tag.is-visible { visibility: visible !important; }
+
 .post-tags .tag:hover {
     background-color: var(--secondary-color);
     color: var(--heading-color);
@@ -783,6 +896,7 @@ main.container.content-page-wrapper.is-visible {
 /* --- Layout for About, Comments, Categories pages --- */
 .about-me-section, .comment-section, .categories-section { 
     width: 100%; 
+    height: auto !important; /* ★★★ NEW FIX: Ensure section takes content height ★★★*/
     text-align: center; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
@@ -790,11 +904,15 @@ main.container.content-page-wrapper.is-visible {
 
      opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+     visibility: hidden; /* Start hidden until JS reveals */
+     display: flex !important; /* ★★★ NEW FIX: Ensure content section internal elements are displayed as flex ★★★*/
+     flex-direction: column !important;
 }
 .about-me-section.is-visible, .comment-section.is-visible, .categories-section.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important; 
 }
 
 
@@ -805,32 +923,40 @@ main.container.content-page-wrapper.is-visible {
     margin-right: auto; 
     text-align: justify; 
     padding: 0 0.5rem; 
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
 .comment-form-container .form-hint { 
     opacity: 0;
     transition: opacity 0.5s ease-out;
+    visibility: hidden;
 }
 .comment-form-container .form-hint.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    visibility: visible !important;
 }
 
 
 /* 对列表也应用max-width和margin auto */
 .content-page-wrapper ul, 
 .content-page-wrapper ol,
-.content-page-wrapper ul li, /* Targeting list item specifically for opacity */
-.content-page-wrapper ol li /* Targeting list item specifically for opacity */
+.content-page-wrapper ul li, 
+.content-page-wrapper ol li 
 { 
     max-width: 760px;
     margin-left: auto;
     margin-right: auto;
     text-align: left; 
     padding-left: 2em; 
+     font-family: var(--font-primary) !important; /* CRITICAL FIX: Ensure font family */
 }
 /* 对分类页的按钮容器确保居中 */
 .categories-section .button-container {
     padding: 0 0.5rem;
+    height: auto !important; /* Add height auto here too to make sure it doesn't get squashed */
+    display: block !important;
+    visibility: hidden;
 }
+.categories-section .button-container.is-visible { visibility: visible !important; }
 
 .about-me-section .my-avatar {
     width: 150px; height: 150px;
@@ -842,10 +968,12 @@ main.container.content-page-wrapper.is-visible {
     transition: transform 0.3s ease, box-shadow 0.3s ease;
      opacity: 0; 
      transform: scale(0.8); 
+     visibility: hidden; /* Start hidden until JS reveals */
 }
 .about-me-section .my-avatar.is-visible { 
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: scale(1) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: scale(1) !important; 
+    visibility: visible !important; 
 }
 .about-me-section .my-avatar:hover {
     transform: scale(1.05) rotate(5deg);
@@ -858,7 +986,7 @@ main.container.content-page-wrapper.is-visible {
     padding: 1.5em; 
     background: rgba(var(--bg-secondary-color-rgb), 0.6); 
     border-radius: var(--border-radius);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Updated to use border-color variable */
     -webkit-backdrop-filter: blur(5px);
     backdrop-filter: blur(5px);
      -webkit-backface-visibility: Hidden; 
@@ -866,11 +994,14 @@ main.container.content-page-wrapper.is-visible {
     transform: translateZ(0); 
      opacity: 0; 
      transform: translateY(10px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+     visibility: hidden; /* Start hidden until JS reveals */
 }
 .about-me-section .contact-info.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important; 
+    display: block !important; /* Ensure block display of contact info */
 }
 
 /* Comments Form */
@@ -878,7 +1009,7 @@ main.container.content-page-wrapper.is-visible {
     background-color: var(--card-bg-color); 
     padding: 2.5rem;
     border-radius: var(--border-radius-lg);
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Updated to use border-color variable */
     box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     width: 100%; 
     max-width: 700px;
@@ -890,78 +1021,86 @@ main.container.content-page-wrapper.is-visible {
     transform: translateZ(0); 
      opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    visibility: hidden; /* Start hidden until JS reveals; need to be very explicit since forms can have complex defaults */
+    display: block !important; /* ★★★ NEW FIX: Ensure form block is visible from start when parent is available ★★★ */
 }
 .comment-form-container.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important; 
 }
 .comment-form-container h3 {
     text-align: center; 
     color: var(--primary-color);
     margin-bottom: 1.5rem;
-    font-family: var(--font-display); 
-    font-size: 1.8rem;
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
-.form-group { margin-bottom: 1.5em; width: 100%; }
-.form-group label { display: block; margin-bottom: 0.5em; font-weight: 500; color: var(--heading-color); }
+.form-group { margin-bottom: 1.5em; width: 100%; display: block !important;}
+.form-group label { display: block !important; margin-bottom: 0.5em; font-weight: 500; color: var(--heading-color); font-family: var(--font-primary), sans-serif !important; }
 .form-group input[type="text"], .form-group textarea {
     width: 100%;
     padding: 0.8em 1em;
-    border: 1px solid var(--border-color);
+    border: 1px solid var(--border-color); /* Updated to use border-color variable */
     border-radius: var(--border-radius);
     background-color: var(--input-bg-color);
     outline: none; 
     color: var(--text-color);
     font-size: 1em;
-    font-family: var(--font-primary);
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    display: block !important; /* Force input to display block */
 }
 .form-group input[type="text"]:focus, .form-group textarea:focus {
     border-color: var(--primary-color);
     box-shadow: 0 0 0 3px rgba(var(--primary-color-rgb), 0.3);
 }
 textarea { resize: vertical; min-height: 120px; }
-.form-hint { font-size: 0.85em; color: var(--meta-text-color); margin-top: 1em; text-align: center; width: 100%;}
-.form-hint.is-visible { opacity: 1 !important; } 
+.form-hint { font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */ font-size: 0.85em; color: var(--meta-text-color); margin-top: 1em; text-align: center; width: 100%; visibility: hidden;}
+.form-hint.is-visible { opacity: 1 !important; visibility: visible !important;} 
 
 
 /* Comments List (基于 posts-grid 的 flex 或 grid 效果) */
 .comments-list-container {
-    margin-top: 3em;
+    margin-top: 3em; 
     padding-top: 2em;
-    border-top: 1px dashed var(--border-color);
+    border-top: 1px dashed var(--border-color); /* Updated to use border-color variable */
     width: 100%; 
     max-width: 900px; 
     text-align: center; 
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+
      opacity: 0; 
-     transition: opacity 0.5s ease-out; 
+     transition: opacity 0.5s ease-out, visibility 0.01s linear 0.5s;
+     visibility: hidden; /* Start hidden until JS reveals */
+     display: block !important; /* Force initial display */
 }
 .comments-list-container.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    visibility: visible !important;
 }
 .comments-list-container h3 {
     text-align: center; 
     margin-bottom: 1.5em;
     color: var(--secondary-color);
-    font-family: var(--font-display); 
-    font-size: 1.8rem;
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
 
-#comments-list  {
+#comments-list {
     margin-top: 1em; 
     text-align: left; 
-    display: grid; 
+    display: grid !important; /* ★★★ CRITICAL FIX: Ensure grid layout */
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 20px; 
     width: 100%; 
     max-width: 100%; 
     margin-left: auto; 
     margin-right: auto;
+    visibility: hidden;
 }
+#comments-list.is-visible { visibility: visible !important; }
 /* Re-style post-card specific to comment list */
 #comments-list.comments-list .post-card { 
     padding: 1.5em; 
@@ -969,35 +1108,44 @@ textarea { resize: vertical; min-height: 120px; }
     font-size: 1em;
     opacity: 0;
     transform: translateY(20px);
+    visibility: hidden;
 }
 #comments-list.comments-list .post-card.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important;
 }
 
 /* Comment text and meta info classes */
 .comment-info { 
-    display: flex;
-    flex-direction: column;
+    display: flex !important;
+    flex-direction: column !important;
     width: 100%;
 }
 .comment-text {
     margin-bottom: 0.5em; 
     font-size: 1em;
-    color: var(--meta-text-color); /* Changed from text-color to meta-text-color for comments */
+    color: var(--text-color) !important; /* CRITICAL FIX: Changed from meta-text-color to text-color for better contrast */
     max-width: 100%;
     text-align: left; 
     word-wrap: break-word; 
     overflow-wrap: break-word;
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    visibility: hidden;
 }
+.comment-text.is-visible { visibility: visible !important; }
 .comment-meta {
     font-size: 0.85em;
     color: var(--meta-text-color);
-    border-top: 1px dashed var(--border-color);
+    border-top: 1px dashed var(--border-color); /* Updated to use border-color */
     padding-top: 0.8em;
     margin-top: 1em;
     text-align: left; 
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    visibility: hidden;
 }
+.comment-meta.is-visible { visibility: visible !important;}
+
 .comment-meta strong { color: var(--primary-color); }
 
 .no-comments-message { 
@@ -1010,11 +1158,13 @@ textarea { resize: vertical; min-height: 120px; }
     width: 100%; 
      opacity: 0; 
      transform: translateY(10px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    visibility: hidden;
 }
 .no-comments-message.is-visible { 
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important;
 }
 
 
@@ -1029,21 +1179,24 @@ main .blog-post-detail {
     max-width: 900px; 
     -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
     backdrop-filter: blur(var(--card-backdrop-blur));
-    display: flex; 
-    flex-direction: column;
+    display: flex !important; /* ★★★ CRITICAL FIX: Ensure flex display */
+    flex-direction: column !important;
     align-items: center; 
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
      opacity: 0; 
-     transition: opacity 0.6s ease-out; 
+     transition: opacity 0.6s ease-out, visibility 0.01s linear 0.6s; 
+     visibility: hidden; /* Start hidden until JS reveals */
 }
 main .blog-post-detail.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    visibility: visible !important;
 }
 
 .post-detail-title {
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-size: 2.8em;
     text-align: center; 
     color: var(--primary-color);
@@ -1052,11 +1205,13 @@ main .blog-post-detail.is-visible {
     width: 100%; 
     opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    visibility: hidden;
 }
 .post-detail-title.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important;
 }
 
 .post-detail-title::after {
@@ -1077,15 +1232,18 @@ main .blog-post-detail.is-visible {
     margin-top: 1em;
     margin-bottom: 2em;
     padding-bottom: 1.5em;
-    border-bottom: 1px dashed var(--border-color);
+    border-bottom: 1px dashed var(--border-color); /* Updated to use border-color */
     width: 100%; 
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
      opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    visibility: hidden;
 }
 .post-meta.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important;
 }
 
 
@@ -1101,14 +1259,17 @@ main .blog-post-detail.is-visible {
     background: var(--bg-fallback-color) no-repeat center center / cover;
     filter: none; 
     opacity: 0; 
-    transition: opacity 0.5s ease-out, filter 0.3s ease, transform 0.3s ease;
+    transition: opacity 0.5s ease-out, filter 0.3s ease, transform 0.3s ease, visibility 0.01s linear 0.5s;
+    visibility: hidden;
 }
 .post-detail-banner.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    visibility: visible !important;
 }
 .post-detail-banner.is-loading-fallback {
     filter: saturate(0) brightness(0.6) blur(1px); 
     object-fit: contain; 
+    visibility: visible !important; /* Ensure visible even when loading fallback */
 }
 /* Post detail banner fallback text style, matching img height */
 .post-detail-banner + .fallback-text-overlay { 
@@ -1122,13 +1283,17 @@ main .blog-post-detail.is-visible {
     width: 100%; 
     max-width: 760px; 
     text-align: justify; 
+    height: auto !important; /* NEW: Ensure content height is automatically set */
      opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    visibility: hidden;
+    display: block !important; /* Force block display for the content container itself */
 }
 .post-content.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important;
 }
 .post-content h3 {
     margin-top: 2.5em;
@@ -1136,13 +1301,16 @@ main .blog-post-detail.is-visible {
     border-left: 5px solid var(--secondary-color);
     padding-left: 1em;
     color: var(--heading-color);
-    font-family: var(--font-display);
+    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-size: 1.8em;
     text-align: left; 
     width: 100%; 
+    visibility: hidden;
 }
-/* ★★★ CSS FIX: Corrected typo 'ot li' to 'ol li' when targeting list items. ★★★ */
+.post-content h3.is-visible { visibility: visible !important;}
+
 .post-content p, .post-content ul, .post-content ol, .post-content ul li, .post-content ol li { 
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-size: 1.05em;
     margin-bottom: 1.5em; 
     line-height: 1.8;
@@ -1150,7 +1318,7 @@ main .blog-post-detail.is-visible {
     padding: 0 0.5rem; 
 }
 .post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} 
-.post-content ul li, .post-content ol li {margin-bottom: 0.5em;}
+.post-content ul li, .post-content ol li {margin-bottom: 0.5em;} /* No direct visibility set here as it's handled by parent p/ul/ol.is-visible*/
 
 
 /* --- Post Share Buttons --- */
@@ -1158,22 +1326,27 @@ main .blog-post-detail.is-visible {
     text-align: center;
     margin-top: 3em;
     padding-top: 2em;
-    border-top: 1px dashed var(--border-color);
+    border-top: 1px dashed var(--border-color); /* Updated to use border-color */
     width: 100%; 
     max-width: 700px; 
+    display: flex !important; /* Force flex display for buttons */
+    justify-content: center !important;
      opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    visibility: hidden;
 }
 .post-share-buttons.is-visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
+    visibility: visible !important;
 }
 .post-share-buttons span {
     color: var(--meta-text-color);
     margin-right: 1em;
     font-size: 0.95em;
     vertical-align: middle;
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
 .share-button {
     display: inline-block;
@@ -1183,34 +1356,65 @@ main .blog-post-detail.is-visible {
     color: #fff;
     font-weight: 500;
     transition: transform 0.2s ease;
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    visibility: hidden;
 }
+.share-button.is-visible { visibility: visible !important; }
+
 .share-button.wechat { background-color: #27CA74; }
 .share-button.weibo { background-color: #E2413E; }
 .share-button.qq { background-color: #3AA9E2; }
 .share-button:hover { transform: translateY(-3px); box-shadow: 0 3px 10px rgba(0,0,0,0.2); }
 
+.read-more {
+    text-align: center;
+    margin-top: 2em; 
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    visibility: hidden;
+}
+.read-more.is-visible { visibility: visible !important; }
 
 /* --- Main Footer --- */
 .main-footer {
-    padding: 1.5rem 0;
+    padding: 0.8rem 0 !important; /* Reduced padding too */
     background: var(--footer-bg-color);
-    border-top: 1px solid var(--border-color);
+    border-top: 1px solid var(--border-color); /* Updated to use border-color */
     box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
     color: var(--meta-text-color);
     font-size: 0.9em;
     text-align: center;
     margin-top: auto; 
+    width: 100% !important; /* CRITICAL FIX: Ensure footer stretches */
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
      opacity: 0; 
-     transition: opacity 0.5s ease-out;
+     transition: opacity 0.5s ease-out, visibility 0.01s linear 0.5s;
+     visibility: hidden; /* Start hidden until JS reveals */
+     display: flex !important; /* Use flex to layout footer children evenly, important! */
+     justify-content: center !important;
+     align-items: center !important;
+     flex-direction: column !important;
+     gap: 0.5em !important;
 }
 .main-footer.is-visible { 
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    visibility: visible !important;
+    display: flex !important; /* Maintain flex display when visible */
 }
 
+.main-footer .container {
+    padding: 0 1.5rem; 
+    display: flex !important; /* Force flex on footer container */
+    flex-direction: column;
+    gap: 0.3em;
+}
+.main-footer p {
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    visibility: hidden;
+}
+.main-footer p.us-visible { visibility: visible !important; }
 
 /* --- Back to Top Button --- */
 #back-to-top {
@@ -1229,13 +1433,16 @@ main .blog-post-detail.is-visible {
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px);
-    transition: all 0.3s ease;
-    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+    transition: all 0.3s ease, visibility 0.01s linear 0.3s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
 }
 #back-to-top.show {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    visibility: visible !important; 
+    transform: translateY(0) !important; 
 }
 #back-to-top:hover {
     background-color: var(--primary-hover-color);
@@ -1255,16 +1462,17 @@ main .blog-post-detail.is-visible {
     box-shadow: 0 0 10px var(--primary-color);
     transition: width 0.1s linear; 
     z-index: 1001; 
+    visibility: hidden;
 }
-
+#read-progress-bar.is-visible { visibility: visible !important; }
 
 /* --- Responsive Adjustments - Mobile Specific (max-width: 767px) --- */
 @media (max-width: 767px) {
     /* 通用移动端样式覆盖 */
     body {
-        cursor: auto; 
-        opacity: 1; 
-        transform: none; 
+        cursor: auto !important; 
+        opacity: 1 !important; 
+        transform: none !important; 
     }
     body::before { 
         backdrop-filter: blur(var(--body-global-blur-value)); 
@@ -1282,8 +1490,9 @@ main .blog-post-detail.is-visible {
         font-size: 1.2rem; 
     }
     .menu-toggle .icon-bar { width: 22px; margin: 3px 0;} 
-    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-4px, 4px); }
-    .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-4px, -4px); }
+    /* Keyframe animations applied above should handle this. */
+    /* .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { transform: rotate(-45deg) translate(-4px, 4px); } */
+    /* .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { transform: rotate(45deg) translate(-4px, -4px); } */
     
     /* 缩小菜单小框在手机端更紧凑 */
     .main-nav {
@@ -1311,9 +1520,7 @@ main .blog-post-detail.is-visible {
     main.container.content-page-wrapper { 
         margin: 0.4rem auto; 
         padding: 0.8rem 0.6rem; 
-        display: flex; 
-        flex-direction: column; 
-        align-items: center; 
+        display: flex !important; /* Force flex here too */
     }
 
     .page-title, .section-title { font-size: 1.5rem; margin-bottom: 0.8rem; } 
@@ -1352,7 +1559,7 @@ main .blog-post-detail.is-visible {
 
     /* **FIX: 博客文章列表网格强制单列且内容自适应** */
     .posts-grid, #comments-list { 
-        grid-template-columns: 1fr; 
+        grid-template-columns: 1fr !important; /* Force single column on mobile */
         gap: 12px; 
         margin-left: 0; 
         margin-right: 0;
@@ -1386,7 +1593,8 @@ main .blog-post-detail.is-visible {
         text-align: justify; 
     }
      .post-content h3 { font-size: 1.2em; padding-left: 0.5em; text-align: left; border-left: 3px solid var(--secondary-color);} 
-    .post-share-buttons {margin-top: 1em; padding-top: 0.8em;} 
+    .post-share-buttons {margin-top: 1em; padding-top: 0.8em; gap: 0; } 
+    .post-share-buttons span {margin-right: 0.5em;}
     .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; border-radius: 4px; } 
 
     .comment-form-container, .about-me-section .contact-info { 
@@ -1408,9 +1616,30 @@ main .blog-post-detail.is-visible {
 
     /* Footer on mobile */
     .main-footer { padding: 0.6rem 0.5rem;}
-    .main-footer .container { padding: 0 0.5rem; flex-direction: column; gap: 0.3rem;} 
+    .main-footer .container { padding: 0 0.5rem;} 
     .main-footer p {font-size: 0.7em;}
 
     #back-to-top { bottom: 0.2rem; right: 0.2rem; width: 25px; height: 25px; font-size: 0.8em; }
 
+}
+
+/* ★★★ CRITICAL FIX: Base utility classes must apply with highest priority ★★★ */
+.force-visible {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: block !important; /* Most common visibility overrides involve display: none; */
+     /* For flex containers, explicitly set flex to override display: none */
+    display: flex !important; 
+    flex-direction: column !important;
+    height: auto !important; /* Ensure height also isn't collapsing contents */
+    min-height: 20px !important; 
+    width: auto !important; /* Ensure width is not zero */
+     pointer-events: auto !important; /* Ensure content is interactive */
+}
+
+/* Ensure images always display */
+img {
+    visibility: visible !important;
+    opacity: 1 !important;
+    display: inline-block !important; /* Default for img */
 }

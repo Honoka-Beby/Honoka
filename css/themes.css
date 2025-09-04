@@ -26,23 +26,24 @@
     --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
 
     --card-bg-color: rgba(26, 22, 37, 0.78); /* 卡片背景（如文章卡片，评论卡片），提供良好背景可读性 */
-    --content-bg-color: rgba(26, 22, 37, 0.72); /* 主要内容区的半透明背景 (e.g. blog, about, comments, post-detail wrapper) */
+    /* ★★★ CRITICAL FIX: Make content background more transparent to blend more with body background ★★★ */
+    /* Adjust this to be slightly more transparent than hero-overlay-bg if aiming for "same color as homepage background" effect. */
+    --content-bg-color: rgba(26, 22, 37, 0.5); /* 调整为更透明的背景色，让底部背景图更多透出 */
     
     --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
-    /* Secondary color RGB values for use in rgba(). */
     --secondary-color-rgb: 189, 147, 249; 
     --shadow-rgb: 0, 0, 0; /* 用于阴影 */
 
     /* Text Colors - 温和的星光白 */
     --text-color: #dcd7e6; /* 主体文本颜色 */
-    --text-color-rgb: 220, 215, 230; /* 新增 RGB 变量，用于颜色计算，特别是实现 homepage title 透明度效果 */
+    --text-color-rgb: 220, 215, 230; 
     --heading-color: #ffffff; /* 标题颜色 */
-    --heading-color-rgb: 255, 255, 255; /* 新增 RGB 变量 */
+    --heading-color-rgb: 255, 255, 255; 
     --meta-text-color: #9e9aac; /* 元信息/辅助文本颜色 */
 
     /* Accent & Primary Colors - 亮眼的少女粉 */
     --primary-color: #ff79c6; /* 主色调，亮粉色 */
-    --primary-color-rgb: 255, 121, 198; /* 用于RGBA计算 */
+    --primary-color-rgb: 255, 121, 198; 
     --primary-hover-color: #ff92d0; /* 主色调悬停，稍亮 */
     --secondary-color: #bd93f9; /* 辅助色，神秘紫 */
 
@@ -52,10 +53,10 @@
     --input-bg-color: var(--bg-secondary-color); /* 输入框背景 */
     
     /* Links */
-    --link-color: var(--primary-color); /* 链接颜色 */
-    --link-hover-color: var(--primary-hover-color); /* 链接悬停颜色 */
+    --link-color: var(--primary-color); 
+    --link-hover-color: var(--primary-hover-color); 
     
     /* Font family */
     --font-primary: 'Noto Sans SC', sans-serif; /* 主要正文字体 */
-    --font-display: 'LXGW WenKai Screen', sans-serif; /* 标题、显示字体 */
+    --font-display: 'LXGW WenKai Screen', serif; /* 为了更兼容，标题字体如果遇到问题，可以尝试用通用的 serif 或 sans-serif 后备，但我们保留了你希望的 Screen 字体 */
 }

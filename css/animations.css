@@ -1,14 +1,11 @@
 /*
- * animations.css
- * This file is intended for custom CSS animation keyframes and associated animation properties.
- * If you have custom @keyframes rules (e.g., for `animate__fade-in`, `animate__slide-up`),
- * please define them here directly.
+ * animations.css - Honoka's Blog
+ * This file is now cleared to prevent potential CSS conflicts and redundant imports.
  *
- * It should NOT contain duplicate @import rules or general styling as found in style.css.
- * The current content has been minimized to prevent conflicts from erroneous duplication.
+ * If you have custom CSS @keyframes rules (e.g., for entrance animations, special effects),
+ * you should add them DIRECTLY to the 'css/style.css' file at its end,
+ * or manage them carefully if you absolutely require a separate file.
+ *
+ * All core animations (fade-out cursor trail, spin, pulse, pulse-glow, homepage-title-flow-gradient, header-text-pulse-glow
+ * and hamburger menu animations) are now defined within `style.css` for consolidation and clarity.
  */
-
-/* Example: @keyframes homepage-title-flow-gradient might go here. (Ensure it's not present in style.css or themes.css if moved here) */
-/* @keyframes spin { /* ... */ } */
-/* @keyframes pulse { /* ... */ } */
-/* Add your custom animation keyframes  here: */
