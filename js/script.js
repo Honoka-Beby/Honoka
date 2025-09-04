@@ -94,6 +94,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }); 
 
     // ################### IMPORTANT: backendBaseUrl Configuration ###################
+    // This value is used by frontend to fetch Netlify Functions from the same domain.
     const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; 
 
 
@@ -145,7 +146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupLinkInterceptor(rootElement = document) { // Accept a root element for targeted interception
         rootElement.querySelectorAll('a').forEach(link => {
             // Skip links that definitely shouldn't trigger a page transition or for external sites
-            if (link.target === '_blank' || link.href.startsWith('mailto:') || link.href.startsWith('tel:') || link.href.startsWith('javascript:voud(0)') || !link.href) {
+            if (link.target === '_blank' || link.href.startsWith('mailto:') || link.href.startsWith('tel:') || link.href.startsWith('javascript:void(0)') || !link.href) {
                 return; 
             }
 
@@ -343,37 +344,39 @@ document.addEventListener('DOMContentLoaded', () => {
             // Add click-to-retry functionality to the overlay OR the image itself
             const retryHandler = (e) => {
                 e.stopPropagation(); // Prevents clicks from bubbling up to parent links/cards
-                console.log("[ImageLoader] Retrying image load due to click on fallback overlay...");
+                console.log("[ImageLoader] Retrying image load due to click on fallback overlay or image itself...");
                 // Remove current overlay (if text clicked) or remove fallback state from image
-                if (fallbackTextOverlay) {
+                if (fallbackTextOverlay) { // Fades out then removes
                     fallbackTextOverlay.classList.remove('is-visible');
-                    setTimeout(() => fallbackTextOverlay.remove(), 200); // Clear immediately/fast
+                    setTimeout(() => fallbackTextOverlay.remove(), 200); 
                  }
-                 targetElement.style.visibility = 'visible'; // Reset image visibility
-                 targetElement.classList.remove('is-loading-fallback'); // Clear fallback filter
-                 targetElement.src = ''; // Clear src, forcing re-fetch attempt
+                // Reset image's visual state to prevent artifacts from previous failed load before re-attempt
+                targetElement.style.visibility = 'visible'; 
+                targetElement.classList.remove('is-loading-fallback'); 
+                targetElement.src = ''; // Clear src to force a fresh re-fetch attempt
 
-                // Immediately try drawing a new API image after a short delay
+                // Immediately try drawing a new API image after a short delay to allow DOM render refresh
                 setTimeout(() => fetchRandomAnimeImage(targetElement, type, srcOverride), 100); 
             };
-            if (!fallbackTextOverlay._retryListener) { // Add listener only once
+            // Attach retry listener to both the image and the overlay for a larger hit area
+            if (!fallbackTextOverlay._retryListener) { // Ensure listener is only added once
                 fallbackTextOverlay.addEventListener('click', retryHandler);
                 targetElement.addEventListener('click', retryHandler); 
-                fallbackTextOverlay._retryListener = retryHandler; // Store reference
+                fallbackTextOverlay._retryListener = retryHandler; // Store reference for cleanup if needed in future
             }
 
-            // Secondary check: if the local fallback image itself is broken (e.g., /img/avatar.png missing)
-            // Then simply hide the `<img>` content itself and ensure only the overlay + gradient are shown.
+            // Secondary check: if the local fallback image itself is broken (e.g., /img/avatar.png missing or corrupted)
+            // In this cascade failure, we simply hide the `<img>` content itself and ensure only the overlay + gradient are shown.
             const testLocalImage = new Image();
             testLocalImage.src = localFallbackSrc;
-            testLocalImage.onload = () => {
-                targetElement.style.visibility = 'visible'; // Keep original img content visible as it loaded
+            testLocalImage.onload = () => { // If local fallback image loads, show the `<img>` again
+                targetElement.style.visibility = 'visible'; 
                 if (fallbackTextOverlay) fallbackTextOverlay.classList.add('is-visible');
             };
-            testLocalImage.onerror = () => {
-                targetElement.style.visibility = 'hidden'; // Hide the broken <img> content, leave only background gradient
-                if (fallbackTextOverlay) setTimeout(() => fallbackTextOverlay.classList.add('is-visible'), 50); // Force visible
-                console.warn(`[ImageLoader] 🚫 Local fallback image (path: "${localFallbackSrc}") itself failed to load. Displaying only text overlay over gradient.`);
+            testLocalImage.onerror = () => { // If local fallback image 404s/fails, hide `<img>` completely
+                targetElement.style.visibility = 'hidden'; 
+                if (fallbackTextOverlay) setTimeout(() => fallbackTextOverlay.classList.add('is-visible'), 50); // Ensure overlay takes over
+                console.warn(`[ImageLoader] 🚫 Local fallback image (path: "${localFallbackSrc}") itself failed to load. Displaying only text overlay over generated gradient.`);
             };
 
             console.log(`[ImageLoader] 🎨 Applied robust local fallback system with overlay for: ${targetElement?.alt || type}.`);
@@ -387,10 +390,11 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("[Background] Dynamic body background initiation.");
 
         // Dynamically load images for avatar, post thumbnails, etc.
+        // Queries all elements that are either `.my-avatar` or have `data-src-type="wallpaper"` (for thumbs/banners)
         document.querySelectorAll('.my-avatar, .post-thumbnail[data-src-type="wallpaper"], .post-detail-banner[data-src-type="wallpaper"]').forEach(img => {
             // Apply fallback logic first to ensure immediate display state, then attempt to fetch dynamic image
             applyFallbackImage(img, 'image'); 
-            fetchRandomAnimeImage(img, 'image'); 
+            fetchRandomAnimeImage(img, 'image'); // Try to fetch a new dynamic image
         });
         console.log("[ImageLoader] Post thumbnails, avatar, and detail banners initiated.");
     }
@@ -417,90 +421,98 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Step 2: Comprehensive selection for *all* content elements that are designed to animate into view,
         // or which might default to `opacity: 0` and require the `is-visible` class to properly display.
-        // This selector is very broad to catch almost anything.
+        // This selector is very broad to catch almost anything that visually holds content.
         const elementsToAnimateOrReveal = document.querySelectorAll(
-            // General elements with an `animate__` class (our primary targets)
+            // General elements marked with an `animate__` class (our primary targets for animation)
             '[class*="animate__"], ' + 
-            // All common content-bearing HTML tags within main sections:
+            // All common content-bearing HTML tags within main sections and their wrappers:
             'main.main-content h1, main.main-content p, main.main-content ul, main.main-content ol, ' +
             'main.container.content-page-wrapper h1, main.container.content-page-wrapper h2, ' +
             'main.container.content-page-wrapper h3, main.container.content-page-wrapper h4, ' +
-            // Specifically targeted paragraphs (excluding tooltips/excerpts that might have their own logic in initial opaque state)
+            // Specifically targeted paragraphs (excluding tooltips/excerpts that might have their own specific display logic, e.g., initially opaque)
             'main.container.content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message), ' +
-            'main.container.content-page-wrapper ul:not(.main-nav ul), ' + // Exclude main navigation list from generic target
+            'main.container.content-page-wrapper ul:not(.main-nav ul), ' + // Exclude the main navigation list from generic target to prevent conflicts
             'main.container.content-page-wrapper ol, ' +
-            // Specific key elements found on different pages:
-            '.hero-subtitle, .hero-nav a, .hero-content, ' + // Homepage elements
-            '.blog-title.is-header-title > a, .menu-toggle, .main-nav ul li a, ' + // Header/Nav elements
-            '.my-avatar, .about-me-section p, .contact-info, .contact-info h3, .contact-info ul li, ' + // About page elements
-            '#blog-category-filters .filter-tag-button, #all-posts-grid .post-card, ' + // Blog page category filters and post cards
-            // Internal elements of post cards / article details that need reveal:
+            // Also explicitly target individual list items if they might be hidden independently
+            'main.container.content-page-wrapper ul li, main.container.content-page-wrapper ol li, ' +
+            // Specific key elements found on different pages that must always reveal:
+            '.hero-subtitle, .hero-nav a, .hero-content, ' + // Homepage specific elements like slogan, nav links, and the hero content block itself
+            '.blog-title.is-header-title > a, .menu-toggle, .main-nav ul li a, ' + // Header/Navigation elements, including the menu toggle and individual nav items
+            '.my-avatar, .about-me-section p, .contact-info, .contact-info h3, .contact-info ul li, ' + // About page elements (avatar, paragraphs, contact box, and its internal elements)
+            '#blog-category-filters .filter-tag-button, #all-posts-grid .post-card, ' + // Blog page category filters and individual post cards
+            // Internal elements of post cards and article details that typically animate or need forced reveal:
             '.post-card .post-info h3, .post-card .post-excerpt, .post-card time, .post-card .post-tags, .post-card .tag, ' + 
             '.blog-post-detail .post-detail-title, .blog-post-detail .post-meta, .blog-post-detail .post-detail-banner, ' + 
             '.blog-post-detail .post-content, .blog-post-detail .post-content h3, ' + 
+               // Footer navigation & other elements
             '.post-share-buttons, .post-share-buttons span, .share-button, .read-more .button, ' +
-            // Comments page elements:
+            // Comments page elements, including the entire container, form, and individual comments/messages:
             '.comment-section .page-title, .comment-form-container, .comment-form-container h3, ' + 
+            // Form-specific elements like labels, inputs, textareas, and helper hints
             '.form-group, .form-group label, .form-group input, .form-group textarea, .form-hint, ' + 
             '.comments-list-container, .comments-list-container h3, ' + 
             '#comments-list .post-card, #comments-list .comment-info, #comments-list .comment-text, ' +
             '#comments-list .comment-meta, .no-comments-message, ' + 
             // Categories page elements:
             '.categories-section .page-title, .categories-section p, #dynamic-category-list .filter-tag-button, .categories-section .button-container .button, ' + 
-            // Global UI elements not captured by main structural elements loop:
+            // Global utility UI elements generally found at the bottom or corners of the page:
             '#back-to-top, .main-footer p, #current-year, #visitor-count ' 
         );
 
         elementsToAnimateOrReveal.forEach(el => {
             const delay = parseInt(el.dataset.delay || '0', 10);
             setTimeout(() => {
-                // Only add 'is-visible' if element doesn't *already* have it (to prevent re-triggering animations)
-                // and isn't being forcefully displayed by the CSS-only `force-visible`.
+                // Only add 'is-visible' if element doesn't *already* have it (to prevent re-triggering animations prematurely)
+                // and isn't being forcefully displayed by the CSS-only `force-visible` utility class.
                 if (!el.classList.contains('is-visible') && !el.classList.contains('force-visible')) {
                     el.classList.add('is-visible');
                 }
-            }, delay + 50); // Small base delay on top of custom data-delay for staggered fade-in
+            }, delay + 50); // A small, consistent base delay on top of data-delay for staggered fade-in effect
         });
         console.log(`[VisibilityFix] Applied 'is-visible' to ${elementsToAnimateOrReveal.length} content elements using direct class injection.`);
 
 
-        // Step 3: Fallback using IntersectionObserver for any elements that might still be missed or are added dynamically POST-load.
-        // This acts as a robust safety net beneath the direct application.
+        // Step 3: Fallback using IntersectionObserver for any elements that might still be missed by direct selection 
+        // or are loaded/injected dynamically POST-initial-load. This acts as an additional robust safety net.
         const observer = new IntersectionObserver((entries, observerInstance) => {
             entries.forEach(entry => {
                 const isElementAlreadyVisible = entry.target.classList.contains('is-visible') || entry.target.classList.contains('force-visible');
 
                 if (entry.isIntersecting && !isElementAlreadyVisible) {
                     const delay = parseInt(entry.target.dataset.delay || '0', 10);
+                    // Add 'is-visible' after small delay to allow for staged animations.
                     setTimeout(() => {
-                        if (!entry.target.classList.contains('is-visible')) { 
+                        if (!entry.target.classList.contains('is-visible')) { // Double-check before adding
                             entry.target.classList.add('is-visible');
                         }
-                        // Stop observing once element is visible, unless it's a specific element meant for continuous animation (e.g., initial blog title on homepage)
+                        // Stop observing once the element is visible, unless it's a specific element designed for continuous animation (e.g., the rotating blog title on the homepage)
                         if (!entry.target.classList.contains('blog-title--animated')) { 
-                            observerInstance.unobserve(entry.target); 
+                            observerInstance.unobserve(entry.target); // Optimize: stop observing static elements
                         }
                     }, delay + 50); 
                 }
             });
         }, { 
-            threshold: 0.1, // Trigger when 10% of the element is visible
-            rootMargin: "0px 0px -50px 0px" // Start observing slightly earlier for smoother transitions
+            threshold: 0.1, // Trigger when 10% of the element is visible in the viewport
+            rootMargin: "0px 0px -50px 0px" // Start observing slightly earlier for smoother transitions (e.g., when 50px towards the bottom edge)
         });
 
-        // Observe all potential animation and content containers 
+        // Apply the IntersectionObserver to all potential animation and content containers.
+        // This is a broad selection to ensure dynamic elements or those missed by direct injection are eventually covered.
         document.querySelectorAll(
-            '[class*="animate__"], ' + // Selects elements already marked for animation
-            '.comments-list-container, .comment-form-container, .about-me-section, .categories-section, .blog-post-detail, ' + // Key section containers
-            '.contact-info, .posts-grid, #dynamic-category-list, #all-posts-grid ' // Additional specific container types for completeness
+            '[class*="animate__"], ' + // Elements explicitly marked for animation (e.g., fade-in, slide-up)
+            // Major content containers for various pages:
+            '.comments-list-container, .comment-form-container, .about-me-section, .categories-section, .blog-post-detail, ' + 
+            // Additional specific container types for completeness and robustness:
+            '.contact-info, .posts-grid, #dynamic-category-list, #all-posts-grid ' 
             )
             .forEach(el => {
-                // Do not observe elements that have already been visibly forced by Step 1 or explicitly made visible by Step 2.
+                // Ensure we don't re-observe elements that have already been visibly forced by Step 1 or made visible by Step 2.
                 if (!el.classList.contains('force-visible') && !el.classList.contains('is-visible')) {
                     observer.observe(el);
                 }
             });
-        console.log("[VisibilityFix] IntersectionObserver initialized as an additional fallback for element visibility.");
+        console.log("[VisibilityFix] IntersectionObserver initialized as an additional self-healing fallback for element visibility.");
     } // End of applyImmediateVisibilityFix
 
 
@@ -510,13 +522,15 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!btn) { console.log("[BackToTop] 'back-to-top' button element not found. Feature disabled."); return; }
 
         // Immediately hide/show button based on initial scroll position
-        if (window.scrollY > document.documentElement.clientHeight / 2) { // Show if scrolled more than half viewport height
-            btn.classList.add('show'); 
+        // Show if scrolled down more than half the viewport height.
+        if (window.scrollY > document.documentElement.clientHeight / 2) { 
+            btn.classList.add('show'); // Apply 'show' class to make it visible
         } 
         else { 
-            btn.classList.remove('show'); 
+            btn.classList.remove('show'); // Hide it
         }
 
+        // Add scroll event listener to dynamically show/hide the button
         window.addEventListener('scroll', () => {
             if (window.scrollY > document.documentElement.clientHeight / 2) { 
                 btn.classList.add('show'); 
@@ -525,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 btn.classList.remove('show'); 
             }
         });
+        // Add click listener for smooth scroll to top
         btn.addEventListener('click', () => { window.scrollTo({ top: 0, behavior: 'smooth' }); });
         console.log("[BackToTop] 'Back to Top' button initialized.");
     }
@@ -532,27 +547,27 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function declaration for full hoisting safety
     function setupReadProgressBar() {
         const progressBar = document.getElementById('read-progress-bar');
-        const content = document.querySelector('.blog-post-detail'); // Main content area for an article
+        const content = document.querySelector('.blog-post-detail'); // Main content area for an article detail page
         if (!progressBar || !content) { 
             console.log("[ReadProgressBar] Not an article detail page or elements not found. Feature skipped."); 
             return; 
         } 
 
         function calculateProgress() {
-            // Calculate total scrollable height considering the entire document
+            // Calculate the total scrollable height of the document beyond the initial viewport
            const documentHeight = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) - window.innerHeight;
             const currentScrollPosition = window.scrollY; 
 
-            // Clamp progress between 0 and 100
+            // Calculate read progress as a percentage and clamp between 0% and 100%
             let readProgress = (documentHeight > 0) ? (currentScrollPosition / documentHeight) * 100 : 0;
-            readProgress = Math.min(100, Math.max(0, readProgress)); 
+            readProgress = Math.min(100, Math.max(0, readProgress)); // Ensure it's between 0 and 100
 
-            progressBar.style.width = readProgress + '%'; 
+            progressBar.style.width = readProgress + '%'; // Apply percentage width to the progress bar
         }
 
         window.addEventListener('scroll', calculateProgress);
-        window.addEventListener('resize', calculateProgress); // Recalculate on window resize
-        setTimeout(calculateProgress, 100); // Initial calculation after a short delay
+        window.addEventListener('resize', calculateProgress); // Recalculate on window resize to adjust for layout changes
+        setTimeout(calculateProgress, 100); // Initial calculation after a short delay to ensure DOM is fully rendered
         console.log("[ReadProgressBar] Enabled for article detail pages.");
     }
     
@@ -564,27 +579,28 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (!menuToggle || !mainNav || !menuClose) {
             console.warn('[MainMenu] Essential menu elements not found. Navigation menu features disabled. Check HTML structure for .menu-toggle, #main-nav-menu, .main-nav .menu-close.');
-            document.body.classList.remove('no-scroll'); 
+            document.body.classList.remove('no-scroll'); // Ensure scrolling is restored if menu fails
             return;
         }
 
         const openMenu = () => {
-            mainNav.classList.add('is-open'); 
-            menuToggle.setAttribute('aria-expanded', 'true');
-            document.body.classList.add('no-scroll'); // Prevent page scroll when nav is open
+            mainNav.classList.add('is-open'); // Apply CSS class to open menu
+            menuToggle.setAttribute('aria-expanded', 'true'); // Update ARIA attribute for accessibility
+            document.body.classList.add('no-scroll'); // Prevent background page scroll when navigation is open
             console.log("[MainMenu] Panel menu is now open.");
         };
 
         const closeMenu = () => {
-            if (!mainNav.classList.contains('is-open')) return; // Only close if it's currently open
+            if (!mainNav.classList.contains('is-open')) return; // Only close if it's currently open to avoid redundant operations
             mainNav.classList.remove('is-open');
             menuToggle.setAttribute('aria-expanded', 'false');
-            document.body.classList.remove('no-scroll'); // Restore page scroll
+            document.body.classList.remove('no-scroll'); // Restore background page scrolling
             console.log("[MainMenu] Panel menu is now closed.");
         };
 
+        // Toggle menu on button click
         menuToggle.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevents document click from immediately closing menu
+            event.stopPropagation(); // Prevents the click from bubbling up to the document body and immediately closing the menu
             if (mainNav.classList.contains('is-open')) { 
                 closeMenu(); 
             } 
@@ -592,45 +608,50 @@ document.addEventListener('DOMContentLoaded', () => {
                 openMenu(); 
             }
         });
+        // Close menu exclusively via the dedicated close button
         menuClose.addEventListener('click', (event) => {
-            event.stopPropagation(); // Prevents unwanted propagation
+            event.stopPropagation(); // Prevent unwanted propagation
             closeMenu();
         });
 
         // Intercept menu item clicks for page transitions
         mainNav.querySelectorAll('a').forEach(link => { 
-            // Clear any old transition listeners to prevent duplicates if function runs twice
+            // Clear any old transition listeners first to prevent duplicates if this setup function is called multiple times
             if (link._menuTransitionHandler) {
                 link.removeEventListener('click', link._menuTransitionHandler);
             }
 
             let hrefURL;
             try { 
-                hrefURL = new URL(link.href || 'javascript:void(0)', window.location.href); 
+                hrefURL = new URL(link.href || 'javascript:void(0)', window.location.href); // Safely parse the URL
             } catch (e) {
-                // For invalid or missing hrefs, just default to closing menu
+                // If URL parsing fails (e.g., malformed href), gracefully fallback to just closing the menu
                 const simpleCloser = () => { closeMenu(); }; 
                 link.addEventListener('click', simpleCloser); 
-                link._menuTransitionHandler = simpleCloser;
+                link._menuTransitionHandler = simpleCloser; // Store reference
+                console.warn(`[MainMenu] Invalid menu link URL "${link.href}", defaulting to menu close on click.`);
                 return; 
             }
 
+            // Define the new click handler for menu links
             const newMenuClickHandler = (e) => {
-                 // Check if it's an internal link leading to a different path
+                 // Check if it's an internal link leading to a *different* path (i.e., not just a hash on the current page)
                  if (hrefURL.origin === window.location.origin && hrefURL.pathname !== window.location.pathname) {
-                    e.preventDefault(); 
-                    activatePageTransition(link.href); 
-                    setTimeout(() => { closeMenu(); }, 400); // Close menu after transition starts (matches CSS fade-in)
-                 } else { // Handle external links, same-page anchors, or internal links to current page - just close menu
+                    e.preventDefault(); // Prevent default browser navigation for internal links
+                    activatePageTransition(link.href); // Trigger our custom page transition
+                    // Close menu swiftly after initiating the page transition
+                    setTimeout(() => { closeMenu(); }, 400); // Matches CSS transition duration roughly
+                 } else { // For external links, same-page anchors, or internal links to the current page, just close the menu gracefully
                     closeMenu(); 
                  }
             };
             link.addEventListener('click', newMenuClickHandler);
-            link._menuTransitionHandler = newMenuClickHandler; // Store handler reference
+            link._menuTransitionHandler = newMenuClickHandler; // Store handler reference for future removal
         });
 
-        // Close menu if clicking outside the menu area or toggle button
+        // Close menu if clicking anywhere outside the menu area or the toggle button itself
         document.body.addEventListener('click', (event) => {
+            // Check if the click occurred while the menu is open AND was outside both the menu panel AND the menu toggle button
             if (mainNav.classList.contains('is-open') && !mainNav.contains(event.target) && !menuToggle.contains(event.target) ) {
                 closeMenu();
             }
@@ -645,66 +666,74 @@ document.addEventListener('DOMContentLoaded', () => {
         const blogPostsGrid = document.getElementById('all-posts-grid'); 
         
         const isCategoriesPage = window.location.pathname.includes('categories.html');
+        // Retrieve `dynamicCategoryList` potentially created in initial HTML or empty if not present.
         const dynamicCategoryList = document.getElementById('dynamic-category-list'); 
 
-        // Aggregate all unique tags from available post cards *in the DOM*
+        // Aggregate all unique tags from available post cards *currently in the DOM*
         const allPosts = document.querySelectorAll('.post-card[data-tags]');
-        const allTags = new Set();
+        const allTags = new Set(); // Use a Set to automatically store unique tags
         allPosts.forEach(post => { 
             const tagsAttr = post.dataset.tags; 
-            if (tagsAttr) { tagsAttr.split(',').map(tag => tag.trim()).filter(Boolean).forEach(tag => allTags.add(tag)); }
+            if (tagsAttr) { // Ensure there are tags to process
+                // Split by comma, trim whitespace, filter out empty strings, and add to the Set
+                tagsAttr.split(',').map(tag => tag.trim()).filter(Boolean).forEach(tag => allTags.add(tag)); 
+            }
         });
         
-        const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN')); // Sort tag buttons alphabetically
+        // Convert Set to Array and sort tags alphabetically for consistent display order
+        const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN')); 
 
-        // Part 1: Interactive filtering on 'blog.html'
+        // Part 1: Interactive filtering on the 'blog.html' page
         if (categoryFiltersContainer && blogPostsGrid) {
-            categoryFiltersContainer.innerHTML = ''; // Clear existing buttons to prevent duplicates
-            // Create and prepend 'All Articles' button explicitly
+            categoryFiltersContainer.innerHTML = ''; // Clear existing buttons to prevent duplicates on re-initialization
+            // Create and prepend an 'All Articles' button explicitly
             const allButton = document.createElement('button');
-            allButton.classList.add('filter-tag-button', 'button', 'active'); // Apply theme button styles
+            allButton.classList.add('filter-tag-button', 'button', 'active'); // Apply theme button styles, default to active
             allButton.textContent = `全部文章`;
-            allButton.dataset.filter = 'all';
-            categoryFiltersContainer.prepend(allButton); 
+            allButton.dataset.filter = 'all'; // Custom data attribute for filtering
+            categoryFiltersContainer.prepend(allButton); // '全部文章' button first
 
-            // Event handler to filter posts
+            // Event handler function to filter posts based on a given tag
             const filterPosts = (filterTag, clickedButton = null) => {
                 // Deactivate all filter buttons, then activate the clicked one
                 categoryFiltersContainer.querySelectorAll('.filter-tag-button').forEach(btn => { 
                     btn.classList.remove('active'); 
                 });
-                if (clickedButton) { 
+                if (clickedButton) { // If a specific button was clicked, make it active
                     clickedButton.classList.add('active'); 
-                } else if (filterTag === 'all') { // If filterTag is 'all' but no specific button was clicked (e.g., initial load)
+                } else if (filterTag === 'all') { // If filterTag is 'all' but no specific button explicitly clicked (e.g., initial page load)
                     allButton.classList.add('active'); 
                 }
 
-                // Iterate through all post cards and show/hide based on filter
+                // Iterate through all post cards within the grid and show/hide based on the filter
                 blogPostsGrid.querySelectorAll('.post-card').forEach(post => { 
                     const tagsAttr = post.dataset.tags;
-                    if (!tagsAttr) { // Handle posts with no specified tags
+                    if (!tagsAttr) { // Handle posts that legitimately have no specified tags
                         post.style.display = (filterTag === 'all') ? 'block' : 'none'; 
-                        post.classList.toggle('is-visible', filterTag === 'all'); // Ensure visibility matches display
-                        return;
+                        post.classList.toggle('is-visible', filterTag === 'all'); // Ensure visibility matches display state
+                        return; // Done with this post
                     }
+                    // Process post's tags for comparison
                     const postTagsLower = tagsAttr.split(',').map(tag => tag.trim().toLowerCase()); 
-                    const filterTagLower = filterTag?.toLowerCase(); 
+                    const filterTagLower = filterTag?.toLowerCase(); // Ensure filter tag is lowercase and safely accessed
 
+                    // Show post if filter is 'all' or if post's tags include the filter tag
                     if (filterTagLower === 'all' || postTagsLower.includes(filterTagLower)) { 
-                        post.style.display = 'block'; 
-                        // Re-trigger staggered animation for visible items. (Small delay needed for CSS `display` transition hints)
+                        post.style.display = 'flex'; // Use flex to maintain card layout
+                        // Re-trigger staggered animation for visible items. (Small delay needed for CSS display transitions)
                         setTimeout(() => post.classList.add('is-visible'), parseInt(post.dataset.delay || '0', 10) + 50); 
                     } else {
-                        post.style.display = 'none'; 
-                        post.classList.remove('is-visible'); 
+                        post.style.display = 'none'; // Hide the post
+                        post.classList.remove('is-visible'); // Remove visibility class (for animation/transitions)
                     }
                 });
                 console.log(`[CategoryFilter] Applied filter: "${filterTag}".`);
             };
 
+            // Add event listener for the 'All Articles' button
             allButton.addEventListener('click', () => filterPosts('all', allButton));
 
-            // Create buttons for each unique tag
+            // Create buttons for each unique tag found and attach filtering logic
             sortedTags.forEach(tag => {
                 const button = document.createElement('button');
                 button.classList.add('filter-tag-button', 'button'); 
@@ -714,51 +743,52 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.addEventListener('click', () => filterPosts(tag, button));
             });
 
-            // Check URL for initial tag filtering (e.g., from categories.html or direct link with query param)
+            // Check URL for an initial tag query parameter (e.g., from categories.html or a direct blog link)
             const urlParams = new URL(window.location.href);
             const initialTag = urlParams.searchParams.get('tag'); 
             if (initialTag) {
                 const initialButton = categoryFiltersContainer.querySelector(`[data-filter="${initialTag.trim()}"]`); 
                 if(initialButton) {
-                    filterPosts(initialTag.trim(), initialButton); 
-                } else { // Fallback to 'all' if initial tag from URL does not exist or has typos
+                    filterPosts(initialTag.trim(), initialButton); // Apply filter based on URL parameter
+                } else { // Fallback to 'all' if the initial tag from URL does not exist or has typos
                     filterPosts('all', allButton); 
                 }
-            } else { // Default to showing all posts on initial load if no specific tag is provided
+            } else { // Default to showing all posts on initial page load if no specific tag is provided
                 filterPosts('all', allButton); 
             }
             console.log("[CategoryFilter] Interactive filters initialized on blog page.");
         }
         
-        // Part 2: Generating category links on 'categories.html'
+        // Part 2: Generating category navigation links on 'categories.html'
         if (isCategoriesPage && dynamicCategoryList) {
-            dynamicCategoryList.innerHTML = ''; // Clear existing content in category list
+            dynamicCategoryList.innerHTML = ''; // Clear existing content in the dynamic category list container
 
-            if (sortedTags.length === 0) { 
+            if (sortedTags.length === 0) { // If no tags found (e.g., no posts or badly structured data)
                  dynamicCategoryList.innerHTML = `<p class="no-comments-message is-visible">暂时没有可用的文章分类。</p>`; 
                  console.log('[CategoryPage] No tags found, displaying default message.');
-                 // Ensure the parent container itself is visible if there are no tags
+                 // Ensure the parent container itself is visible, especially if no content generated
                  dynamicCategoryList.closest('.categories-section')?.classList.add('is-visible');
-                 return;
+                 return; // No tagsMeans no categories to display.
             }
 
+            // Create an <a> element styled as a button for each unique tag, linking to blog.html with a pre-set tag filter
             sortedTags.forEach((tag, index) => {
-                const buttonLink = document.createElement('a'); // Use <a> elements acting as buttons for navigation
+                const buttonLink = document.createElement('a'); 
                 buttonLink.href = `blog.html?tag=${encodeURIComponent(tag)}`; // Link to blog page with pre-set tag filter
-                buttonLink.classList.add('filter-tag-button', 'button', 'animate__slide-up'); 
-                buttonLink.textContent = ` # ${tag}`;
-                buttonLink.setAttribute('aria-label', `查看所有分类为 ${tag} 的文章`);
+                buttonLink.classList.add('filter-tag-button', 'button', 'animate__slide-up'); // Apply button styling and an animation class
+                buttonLink.textContent = ` # ${tag}`; // Display hash and tag name
+                buttonLink.setAttribute('aria-label', `查看所有分类为 ${tag} 的文章`); // Accessibility improvement
 
-                buttonLink.dataset.filter = tag; 
-                buttonLink.dataset.delay = String(index * 50); // Stagger animations for visual appeal
-                dynamicCategoryList.appendChild(buttonLink);
+                buttonLink.dataset.filter = tag; // Store tag name as data attribute
+                buttonLink.dataset.delay = String(index * 50); // Set a staggered delay for animations
+                dynamicCategoryList.appendChild(buttonLink); // Add to DOM
 
-                // Explicitly add is-visible with small stagger for proper entrance animation
+                // Explicitly apply 'is-visible' class with small stagger for proper entrance animation from base `opacity: 0`
                 setTimeout(() => buttonLink.classList.add('is-visible'), parseInt(buttonLink.dataset.delay) + 100); 
             });
             console.log(`[CategoryPage] Generated ${sortedTags.length} category links.`);
             
-            // Ensure parent content container is visible as a whole after rendering content
+            // Ensure the main content container for categories is visible once its dynamic content is rendered
             const contentWrapper = document.querySelector('main.container.content-page-wrapper');
             if (contentWrapper && !contentWrapper.classList.contains('is-visible')) {
                 setTimeout(() => contentWrapper.classList.add('is-visible'), 150); 
@@ -768,29 +798,36 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Function declaration for full hoisting safety
     function setupShareButtons() {
+        // Targets specific share buttons for Weibo and QQ
         const shareButtons = document.querySelectorAll('.post-share-buttons a.weibo, .post-share-buttons a.qq');
         if (shareButtons.length === 0) { 
             console.log("[ShareButtons] No share buttons found on this page."); 
             return; 
         } 
 
-        const currentUrl = encodeURIComponent(window.location.href);
+        const currentUrl = encodeURIComponent(window.location.href); // URL of the current page for sharing
         const pageTitle = document.title;
+        // Extract a clean article title, defaulting to blog name if none found in title
         const articleTitle = encodeURIComponent(pageTitle.split(' - ')[0] || "Honoka的小屋"); 
 
         shareButtons.forEach(btn => {
             if (btn.classList.contains('weibo')) {
+                // Construct Weibo share URL
                 btn.href = `https://service.weibo.com/share/share.php?url=${currentUrl}&title=${articleTitle}`;
             } else if (btn.classList.contains('qq')) {
-                const imgElement = document.querySelector('.post-detail-banner');
-                // Only use dynamic image if it loaded successfully (not fallback or local placeholder that might fail)
-                const imgUrl = (imgElement && imgElement.src && !imgElement.classList.contains('is-loading-fallback') && imgElement.naturalWidth > 0 && !(imgElement.src.startsWith(window.location.origin + '/img/')))
+                const imgElement = document.querySelector('.post-detail-banner'); // Get the main article image
+                // Only include dynamic image URL in QQ share if it successfully loaded and is not a local fallback.
+                const imgUrl = (imgElement && imgElement.src && 
+                                !imgElement.classList.contains('is-loading-fallback') && 
+                                imgElement.naturalWidth > 0 && 
+                                !(imgElement.src.startsWith(window.location.origin + '/img/'))) // Also ensure it's not our local fallback
                                ? encodeURIComponent(imgElement.src) : ''; 
+                // Construct QQ share URL with optional image
                 btn.href = `https://connect.qq.com/widget/shareqq/index.html?url=${currentUrl}&title=${articleTitle}${imgUrl ? '&pics=' + imgUrl : ''}`;
             }
-            // Ensure share links open in a dedicated small window
+            // Ensure share links open in a dedicated small pop-up window for better user experience
             btn.addEventListener('click', (e) => {
-                e.preventDefault();
+                e.preventDefault(); // Prevent default link navigation
                 window.open(btn.href, 'sharewindow', 'height=480,width=640,toolbar=no,menubar=no,scrollbars=yes,resizable=yes');
             });
         });
@@ -800,7 +837,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Function declaration for full hoisting safety
     function setupFooterAndVisitorCount() { 
         const currentYearSpan = document.getElementById('current-year');
-        if (currentYearSpan) { currentYearSpan.textContent = new Date().getFullYear(); }
+        if (currentYearSpan) { // Update dynamic year in the footer
+            currentYearSpan.textContent = new Date().getFullYear(); 
+        }
 
         const visitorCountSpan = document.getElementById('visitor-count');
         if (!visitorCountSpan) {
@@ -808,34 +847,35 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        // Fetch spectator count from backend Netlify Function
+        // Fetch Spectator count from backend Netlify Function
         fetch(`${backendBaseUrl}handleVisitCount`, {
             method: 'GET',
              headers: { 'Accept': 'application/json' }
         })
             .then(response => {
-                if (!response.ok) { // Robust error check
-                    // Attempt to parse backend error message
+                if (!response.ok) { // Robust error check for HTTP status
+                    // Attempt to parse a rich backend error message from the response body for better debugging
                     return response.json().then(error => { 
                        throw new Error(error.message || `API error: HTTP ${response.status} ${response.statusText}.`); 
                     }).catch(() => {
-                       throw new Error(`API error: HTTP ${response.status} ${response.statusText}. Failed to parse backend error.`);
+                       // If body is not JSON or parsing fails, create a generic error message
+                       throw new Error(`API error: HTTP ${response.status} ${response.statusText}. Failed to parse backend error response.`);
                     }); 
                 }
-                return response.json(); 
+                return response.json(); // Parse successful JSON response
             })
             .then(data => {
-                if (data && typeof data.count !== 'undefined') { // Check for explicit count property
-                    visitorCountSpan.textContent = data.count;
+                if (data && typeof data.count !== 'undefined') { // Verify `count` property exists and is defined
+                    visitorCountSpan.textContent = data.count; // Update displayed count
                     console.log(`[VisitorCount] Updated to: ${data.count}.`);
                 } else {
-                    console.warn("[VisitorCount] API returned no specific count structure or count is undefined. Showing '0'. Response:", data);
-                    visitorCountSpan.textContent = '0';
+                    console.warn("[VisitorCount] API returned no specific count structure or 'count' is undefined. Showing '0'. Full response:", data);
+                    visitorCountSpan.textContent = '0'; // Default to '0' on ambiguous response
                 }
             })
             .catch(error => {
-                console.error('[VisitorCount] Failed to retrieve or update visitor count from frontend fetch. Details:', error, '. Check backend config (e.g., Firebase key) or Netlify Function deployment.');
-                visitorCountSpan.textContent = '???'; // Indicate failure
+                console.error('[VisitorCount] Failed to retrieve or update visitor count from frontend fetch. Details:', error, '. Please check backend configuration (e.g., Firebase private key) or Netlify Function deployment status in Netlify dashboard.');
+                visitorCountSpan.textContent = '???'; // Indicate a definitive failure to fetch count
             });
         console.log("[VisitorCount] Footer current year and visitor count feature initialized.");
     } 
@@ -844,57 +884,34 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- MAIN GLOBAL INITIALIZATION SEQUENCE: Orchestrates all features ---
     /**
      * This function is the master initializer. It explicitly calls all setup functions
-     * in an order that attempts to predict and resolve dependencies and common race conditions.
+     * in an order that attempts to predict and resolve dependencies and common race conditions,
+     * ensuring a smooth and complete initialization of all client-side features.
      */
     function initializeAllFeatures() {
-        // Essential DOM/Layout related setups are critical and run first.
-        setupPageTransition();      // Overlay manages page transitions
-        setupLinkInterceptor();     // Ensures our smooth link hovers are on time
-        updateBodyStyling();        // Detects mobile/desktop and sets cursor/blur dynamically (includes setupCursorTrail)
+        // Essential DOM & Layout related setups are critical and should run very early.
+        setupPageTransition();      // Overlay manages page transitions (must be before links are clicked)
+        setupLinkInterceptor();     // Intercepts all internal anchor clicks for smooth transitions
+        updateBodyStyling();        // Detects mobile/desktop, sets dynamic CSS variables, and initializes cursor trail.
 
-        // Then, apply a brute-force visibility fix with a slight delay
+        // After initial setup, apply a brute-force visibility fix to ensure all content elements are rendered
+        // This is crucial to override potential CSS `opacity: 0` defaults that might persist in certain rendering paths.
         setTimeout(() => {
             applyImmediateVisibilityFix(); 
-        }, 50); // Small, but vital delay for initial browser render
+        }, 50); // A small, but vital delay for initial browser render pass on elements.
 
-        setupDynamicPostImages();   // Image handling (dynamic APIs + local fallbacks)
-        setupMainMenu();            // Main navigation and mobile menu logic                 
-        setupBackToTopButton();     // Scroll-to-top feature         
-        setupReadProgressBar();     // Article read progress             
-        setupFooterAndVisitorCount();  // Dynamic footer content (year, visitor count)
-        setupPostCategoryFilters(); // Blog/Category functionality, relies on posts being in DOM
+        // Other UI and content features are initialized here. Order is important for some inter-dependencies.
+        setupDynamicPostImages();   // Handles dynamic image fetching (API + local fallbacks) for background, avatars, post thumbnails/banners.
+        setupMainMenu();            // Initializes main navigation, mobile menu toggle, and menu closing logic.                 
+        setupBackToTopButton();     // Sets up the scroll-to-top button functionality.         
+        setupReadProgressBar();     // Activates the article read progress bar (only on detail pages).             
+        setupFooterAndVisitorCount();  // Manages dynamic content in the footer like current year and visitor count.
+        setupPostCategoryFilters(); // Initializes category filters for the blog page and dynamic category listings.
 
         console.log("✅ [FINAL Version: ULTIMATE REPAIR] All page features initialization sequence triggered.");
     }
     
-    // Kick off the master initialization only once after DOM content is fully loaded and parsed.
+    // Kick off the master initialization function securely only once after the DOM content is fully loaded and parsed.
     initializeAllFeatures();
 
     console.log("✅ [FINAL Version: ULTIMATE REPAIR] script.js COMPLETED all execution. Site should be fully functional now.");
-});```
-
-#### **文件夹 5/4：`netlify/functions/` 和 `firebase-*` 以及 `package*` 文件保持不变**
-
-*(这些文件你在之前已经提供过了，且是 backend serverless function 相关，对于解决前端空白问题不在本次修改范围内。我已经确认它们最新的版本没有影响前端渲染的逻辑问题，你可以继续使用。内容与你提供的保持一致即可。)*
-
----
-
-### **Honoka，请务必集中精力，认真执行以下【最终终极】操作步骤：**
-
-1.  **文件逐一替换与最仔细保存：**
-    *   将上述 **所有 HTML 文件 (共 9 个)** 的完整内容，**复制粘贴，替换**你本地 `my-anime-blog` 根目录和 `posts/` 子目录下的所有对应文件中的所有内容。
-    *   将上述 **`css/style.css` 文件** 的完整内容，**复制粘贴，替换**你本地 `css/style.css` 文件中的所有内容。
-    *   将上述 **`css/animations.css` 文件** 的完整内容，**复制粘贴，替换**你本地 `css/animations.css` 文件中的所有内容。 (这是一个**非常轻量且干净的版本**，如果你有自定义动画，请务必小心合并你原来的动画规则到 `style.css` 的适当位置，或确保它们没有冲突。)
-    *   `css/themes.css` 文件在你上次提供的内容中本身是正确的，**无需修改**。你本地与我提供的一致即可。
-    *   将上述 **`js/comments.js` 文件** 的完整内容，**复制粘贴，替换**你本地 `js/comments.js` 文件中的所有内容。
-    *   将上述 **`js/script.js` 文件** 的完整内容，**复制粘贴，替换**你本地 `js/script.js` 文件中的所有内容。
-    *   **非常重要：再次检查这些文件的完整性并保存。任何遗漏都会导致问题重新出现！**
-
-2.  **提交到 Git 仓库：** （在你确认所有文件都已更新并保存完毕后执行）
-    *   打开你的 PowerShell。
-    *   进入博客项目根目录 (`E:\博客\最新\my-anime-blog`)。
-    *   执行以下命令：
-        ```powershell
-        git add .
-        git commit -m "ULTIMATE FINAL FIX - v2: Forced CSS visibility with !important, absolute image paths HTML/JS, cleaned animations.css, fixed nested <p> tag. Blog SHOULD be fully visible now."
-        git push origin main
+});
