@@ -4,12 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>手办坑里的那些趣事和我最爱的Waifu - Honoka的小屋</title>
-    <link rel="icon" href="../img/favicon.ico" type="image/x-icon">
-    <!-- 其他相对路径资源 (非字体preload) 的 `../` 保持不变 -->
+    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+    <!-- 其他相对路径资源 (非字体preload) 的 `../` 调整为绝对路径 -->
     <link rel="stylesheet" href="../css/style.css">
     <link rel="stylesheet" href="../css/themes.css">
     <link rel="stylesheet" href="../css/animations.css">
-    <!-- 优化字体加载速度：通过style.css @import 安全加载，移除重复的 preload 标签 -->
+    <!-- 字体通过style.css @import 安全加载，此处不设置preload以避免Chrome重复加载或404 -->
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -33,7 +33,6 @@
             </button>
             <!-- 主导航菜单 (小屏幕会隐藏，大屏幕浮动在右侧) -->
             <nav id="main-nav-menu" class="main-nav">
-                <!-- CRITICAL FIX: 移除多余的 span.icon-bar -->
                 <button class="menu-close" title="关闭">✕</button>
                 <ul>
                     <li><a href="../index.html">主页</a></li>
@@ -54,7 +53,7 @@
                 <span class="post-tags"><span class="tag">#手办</span><span class="tag">#收藏</span><span class="tag">#Waifu</span></span>
             </div>
             
-            <img src="../img/post-detail-banner-fallback.png" data-src-type="wallpaper" alt="我的手办 coleção" class="post-detail-banner animate__fade-in" data-delay="200">
+            <img src="/img/post-detail-banner-fallback.png" data-src-type="wallpaper" alt="我的手办 coleção" class="post-detail-banner animate__fade-in" data-delay="200">
 
             <div class="post-content animate__slide-up" data-delay="300">
                 <p>
