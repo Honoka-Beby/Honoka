@@ -1,62 +1,65 @@
-/* --- CSS Variables for Cosmic Dream Theme --- */
+/* --- CSS Variables for Cosmic Dream Theme - https://honoka1.netlify.app/css/themes.css --- */
 :root {
     --border-radius: 8px;
     --border-radius-lg: 12px;
 
     /* Base Colors - 深邃的星空紫 */
-    --bg-fallback-color: #1a1625; /* 纯色背景，用作加载时的后备 */
+    --bg-fallback-color: #1a1625; /* Solid fallback background color */
     --bg-image: none; /* Dynamic, set by JS to image URL */
+
     /* ★★★ CRITICAL FIX: Make body overlay significantly more transparent for background image to show through! ★★★ */
-    --body-overlay-bg: rgba(26, 22, 37, 0.2); /* 全局身体背景叠加层: 更加透明，让壁纸透出大部分 */
-    --hero-overlay-bg: rgba(26, 22, 37, 0.8); /* 主页Hero区域的背景叠加层: 较不透明，保持前景文字对比度 */
+    --body-overlay-bg: rgba(26, 22, 37, 0.2); /* Global body background overlay: very transparent, allowing main wallpaper to show through the most. */
 
-    --body-backdrop-blur: 3px;     /* 桌面端 body 模糊度 */
-    --content-backdrop-blur: 9px;  /* 内容区域更高模糊度 (更强的磨砂玻璃感) */
-    --card-backdrop-blur: 6px;     /* 卡片更高模糊度 */
+    --hero-overlay-bg: rgba(26, 22, 37, 0.8); /* Homepage Hero Area Overlay: less transparent, maintaining foreground text contrast. */
 
-    /* ------------- 动态控制的全局 Body 模糊值变量 ------------- */
-    /* 由 JS 根据设备宽度动态更新该变量，然后 body::before 使用此变量。 */
-    --body-global-blur-value: var(--body-backdrop-blur); /* 默认值同桌面端，JS会实时更新 */
-    --body-backdrop-blur-mobile: 1px; /* 手机端 body 模糊度基准值 */
+    --body-backdrop-blur: 3px;     /* Desktop body blur intensity */
+    --content-backdrop-blur: 9px;  /* Higher blur intensity for content areas (stronger frosted glass effect) */
+    --card-backdrop-blur: 6px;     /* Higher blur intensity for cards */
 
-    /* HEADER MIN HEIGHT VARIABLES */
-    --header-min-height: 50px; /* 桌面端Header最小高度 */
-    --header-min-height-mobile: 45px; /* 手机端Header最小高度 */
+    /* Dynamically controlled global body blur value, updated by JS based on device width */
+    --body-global-blur-value: var(--body-backdrop-blur); /* Default to desktop, JS updates in real-time */
+    --body-backdrop-blur-mobile: 1px; /* Mobile body blur baseline value */
 
-    --bg-secondary-color: #2a2438; /* 稍微浅一点的紫色，用于一些区块 */
-    --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
+    /* Header Minimum Height Variables */
+    --header-min-height: 50px; /* Desktop Header min-height */
+    --header-min-height-mobile: 45px; /* Mobile Header min-height */
 
-    --card-bg-color: rgba(26, 22, 37, 0.78); /* 卡片背景（如文章卡片，评论卡片），提供良好背景可读性 */
-    /* ★★★ CRITICAL FIX: Make content background more transparent to blend more with body background for other pages ★★★ */
-    --content-bg-color: rgba(26, 22, 37, 0.2); /* 调整为更透明的背景色，让底部背景图更多透出 */
+    --bg-secondary-color: #2a2438; /* Slightly lighter purple for certain blocks */
+    --bg-secondary-color-rgb: 42, 36, 56; /* Used for RGBA calculations */
+
+    /* ★★★ CRITICAL FIX: Adjust for unified background visibility, matching overall theme ★★★ */
+    --card-bg-color: rgba(26, 22, 37, 0.4); /* Card background (e.g., post cards, comment cards), adjusted opacity for blend */
+    --content-bg-color: rgba(26, 22, 37, 0.4); /* Main content area's translucent background (e.g., blog, about, comments, post-detail wrapper), adjusted for blend */
     
-    --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
+    --border-color: rgba(255, 121, 198, 0.25); /* Neon pink light border */
     --secondary-color-rgb: 189, 147, 249; 
-    --shadow-rgb: 0, 0, 0; /* 用于阴影 */
+    --shadow-rgb: 0, 0, 0; /* For shadows */
 
-    /* Text Colors - 温和的星光白 */
-    --text-color: #dcd7e6; /* 主体文本颜色 */
+    /* Text Colors - Gentle starlight white */
+    --text-color: #dcd7e6; /* Main text color */
     --text-color-rgb: 220, 215, 230; 
-    --heading-color: #ffffff; /* 标题颜色 */
+    --heading-color: #ffffff; /* Heading color */
     --heading-color-rgb: 255, 255, 255; 
-    --meta-text-color: #9e9aac; /* 元信息/辅助文本颜色 */
+    --meta-text-color: #9e9aac; /* Meta info / auxiliary text color */
 
-    /* Accent & Primary Colors - 亮眼的少女粉 */
-    --primary-color: #ff79c6; /* 主色调，亮粉色 */
+    /* Accent & Primary Colors - Bright girlish pink */
+    --primary-color: #ff79c6; /* Primary color, bright pink */
     --primary-color-rgb: 255, 121, 198; 
-    --primary-hover-color: #ff92d0; /* 主色调悬停，稍亮 */
-    --secondary-color: #bd93f9; /* 辅助色，神秘紫 */
+    --primary-hover-color: #ff92d0; /* Primary hover color, slightly brighter */
+    --secondary-color: #bd93f9; /* Secondary color, mysterious purple */
 
     /* Header/Footer/Forms */
-    --header-bg-color: rgba(26, 22, 37, 0.95); /* Header更不透明，使其在任何背景下都显眼 */
-    --footer-bg-color: #110e1a; /* Footer深色背景 */
-    --input-bg-color: var(--bg-secondary-color); /* 输入框背景 */
+    --header-bg-color: rgba(26, 22, 37, 0.95); /* Header, less transparent for strong presence */
+    --footer-bg-color: #110e1a; /* Footer deep dark background */
+    --input-bg-color: var(--bg-secondary-color); /* Input field background */
     
     /* Links */
     --link-color: var(--primary-color); 
     --link-hover-color: var(--primary-hover-color); 
     
     /* Font family */
-    --font-primary: 'Noto Sans SC', sans-serif; /* 主要正文字体 */
-    --font-display: 'LXGW WenKai Screen', "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; /* CRITICAL FIX: Add more safe fallbacks for Chinese fonts if original fails */
+    /* ★★★ CRITICAL FIX: Add robust system font fallbacks in preferred order for primary content ★★★ */
+    --font-primary: 'Noto Sans SC', "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; 
+    /* ★★★ CRITICAL FIX: Add robust system font fallbacks for display titles ★★★ */
+    --font-display: 'LXGW WenKai Screen', "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; 
 }

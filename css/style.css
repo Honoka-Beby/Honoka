@@ -1,85 +1,99 @@
 /* --- Reset & Base Styles - https://honoka1.netlify.app/css/style.css --- */
 @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;700&display=swap');
-/* 'LXGW WenKai Screen' is from lxgw-wenkai-screen-webfont@1.1.0/style.css */
+/* 'LXGW WenKai Screen' will stay as a custom font but with stronger local fallbacks. */
 @import url('https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/style.css');
 
-/* 全局应用 */
-html, body {
-    /* ★★★ CRITICAL FIX: Ensure height and layout calculation are never zero/hidden by default to prevent blank pages ★★★ */
-    width: 100% !important;
-    min-height: 100vh !important; 
-    height: 100% !important; /* Ensure they always take full height initially */
-    /* Force initial display property for body if it's default to nowhere or flex. */
-    display: flex !important; /* Ensure HTML and body are flex containers from start */
-    flex-direction: column !important; /* Stack vertically */
-    visibility: visible !important; /* Force initial visibility for the entire document */
-     will-change: transform, opacity; /* Optimisation for smoother initial render */
-}
 
+/* Universal box-sizing for consistent layout calculation */
 * { 
     box-sizing: border-box; 
     margin: 0; 
     padding: 0; 
-    /* Force display for all elements not explicitly set to none */
-    /* Exclude elements where display: none is intentional in main CSS for now if that causes trouble */
-    /* For now, be general. Specific `display: none` can override this locally later. */
-     /* display: unset; */
+    /* Attempt to reset all elements to their initial display state globally which might help avoid some weird defaults affecting rendering. Only for trouble-shooting for now. */
+    /* display: initial !important; */
 }
-html { scroll-behavior: smooth; } /* 平滑滚动 */
+/* Ensure smooth scrolling across the page */
+html { scroll-behavior: smooth; } 
+
+/* Critical base layout and visibility ensures for the entire document and body */
+html, body {
+    width: 100% !important;
+    min-height: 100vh !important; 
+    height: 100% !important; 
+    display: flex !important; /* Force HTML and body to be flex containers for main content */
+    flex-direction: column !important; /* Arrange children vertically */
+    visibility: visible !important; /* Force initial visibility for the entire document context */
+    opacity: 1 !important; /* Ensure opacity is full */
+    pointer-events: auto !important; /* Ensure all content is interactive by default until specific elements override */
+    position: relative !important; /* Ensure a positioning context for any children absolutes */
+}
 
 body {
-    background-color: var(--bg-fallback-color); /* Fallback solid color */
-    background-image: var(--bg-image); /* Dynamic background image, set by JS */
-    background-size: cover;          /* 覆盖整个背景区域 */
-    background-position: center center; /* 图片居中 */
-    background-repeat: no-repeat;    /* 不重复 */
-    background-attachment: fixed;    /* 背景固定，实现视差滚动效果 */
+    background-color: var(--bg-fallback-color); /* Solid color fallback, for very initial state or critical resource missing */
+    background-image: var(--bg-image); /* Dynamic background image, set by JS (or local fallback) */
+    background-size: cover;          /* Cover the entire background area */
+    background-position: center center; /* Image centered */
+    background-repeat: no-repeat;    /* No repetition */
+    background-attachment: fixed;    /* Fixed background for parallax-like effect */
     color: var(--text-color);
-    font-family: var(--font-primary), sans-serif; /* ALWAYS ensure font-family here too, with a solid fallback */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; /* Force global primary font with robust Chinese system fallbacks */
     line-height:1.7;
-    -webkit-font-smoothing: antialiased; /* 抗锯齿，平滑文字 */
-    /* 当移动菜单打开时，body不允许滚动 */
-     &.no-scroll { overflow: hidden !important; } /* ★★★ CRITICAL FIX: Force `overflow: hidden` when menu is open ★★★ */
-     z-index: 0 !important; /* Make sure body is not below Z-index -1 */
+    -webkit-font-smoothing: antialiased; /* Enable anti-aliasing for smoother text rendering */
+    z-index: 0 !important; /* Ensure body is in a default z-index stacking context */
+
+    /* Control body overflow when mobile menu is open */
+    &.no-scroll { overflow: hidden !important; } 
 }
 
-/* 全局固定模糊叠加层：位于body背景之上，所有内容之下，提供统一的背景模糊和颜色基调 */
-/* ★★★ CRITICAL FIX: Ensure visibility is always on for this overlay itself ★★★ */
-body::before, #global-page-transition-overlay::before, #global-page-transition-overlay::after { /* Also check against overlay pseudos just in case */
-    visibility: visible !important; /* Force visibility of the ::before overlay too */
-    opacity: 1 !important; /* Also make it full opaque until explicitly changed dynamically */
-}
+/* Global fixed blur overlay: sits above body background, below all content, providing uniform blur & color tone */
 body::before {
     content: '';
-    position: fixed; /* 固定在视口 */
+    position: fixed; 
     top: 0; left: 0; right: 0; bottom: 0;
-    /* 使用 JS 动态设置的 `--body-global-blur-value` 变量来控制模糊强度 */
-    background: var(--body-overlay-bg); /* 半透明深色叠加层，允许背景图透出 */
     backdrop-filter: blur(var(--body-global-blur-value)); 
-    -webkit-backdrop-filter: blur(var(--body-global-blur-value)); /* Webkit 兼容 */
-    z-index: -1; /* 位于正常内容之下，body背景图之上 */
-    transition: backdrop-filter 0.5s ease; /* 平滑过渡模糊效果 */
+    -webkit-backdrop-filter: blur(var(--body-global-blur-value)); /* Webkit compatibility */
+    background: var(--body-overlay-bg); /* Semi-transparent dark overlay, allowing background image to show through */
+    z-index: -1; /* Below normal content, above body background image */
+    transition: backdrop-filter 0.5s ease; /* Smooth transition for blur effect */
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
+    visibility: visible !important; /* Force visibility for this permanent overlay */
+    opacity: 1 !important; /* Ensure this visual element doesn't start at opacity 0 */
 }
 
-a { color: var(--link-color); text-decoration: none; transition: all 0.3s ease; }
-a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-color); }
+a { 
+    color: var(--link-color); 
+    text-decoration: none; 
+    transition: all 0.3s ease; 
+    cursor: pointer !important; /* Ensure links always have a pointer cursor */
+    pointer-events: auto !important; /* Ensure interaction */
+    visibility: visible !important; /* Force all dynamic links visible too */
+    opacity: 1 !important; /* Ensure text visible */
+}
+a:hover { 
+    color: var(--link-hover-color); 
+    text-shadow: 0 0 8px var(--link-hover-color); 
+}
+
+/* Base container for content regions, centered horizontally */
 .container { 
     max-width: 1000px; 
-    margin: 0 auto; 
+    margin: 0 auto !important; /* Force auto margins for centering */
     padding: 1.5rem; 
-    width: 100% !important; /* Always make container max-width available unless specific media query reduces */
-    height: auto !important; /* Ensure it computes its height dynamically */
-    display: flex !important; /* Use flexbox for sub-content layout inside container */
-    flex-direction: column !important; /* Stack children vertically by default */
-    align-items: center !important; /* Center-align children */
+    width: 100% !important; /* Ensure container uses its width */
+    height: auto !important; /* Dynamic height based on content */
+    display: flex !important; /* Make container itself a flex container */
+    flex-direction: column !important; /* Stack child elements vertically */
+    align-items: center !important; /* Horizontally center flex items */
+    flex-grow: 1 !important; /* Let body's direct main child take available layout space */
+    position: relative !important; /* Must be relative for child positioning */
+    z-index: 10 !important; /* Ensure it is above body::before */
 }
 
-/* Global buttons */
+/* Global button styles */
 .button {
-    display: inline-block !important; /* Force display block */
+    display: inline-block !important; /* Force specific display for buttons */
     background-color: var(--primary-color);
     color: #fff;
     padding: 0.8em 1.8em;
@@ -88,14 +102,15 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
     border: none;
     cursor: pointer;
     font-size: 1em;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; /* Force primary font for buttons */
     text-shadow: 0 1px 3px rgba(0,0,0,0.2);
     -webkit-tap-highlight-color: transparent; 
-     -webkit-backface-visibility: hidden; 
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
-    visibility: visible !important; /* Forced to be visible for now */
+    visibility: visible !important; /* Force visible right away to prevent invisible buttons */
     opacity: 1 !important;
+    pointer-events: auto !important; /* Ensure buttons are clickable */
 }
 .button:hover {
     background-color: var(--primary-hover-color);
@@ -117,8 +132,11 @@ a:hover { color: var(--link-hover-color); text-shadow: 0 0 8px var(--link-hover-
     opacity: 0;
     will-change: top, left, width, height, opacity, transform;
 }
-/* 鼠标进入body时，在非移动端显示自定义指针 */
-body:not(.is-mobile):hover #cursor-trail { opacity: 1 !important; width: 10px; height: 10px;} 
+/* Ensure custom cursor appears only on desktop browsers */
+body:not(.is-mobile):hover #cursor-trail { 
+    opacity: 1 !important; /* Force custom cursor visible on hover */
+    width: 10px; height: 10px;
+} 
 
 .cursor-trail-dot {
     position: fixed;
@@ -132,7 +150,7 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1 !important; width: 10px; h
     animation: fadeOutTrail 0.5s forwards; 
     will-change: top, left, opacity, transform;
 }
-/* All @keyframes are now centralized here (or in a dedicated, minimal animations.css if it's purely for keyframes) */
+/* Keyframe animation for cursor trail fade-out effect */
 @keyframes fadeOutTrail {
     from { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
     to { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
@@ -145,25 +163,26 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1 !important; width: 10px; h
     top: 0; left: 0; width: 100vw; height: 100vh;
     background-color: var(--bg-fallback-color); 
     z-index: 9999; 
-    opacity: 0;
-    visibility: hidden;
+    opacity: 0; /* Starts hidden */
+    visibility: hidden; /* Starts visually hidden as well for smoothness */
     transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; 
-    display: flex !important; /* Force display flex for overlay for children to center */
+    display: flex !important; /* Always display flex to center content, even when hidden */
     justify-content: center;
     align-items: center;
     flex-direction: column;
     color: var(--primary-color);
     font-size: 1.5rem;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     text-shadow: 0 0 8px rgba(0,0,0,0.5); 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
-    visibility: hidden !important; /* Force hidden until JS activates it */
+    pointer-events: all !important; /* It should intercept all pointer events when visible */
 }
+/* When '.visible' class is added by JS, animate it in */
 #global-page-transition-overlay.visible {
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    visibility: visible !important; 
     transition: opacity 0.4s ease-in, visibility 0s linear; 
 }
 #global-page-transition-overlay .loader {
@@ -183,13 +202,14 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1 !important; width: 10px; h
     box-shadow: 0 0 10px 2px var(--primary-color), inset 0 0 10px 2px var(--primary-color);
     animation: pulse-glow 1.5s infinite alternate; 
 }
+/* Keyframe animations for loader and text */
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
 .overlay-text {
     margin-top: 0.8em;
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-size: 2em;
     animation: pulse 1.5s infinite alternate; 
 }
@@ -205,42 +225,44 @@ body:not(.is-mobile):hover #cursor-trail { opacity: 1 !important; width: 10px; h
 
 /* --- Homepage (hero-section) --- */
 .hero-section {
-    display: flex !important; /* Force flex display * /
+    display: flex !important; 
     flex-direction: column !important;
-    justify-content: center !important;
-    align-items: center !important;
+    justify-content: center !important; /* Vertically center content */
+    align-items: center !important; /* Horizontally center content */
     min-height: 100vh;
-    height: 100vh !important; /* Ensure it takes full viewport height */
+    height: 100vh !important; /* Force to take full viewport height, crucial for homepage */
     text-align: center;
     padding: 2rem;
     position: relative;
     overflow: hidden;
-    /* ★★★ CRITICAL FIX: Ensure main section is always visible and stretches ★★★ */
     width: 100% !important;
-    flex-grow: 1 !important; /* Ensure it takes available vertical space */
-    visibility: hidden; /* Start hidden until JS reveals for animation */
+    flex-grow: 1 !important; 
+    visibility: hidden; /* Starts hidden, revealed by JS with animation */
+    opacity: 0;
+    transition: opacity 0.8s ease-out, visibility 0s linear 0.8s;
+    pointer-events: none !important; /* Initially suppress interactions until visible */
 }
+/* When JS adds is-visible/force-visible, override transitions */
 .hero-section.is-visible, .hero-section.force-visible {
-    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important; /* Re-enable pointer events */
 }
 
-/* 主页Hero区域的背景叠加层，比全局overlay更深，确保文字可读性 */
-body.is-homepage .hero-section::before { /* Specifically target homepage hero section overlay */
+/* Homepage Hero Area Overlay: deeper than global overlay for better text readability */
+body.is-homepage .hero-section::before { 
     content: '';
     position: absolute;
     top: 0; left: 0; right: 0; bottom: 0;
-    /* User wants homepage color "same as below". This value (0.8) provides good readability. */
-    background: var(--hero-overlay-bg); /* Use the specific hero overlay background from themes.css */
+    background: var(--hero-overlay-bg); /* Use specific hero overlay background color */
     backdrop-filter: blur(5px); 
     -webkit-backdrop-filter: blur(5px);
     z-index: 1; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
-    visibility: visible !important; /* ★★★ CRITICAL FIX: Ensure hero overlay is visible ★★★ */
-    opacity: 1 !important; /* Ensure it applies without issue */
-
-    /* For consistency in request, ensure `content-body-wrap` beneath is also consistent with `hero-overlay-bg` color but more translucent */
+    visibility: visible !important; /* Force visibility for this permanent overlay */
+    opacity: 1 !important;
 }
 
 .hero-content {
@@ -248,30 +270,31 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     z-index: 2; 
     opacity: 0;
     transform: translateY(20px);
-    transition: opacity 0.8s ease-out, transform 0.8s ease-out; 
-    /* ★★★ CRITICAL FIX: Force basic display properties for core elements ★★★ */
-    display: flex !important; 
-    flex-direction: column !important; /* Flex children correctly */
+    transition: opacity 0.8s ease-out, transform 0.8s ease-out, visibility 0s linear 0.8s; 
+    display: flex !important; /* Force flex display for content wrapper */
+    flex-direction: column !important; 
     align-items: center !important;
     justify-content: center !important;
-    visibility: hidden; /* Hidden until JS activates is-visible */
+    visibility: hidden; /* Controlled by JS is-visible */
+    pointer-events: none !important;
 }
 .hero-content.is-visible { 
-    opacity: 1 !important; /* ★★★ 重要修复：强制显示 */
-    transform: translateY(0) !important; /* ★★★ 重要修复：强制显示 */
+    opacity: 1 !important; 
+    transform: translateY(0) !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 
-/* 核心：主页标题 “Honoka的小屋” 的文字渐变发光走马灯动画 */
+/* Main homepage title: "Honoka的小屋" with gradient glow carousel animation */
 .blog-title--animated.is-homepage-title > a { 
-    color: var(--text-color); /* Fallback color */
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family, with solid fallbacks */
+    color: var(--text-color); 
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; /* Ensure font family with robust fallbacks */
     font-size: clamp(2.5rem, 10vw, 5rem); 
     font-weight: 700;
     text-shadow: none; 
     position: relative;
-    display: inline-block !important; /* Force inline-block display */
+    display: inline-block !important; /* Crucial for animation display */
     vertical-align: top;
     line-height: 1.2;
     padding: 0 10px; 
@@ -301,10 +324,13 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     filter: drop-shadow(0 0 5px rgba(var(--primary-color-rgb), 0.8)) 
              drop-shadow(0 0 15px rgba(var(--primary-color-rgb), 0.5)); 
     will-change: background-position, filter; 
-    visibility: hidden; /* Start hidden until JS reveals */
+    visibility: hidden; /* Controlled by JS is-visible */
+    opacity: 0;
+    pointer-events: auto !important;
 }
 .blog-title--animated.is-homepage-title > a.is-visible {
     visibility: visible !important;
+    opacity: 1 !important;
 }
 @keyframes homepage-title-flow-gradient { 
     0% { background-position: -200% 0; } 
@@ -312,12 +338,12 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
 }
 
 
-/* 导航栏 "Honoka的小屋" 标题的粉色慢速呼吸式辉光动画 (仅发光，不滑动) */
+/* Navbar "Honoka's Lodge" title: pink slow breathing glow animation (glow only, no slide) */
 .main-header .blog-title--animated.is-header-title > a { 
     font-size: 1.8rem; 
     color: var(--heading-color); 
     position: relative; 
-    display: inline-block !important; /* Force inline-block display */
+    display: inline-block !important; 
     vertical-align: middle;
     line-height: 1.2;
     padding: 0 5px; 
@@ -331,11 +357,14 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     background-color: transparent; 
     filter: none; 
     text-shadow: 0 0 3px rgba(255, 255, 255, 0.4); 
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
-    visibility: hidden; /* Start hidden until JS reveals */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; /* Force primary font for header title */
+    visibility: hidden; /* Controlled by JS is-visible */
+    opacity: 0;
+    pointer-events: auto !important;
 }
 .main-header .blog-title--animated.is-header-title > a.is-visible {
     visibility: visible !important;
+    opacity: 1 !important;
 }
 
 @keyframes header-text-pulse-glow { 
@@ -344,40 +373,46 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
 }
 
 
-.hero-subtitle, p.animate__slide-up { /* Consolidate paragraph reveals */
+.hero-subtitle { 
     font-size: clamp(1rem, 3vw, 1.2rem);
     margin: 1rem 0 2rem;
     color: var(--text-color);
     text-shadow: 0 0 10px rgba(0,0,0,0.5);
     opacity: 0; 
     transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s; /* Keep transition, but hide to ensure display */
-    visibility: hidden; /* Start hidden until JS activates is-visible */
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s; 
+    visibility: hidden; /* Controlled by JS is-visible */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    line-height: normal; /* Ensure line-height to make sure it occupies space */
+    min-height: 1.2em; /* Minimum height for text */
+    pointer-events: none !important;
 }
-.hero-subtitle.is-visible, p.animate__slide-up.is-visible { /* apply to all common p animate rules */
+.hero-subtitle.is-visible { 
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important; 
+    pointer-events: auto !important;
 }
 .hero-nav {
-    display: flex !important; /* Force flex display * /
+    display: flex !important; 
     justify-content: center; 
     flex-wrap: wrap; 
     gap: 1rem;
     opacity: 0; 
     transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
-    visibility: hidden; /* Start hidden until JS activates is-visible */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    visibility: hidden; /* Controlled by JS is-visible */
+    pointer-events: none !important;
 }
 .hero-nav.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important; 
+    pointer-events: auto !important;
 }
 
 .hero-nav .nav-link {
-    margin: 0; 
+    margin: 0 !important; 
     font-size: 1.1rem;
     font-weight: 500;
     padding: 0.5rem 1.2rem;
@@ -387,9 +422,10 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     transition: all 0.3s ease;
     backdrop-filter: blur(5px);
      -webkit-backdrop-filter: blur(5px);
-    visibility: visible !important; /* Force visible right away */
+    visibility: visible !important; /* Force visible */
     opacity: 1 !important;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    pointer-events: auto !important;
 }
 .hero-nav .nav-link:hover {
     border-color: var(--primary-color);
@@ -404,77 +440,74 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     padding: 0.3rem 0.5rem; 
     min-height: var(--header-min-height, 50px); 
     height: 50px !important; /* Force specific height for consistency */
-    display: flex !important; /* Force Header to be a flex container */
+    display: flex !important; 
+    flex-shrink: 0 !important; /* Prevent header from shrinking */
     align-items: center !important; 
     justify-content: center !important; 
     background: var(--header-bg-color); 
     border-bottom: 
-    1px solid var(--border-color); 
+    1px solid var(--border-color); /* Use border-color variable */
     position: sticky; 
     top: 0; 
-    z-index: 100;
+    z-index: 100 !important; /* Important Z-index */
     box-shadow: 0 2px 15px rgba(0,0,0,0.3); 
-    width: 100% !important; /* ★★★ CRITICAL FIX: Ensure header stretches */
-    min-height: 50px !important; /* Force minimum height * /
-    
-     -webkit-backface-visibility: hidden; 
-    backface-visibility: hidden;
-    transform: translateZ(0); 
-    opacity: 0; 
-    transition: opacity 0.5s ease-out, visibility 0.01s linear 0.5s;
-    visibility: hidden; /* Start hidden until JS reveals */
+    width: 100% !important; 
+    visibility: hidden; /* Starts hidden, controlled by JS is-visible */
+    opacity: 0;
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s; 
+    pointer-events: none !important;
 }
 .main-header.is-visible, .main-header.force-visible {
     opacity: 1 !important; 
-    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
-    display: flex !important; /* Ensure it is displayed */
+    visibility: visible !important; 
+    pointer-events: auto !important;
 }
 
 .main-header .container { 
     width: 100%; 
-    display: flex !important; /* ★★★ CRITICAL FIX: Ensure container itself is flex to layout children ★★★ */
+    display: flex !important; /* Force container to be flex */
     justify-content: space-between !important; 
     align-items: center !important; 
     flex-wrap: nowrap; 
-    visibility: inherit !important; /* Make sure container inheriting parent visibility */
+    height: 100% !important; /* Ensure content stretches in header */
 }
 
-/* 汉堡包菜单切换按钮 */
+/* Hamburger menu toggle button */
 .menu-toggle {
-    display: block !important; /* ★★★ CRITICAL FIX: Force hamburger menu to display as block ★★★ */
+    display: block !important; 
     background: none;
     border: none;
     cursor: pointer;
     padding: 8px; 
     position: relative;
-    z-index: 210; 
+    z-index: 210 !important; /* Ensure it is above everything else */
     -webkit-tap-highlight-color: transparent;
-    visibility: hidden; /* Start hidden until JS init + reveal */
+    visibility: hidden; /* Starts hidden, controlled by JS init + reveal */
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out, visibility 0s linear 0.3s;
+    pointer-events: none !important;
 }
 .menu-toggle.is-visible {
-    visibility: visible !important; /* ★★★ CRITICAL FIX: Force hamburger menu to visible ★★★ */
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 .menu-toggle .icon-bar {
-    display: block;
+    display: block !important;
     width: 30px; 
     height: 3px;
     background-color: var(--primary-color);
     margin: 5px 0; 
-    transition: all 0.3s ease;
     border-radius: 2px;
-    visibility: inherit; /* Inherit from parent menu-toggle */
+    opacity: 1 !important; /* Force bars visible within the toggle */
+    visibility: visible !important;
+    transition: all 0.3s ease !important; /* Allow animation, but instant visible */
 }
-/* 当菜单打开或关闭时，汉堡包图标的动画效果 */
-@keyframes menuToggleBar1 {
-    to { transform: rotate(-45deg) translate(-7px, 7px); }
-}
-@keyframes menuToggleBar2 {
-    to { opacity: 0; }
-}
-@keyframes menuToggleBar3 {
-    to { transform: rotate(45deg) translate(-7px, -7px); }
-}
-/* Apply animations using keyframes */
+/* Keyframe transitions for hamburger icon animation */
+@keyframes menuToggleBar1 { to { transform: rotate(-45deg) translate(-7px, 7px); } }
+@keyframes menuToggleBar2 { to { opacity: 0; } }
+@keyframes menuToggleBar3 { to { transform: rotate(45deg) translate(-7px, -7px); } }
+/* Apply keyframe animations based on 'aria-expanded' state */
 .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(1) { animation: menuToggleBar1 0.3s forwards; }
 .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(2) { animation: menuToggleBar2 0.3s forwards; }
 .menu-toggle[aria-expanded="true"] .icon-bar:nth-child(3) { animation: menuToggleBar3 0.3s forwards; }
@@ -483,11 +516,13 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
 .menu-toggle[aria-expanded="false"] .icon-bar:nth-child(3) { animation: menuToggleBar3 0.3s reverse forwards; }
 
 
-/* 全新：圆润的导航菜单小框样式 */
+/* Styles for the panel navigation menu (appears from right on small screens) */
 .main-nav {
-    display: flex; /* Always flex now after being explicit */
+    display: flex !important; 
     position: fixed; 
+/* Top position relative to header */
     top: calc(var(--header-min-height, 50px) + 15px); 
+    
     right: 20px; 
     width: 250px; 
     max-height: calc(100vh - 85px); 
@@ -500,10 +535,11 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     border: 1px solid var(--border-color); 
     box-shadow: 0 5px 20px rgba(var(--shadow-rgb), 0.4); 
     
-    transform: translateX(110%); 
+    transform: translateX(110%); /* Initially off-screen to the right */
     opacity: 0; 
     visibility: hidden;
-    pointer-events: none; 
+    pointer-events: none; /* Inactive until opened */
+    z-index: 200 !important; /* Ensure it's above other page content */
     
     transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0.3s ease-out; 
     
@@ -518,24 +554,25 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     text-align: center; 
     overflow-y: auto; 
 }
+/* When menu is open, show it */
 .main-nav.is-open { 
     transform: translateX(0) !important; 
-     opacity: 1 !important; 
+    opacity: 1 !important; 
     visibility: visible !important; 
-    pointer-events: auto; 
-    display: flex !important; /* Ensure it stays flex when opened */
+    pointer-events: auto !important; 
 }
 .main-nav ul { 
-    list-style: none; display: flex !important; /* force flex */
+    list-style: none; 
+    display: flex !important; 
     flex-direction: column !important; 
     gap: 1.2rem; 
-    margin: 0; align-items: center; 
+    margin: 0; 
+    align-items: center; 
     padding: 0.5rem 0 0; 
     width: 100%;
 }
 .main-nav ul li { width: 100%;} 
 .main-nav a { 
-    font-family: var(--font-primary), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-weight: 500; 
     padding: 0.8em 1.5em; 
     border-radius: var(--border-radius-lg); 
@@ -554,8 +591,8 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
      -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
-    visibility: visible !important; /* Force nav links to be visible */
-    opacity: 1 !important;
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    /* For nav links themselves, `is-visible` will control opacity/visibility, so these defaults are fine */
 }
 .main-nav a:hover, .main-nav a.active { 
     color: var(--heading-color); 
@@ -567,7 +604,7 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
      text-shadow: 0 0 10px rgba(var(--heading-color-rgb), 0.8), 0 0 20px rgba(var(--primary-color-rgb), 0.5); 
 } 
  .main-nav .menu-close {
-    display: block; 
+    display: block !important; 
     position: absolute;
     top: 10px; 
     right: 1rem; 
@@ -579,13 +616,13 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     cursor: pointer;
     padding: 5px;
     -webkit-tap-highlight-color: transparent;
-    z-index: 202; 
+    z-index: 202 !important; 
     transition: color 0.2s ease, transform 0.2s ease;
      border-radius: 50%; 
      line-height:1; 
      width: 1.5em; 
      height: 1.5em; 
-     visibility: visible !important; /* Force close button to be visible */
+     visibility: visible !important; /* Force visible */
      opacity: 1 !important;
 }
 .main-nav .menu-close:hover {
@@ -596,29 +633,31 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
 
 /* --- Page & Section Titles for inner pages --- */
 .section-title, .page-title {
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-weight: 700;
     color: #fff;
     text-align: center; 
     margin-bottom: 2rem;
     font-size: 2.5rem;
     position: relative;
-    display: block !important; /* Force display block */
+    display: block !important; 
     width: 100%; 
-    min-height: 1.2em; /* Ensure some height for title display */
+    min-height: 1.8em !important; /* Ensure sufficient height for titles */
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
     opacity: 0; 
     transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
-    visibility: hidden; /* Start hidden until JS reveals */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s; /* Delay visibility until after animation */
+    visibility: hidden; /* Starts hidden, revealed by JS */
+    pointer-events: none !important; /* No interactions until visible */
 }
 .section-title.is-visible, .page-title.is-visible, 
 .section-title.force-visible, .page-title.force-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
-    visibility: visible !important; /* ★★★ CRITICAL FIX: Force visible */
+    visibility: visible !important; 
+    pointer-events: auto !important;
 }
 .section-title::after, .page-title::after {
     content: '';
@@ -632,37 +671,41 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
     border-radius: 2px;
 }
-/* 模块内的子标题 */
+/* Module-specific subheadings */
 .comment-form-container h3, .comments-list-container h3, .contact-info h3 { 
     text-align: center;
     width: 100%;
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    visibility: inherit !important; /* Inherit parent forced visibility state */
+    opacity: 1 !important;
 }
 
-/* 新增：文章分类筛选区域 */
+/* NEW: Article Category Filtering Area on Blog page */
 .category-filters {
     margin-bottom: 2rem;
-    display: flex !important; /* Force flex display * /
+    display: flex !important; 
     flex-wrap: wrap; 
     justify-content: center; 
     gap: 0.8rem; 
     width: 100%;
     padding: 0 1rem;
-     -webkit-backface-visibility: hidden; 
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
     opacity: 0; 
     transform: translateY(10px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
-    visibility: hidden; /* Start hidden until JS reveals */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    visibility: hidden; /* Controlled by JS is-visible */
+    pointer-events: none !important;
+    min-height: 1.5em; /* Some initial height */
 }
 .category-filters.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
-    visibility: visible !important; /* ★★★ CRITICAL FIX: Force visible */
+    visibility: visible !important; 
+    pointer-events: auto !important;
 }
 .filter-tag-button {
-    font-family: var(--font-primary), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
     font-size: 0.95em;
     padding: 0.6em 1.2em;
     border-radius: 20px; 
@@ -671,9 +714,11 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     border: 1px solid rgba(var(--secondary-color-rgb), 0.3);
     cursor: pointer;
     transition: all 0.3s ease;
-     -webkit-tap-highlight-color: transparent; 
-    visibility: visible !important; /* Force visible */
+    -webkit-tap-highlight-color: transparent; 
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    visibility: visible !important; /* Always show the filter buttons */
     opacity: 1 !important;
+    pointer-events: auto !important;
 }
 .filter-tag-button:hover, .filter-tag-button.active {
     background-color: var(--secondary-color);
@@ -682,18 +727,24 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
     border-color: var(--secondary-color);
     transform: translateY(-2px);
 }
-/* 分类归档页的网格布局 */
+/* Category grid for categories page */
 .category-grid {
     margin-top: 1.5rem;
     padding-bottom: 2rem; 
     width: 100%;
     justify-items: center; 
-    display: grid !important; /* Force grid for the grid container */
-    visibility: hidden;
+    display: grid !important; 
+    visibility: hidden; /* Controlled by JS is-visible */
+    opacity: 0;
+    pointer-events: auto !important; /* Enable interaction by default for inner links */
+    min-height: 5em;
 }
-.category-grid.is-visible { visibility: visible !important; }
+.category-grid.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+}
 
-/* 分类归档页的分类项按钮样式(基于 filter-tag-button 稍微调整) */
+/* Category item button styles (slightly adjusted from filter-tag-button) */
 .category-grid .filter-tag-button {
     font-size: 1em;
     padding: 0.8em 1.5em;
@@ -708,45 +759,59 @@ body.is-homepage .hero-section::before { /* Specifically target homepage hero se
      border-color: var(--primary-color);
      box-shadow: 0 2px 10px rgba(var(--primary-color-rgb), 0.6);
 }
-.categories-section .button-container {margin-top: 2rem; text-align: center; visibility: hidden; opacity: 0; display: block !important;}
-.categories-section .button-container.is-visible { visibility: visible !important; opacity: 1 !important;}
+.categories-section .button-container { 
+    margin-top: 2rem; 
+    text-align: center; 
+    visibility: hidden; 
+    opacity: 0; /* Starts hidden */
+    display: block !important; 
+    min-height: 2em;
+    pointer-events: none !important;
+}
+.categories-section .button-container.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 
 /* --- Content Page Wrapper (for blog, about, comments, posts) --- */
-/* ★★★ CRITICAL FIX: 主页面内容包裹器，必须强制可见和撑开布局 ★★★ */
+/* Critical wrapper for all main content on non-homepage pages */
 main.container.content-page-wrapper { 
-    background-color: var(--content-bg-color); /* Maintain slightly different background to distinguish content area */
+    background-color: var(--content-bg-color); /* More transparent to allow background image to show */
     -webkit-backdrop-filter: blur(var(--content-backdrop-blur)); 
     backdrop-filter: blur(var(--content-backdrop-blur)); 
     border-radius: var(--border-radius-lg);
     box-shadow: 0 6px 25px rgba(0,0,0,0.25); 
     max-width: 900px;
-    margin: 3rem auto;
+    margin: 3rem auto !important;
     padding: 2.5rem 1.5rem;
-    flex-grow: 1 !important; /* ★★★ CRITICAL FIX: Ensure it grows to take vertical space ★★★ */
-    display: flex !important; /* ★★★ CRITICAL FIX: Use flex to enforce layout on internal containers ★★★ */
+    flex-grow: 1 !important; 
+    display: flex !important; 
     flex-direction: column !important;
-    align-items: center !important; /* Align content centrally */
-    justify-content: flex-start; 
+    align-items: center !important; 
+    justify-content: flex-start; /* Start content from the top */
     text-align: initial; 
-     -webkit-backface-visibility: hidden; 
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
-     opacity: 0; 
-     transition: opacity 0.6s ease-out, visibility 0.01s linear 0.6s; 
-     visibility: hidden; /* Start hidden until JS reveals */
-     height: auto !important; /* Ensure height calculation */
+    opacity: 0; 
+    transition: opacity 0.6s ease-out, visibility 0s linear 0.6s; 
+    visibility: hidden; /* controlled by JS animations (is-visible) */
+    height: auto !important; 
+    min-height: 70vh !important; /* Ensure some height for content wrapper */
+    pointer-events: none !important;
 }
 main.container.content-page-wrapper.is-visible,
 main.container.content-page-wrapper.force-visible {
     opacity: 1 !important; 
-    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
-    display: flex !important; /* Ensure content is display flexibly when visible */
+    visibility: visible !important; 
+    pointer-events: auto !important;
 }
 
-/* 所有的内容性标签默认也隐藏，配合 JS 动画 */
-.content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message),
+/* Force visibility and set initial properties for all main content elements inside the wrapper */
+.content-page-wrapper p,
 .content-page-wrapper ul,
 .content-page-wrapper ol,
 .content-page-wrapper ul li, 
@@ -754,17 +819,20 @@ main.container.content-page-wrapper.force-visible {
 .content-page-wrapper h1,
 .content-page-wrapper h2,
 .content-page-wrapper h3,
-.content-page-wrapper h4
-{
+.content-page-wrapper h4,
+.content-page-wrapper h5,
+.content-page-wrapper h6 {
     opacity: 0;
     transform: translateY(10px); 
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s; /* Keep transition, but hide to ensure display */
-    visibility: hidden; /* Start hidden until JS controls */
-     font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
-    display: block !important; /* Force block display for these elements */
-    min-height: 1.2em; /* Ensure some height for text elements */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s; 
+    visibility: hidden; /* Controlled by JS is-visible */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    display: block !important; 
+    line-height: normal;
+    min-height: 1.2em; /* Ensure some visible height for text */
+    pointer-events: none !important;
 }
-/* When .is-visible is added to these elements by JS, then they animate in */
+/* When '.is-visible' is added by JS, animate them in */
 .content-page-wrapper p.is-visible,
 .content-page-wrapper ul.is-visible,
 .content-page-wrapper ol.is-visible,
@@ -773,26 +841,36 @@ main.container.content-page-wrapper.force-visible {
 .content-page-wrapper h1.is-visible,
 .content-page-wrapper h2.is-visible,
 .content-page-wrapper h3.is-visible,
-.content-page-wrapper h4.is-visible
+.content-page-wrapper h4.is-visible,
+.content-page-wrapper h5.is-visible,
+.content-page-wrapper h6.is-visible
 {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important; 
+    pointer-events: auto !important;
 }
 
 
 /* --- Posts Grid (Blog Page & Comments List) --- */
 .posts-grid { 
-    display: grid !important; /* ★★★ CRITICAL FIX: Ensure grid layout */
+    display: grid !important; 
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 30px; 
     width: 100%; 
-    height: auto !important; /* Ensure height calc */
+    height: auto !important; 
     max-width: 900px; 
-    visibility: hidden; /* Start hidden until JS reveals */
+    visibility: hidden; 
+    opacity: 0;
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+    min-height: 5em; /* Ensure minimal display area */
+    pointer-events: none !important;
 }
-.posts-grid.is-visible {
-    visibility: visible !important; /* Force visible */
+/* When JS reveals grid */
+.posts-grid.is-visible, .post-grid.force-visible {
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 .post-card {
     background-color: var(--card-bg-color); 
@@ -800,34 +878,39 @@ main.container.content-page-wrapper.force-visible {
     border-radius: var(--border-radius-lg);
     overflow: hidden;
     -webkit-backdrop-filter: blur(var(--card-backdrop-blur)); 
-    backdrop-filter: blur(var)--card-backdrop-blur); 
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    backdrop-filter: blur(var(--card-backdrop-blur)); 
+    transition: transform 0.3s ease, box-shadow 0.3s ease, visibility 0s linear 0.5s;
     height: 100%; 
     display: flex !important;
     flex-direction: column !important;
-     -webkit-backface-visibility: hidden; 
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
     opacity: 0; 
     transform: translateY(20px); 
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s ease, visibility 0.01s linear 0.5s; 
-    visibility: hidden; /* Start hidden until JS reveals */
+    /* Combined transition for opacity and transform for animated reveal */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, box-shadow 0.3s ease, visibility 0s linear 0.5s; 
+    visibility: hidden; /* Controlled by JS is-visible */
+    pointer-events: none !important;
 }
+/* When JS adds is-visible, animate it in */
 .post-card.is-visible { 
     opacity: 1 !important; 
     transform: translateY(0) !important; 
-    visibility: visible !important; /* ★★★ 重要修复：强制显示 */
+    visibility: visible !important; 
+    pointer-events: auto !important;
 }
 .post-card a { 
     color: inherit; 
-    display: flex !important; /* ★★★ CRITICAL FIX: Ensure link itself is display flex to contain content ★★★ */
+    display: flex !important; 
     flex-direction: column !important; 
     height: 100%;
     position: relative; 
-    flex-grow: 1 !important; /* Ensure A tag inside card grows to take space */
-    visibility: visible !important; /* Default visible for links */
+    flex-grow: 1 !important; 
+    visibility: visible !important; /* Links always visible */
     opacity: 1 !important;
+    pointer-events: auto !important;
 } 
 .post-card:hover { transform: translateY(-8px); box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(var(--primary-color-rgb), 0.3); }
 .post-thumbnail { 
@@ -839,84 +922,96 @@ main.container.content-page-wrapper.force-visible {
     flex-shrink: 0; 
     background: var(--bg-fallback-color) no-repeat center center / cover; 
     filter: none; 
-    visibility: visible !important; /* ★★★ CRITICAL FIX: Ensure img is always visibly ★★★ */
+    visibility: visible !important; 
     opacity: 1 !important;
-    min-height: 50px !important; /* Ensure a minimal height even if image fails entirely */
+    min-height: 50px !important; 
 }
 
 /* Image loading/fallback states */
 .post-thumbnail.is-loading-fallback {
     /* object-fit: contain ensures entire fallback image is seen, even if it leaves bars */
-    object-fit: contain !important; /* Change to contain during fallback */
+    object-fit: contain !important; /* Change to contain during fallback to show entire fallback image */
     filter: saturate(0) brightness(0.5) blur(1px); 
-    visibility: visible !important; /* Remain visible during fallback loading state */
+    visibility: visible !important; 
     opacity: 1 !important;
 } 
 
 /* Global fallback-text-overlay for all images */
 .fallback-text-overlay {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%); 
+    top: 0; /* was 50%, center with flex now inside */
+    left: 0; /* was 50% */
+    transform: none; /* center with flex */
     width: 100%;
     height: 100%; 
-    display: flex !important;
+    display: flex !important; /* Use flex to center content */
     justify-content: center;
     align-items: center;
     font-size: 1rem;
     color: rgba(255, 255, 255, 0.8);
     text-shadow: 0 0 5px rgba(0,0,0,0.8);
     background: rgba(0,0,0,0.5); 
-    pointer-events: none; 
+    pointer-events: auto !important; /* Allow interaction on overlay (for retry) */
     z-index: 5;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     padding: 0 10px; 
     text-align: center;
     border-radius: inherit; 
     opacity: 0; 
-    transition: opacity 0.3s ease, visibility 0.01s linear 0.3s;
-    visibility: hidden; /* Start hidden */
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+    visibility: hidden; /* Controlled by JS is-visible */
+    line-height: normal; /* Ensure text line-height */
 }
 .fallback-text-overlay.is-visible {
-    opacity: 1 !important; /* Force visible */
-    visibility: visible !important; /* Force visible */
+    opacity: 1 !important; 
+    visibility: visible !important; 
 }
 
 
 .post-info { 
     padding: 1.5rem; 
     flex-grow: 1 !important; 
-    display: flex !important; /* ★★★ CRITICAL FIX: Ensure flex display ★★★ */
+    display: flex !important; 
     flex-direction: column !important; 
     text-align: left; 
     align-self:stretch; 
-    visibility: hidden; /* Start hidden until JS reveals */
+    visibility: hidden; /* Controlled by JS is-visible */
+    opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    pointer-events: none !important;
+    min-height: 3em; /* Minimal height to ensure visibility */
 } 
 .post-info.is-visible {
-    visibility: visible !important; /* Force visible */
+    visibility: visible !important; 
+    opacity: 1 !important;
     height: auto !important;
+    pointer-events: auto !important;
 }
 .post-info h3 { 
     margin: 0 0 0.5rem; 
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-size: 1.4rem; 
     color: #fff; 
     
-    display: -webkit-box !important; /* Force webkit box for text clamp */
+    display: -webkit-box !important; 
     -webkit-line-clamp: 2; 
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: 1.2em; /* Ensure some height for title display */
-    visibility: hidden; /* Start hidden until JS reveals */
+    visibility: hidden; 
+    opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    pointer-events: none !important;
 }
 .post-info h3.is-visible {
     visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
 .post-info h3:hover { color: var(--primary-color); } 
 .post-excerpt { 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-size: 0.9em; 
     margin-bottom: 1rem; 
     color: var(--text-color); 
@@ -930,23 +1025,36 @@ main.container.content-page-wrapper.force-visible {
     overflow: hidden;
     text-overflow: ellipsis;
     min-height: 1.2em;
-    visibility: hidden;
-    opacity: 0; /* Keep initial opaque until JS */
+    visibility: hidden; 
+    opacity: 0; 
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    pointer-events: none !important;
 } 
-.post-excerpt.is-visible { visibility: visible !important; opacity: 1 !important;}
+.post-excerpt.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .post-info time { 
     font-size: 0.8em; 
     color: var(--meta-text-color); 
     margin-top: auto;
-    visibility: hidden;
+    visibility: hidden; 
     opacity: 0;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    pointer-events: none !important;
+    min-height: 1.2em;
 } 
-.post-info time.is-visible { visibility: visible !important; opacity: 1 !important;}
+.post-info time.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
-.post-tags {margin-top: 0.8em; display: flex !important; gap: 0.5em; flex-wrap: wrap; visibility: hidden; opacity: 0; }
-.post-tags.is-visible { visibility: visible !important; opacity: 1 !important;}
+.post-tags {margin-top: 0.8em; display: flex !important; gap: 0.5em; flex-wrap: wrap; visibility: hidden; opacity: 0; pointer-events: none !important; min-height: 1.5em; position: relative !important;}
+.post-tags.is-visible { visibility: visible !important; opacity: 1 !important; pointer-events: auto !important;}
 .post-tags .tag {
     display: inline-block !important;
     background-color: rgba(var(--secondary-color-rgb), 0.15); 
@@ -958,12 +1066,11 @@ main.container.content-page-wrapper.force-visible {
     border: 1px solid rgba(var(--secondary-color-rgb), 0.2);
     cursor: pointer; 
     transition: all 0.2s ease;
-    visibility: hidden;
-    opacity: 0; /* Maintain initial as 0 */
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    visibility: visible; /* Always keep tags visible */
+    opacity: 1; 
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    pointer-events: auto !important;
 }
-.post-tags .tag.is-visible { visibility: visible !important; opacity: 0.9 !important; }
-
 .post-tags .tag:hover {
     background-color: var(--secondary-color);
     color: var(--heading-color);
@@ -975,8 +1082,8 @@ main.container.content-page-wrapper.force-visible {
 /* --- Layout for About, Comments, Categories pages --- */
 .about-me-section, .comment-section, .categories-section { 
     width: 100%; 
-    height: auto !important; /* ★★★ CRITICAL FIX: Ensure section takes content height ★★★*/
-    min-height: 50vh !important; /* Ensure some minimum height for non-homepage content */
+    height: auto !important; 
+    min-height: 50vh !important; 
     text-align: center; 
     -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
@@ -984,89 +1091,121 @@ main.container.content-page-wrapper.force-visible {
 
      opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
-     visibility: hidden; /* Start hidden until JS reveals */
-     display: flex !important; /* ★★★ CRITICAL FIX: Ensure content section internal elements are displayed as flex ★★★*/
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+     visibility: hidden; 
+     display: flex !important;
      flex-direction: column !important;
-     align-items: center !important; /* Align inner content centrally */
-     justify-content: flex-start !important; /* Align content to top */
+     align-items: center !important; 
+     justify-content: flex-start !important; 
+     min-height: calc(100vh - (var(--header-min-height, 50px) + 2rem)); /* ensure fills space minus header and some margin */
+     pointer-events: none !important;
 }
 .about-me-section.is-visible, .comment-section.is-visible, .categories-section.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important; 
+    pointer-events: auto !important;
 }
 
 
 .about-me-section p, .comment-section p, .categories-section p { 
     font-size: 1.05em;
     max-width: 760px; 
-    margin-left: auto; 
-    margin-right: auto; 
+    margin-left: auto !important; 
+    margin-right: auto !important; 
     text-align: justify; 
     padding: 0 0.5rem; 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
-    visibility: hidden;
+    font-family: var(--font-primary), "Times New Roman", Times, serif; 
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    line-height: normal;
+    min-height: 1.2em;
+    pointer-events: none !important;
 }
-.about-me-section p.is-visible, .comment-section p.is-visible, .categories-section p.is-visible { visibility: visible !important; }
+.about-me-section p.is-visible, .comment-section p.is-visible, .categories-section p.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .comment-form-container .form-hint { 
     opacity: 0;
-    transition: opacity 0.5s ease-out, visibility 0.01s linear 0.5s;
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
     visibility: hidden;
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important;
+    line-height: normal;
+    min-height: 1.2em;
+    display: block !important;
+    pointer-events: none !important;
 }
 .comment-form-container .form-hint.is-visible {
     opacity: 1 !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 
-/* 对列表也应用max-width和margin auto */
+/* Apply max-width and auto margins to lists as well */
 .content-page-wrapper ul, 
 .content-page-wrapper ol,
 .content-page-wrapper ul li, 
 .content-page-wrapper ol li 
 { 
     max-width: 760px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: auto !important;
+    margin-right: auto !important;
     text-align: left; 
     padding-left: 2em; 
-     font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
-    visibility: hidden;
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important;
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    line-height: normal;
+    min-height: 1.2em;
+    pointer-events: none !important;
 }
 .content-page-wrapper ul.is-visible, 
 .content-page-wrapper ol.is-visible,
 .content-page-wrapper ul li.is-visible, 
 .content-page-wrapper ol li.is-visible {
     visibility: visible !important;
+    opacity: 1 !important;
+    pointer-events: auto !important;
 }
-/* 对分类页的按钮容器确保居中 */
+/* Ensure categories page button container is centered */
 .categories-section .button-container {
     padding: 0 0.5rem;
     height: auto !important; 
     display: block !important;
-    visibility: hidden;
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    pointer-events: none !important;
+    min-height: 2em;
 }
-.categories-section .button-container.is-visible { visibility: visible !important; }
+.categories-section .button-container.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .about-me-section .my-avatar {
     width: 150px; height: 150px;
     border-radius: 50%;
     object-fit: cover;
-    margin: 0 auto 1.5em; 
+    margin: 0 auto 1.5em !important; 
     border: 4px solid var(--primary-color);
     box-shadow: 0 0 0 8px rgba(var(--primary-color-rgb), 0.2); 
-    transition: transform 0.3s ease, box-shadow 0.3s ease, visibility 0.01s linear 0.3s;
-     opacity: 0; 
-     transform: scale(0.8); 
-     visibility: hidden; /* Start hidden until JS reveals */
-     display: block !important; /* Force block in About page Avatar */
+    transition: transform 0.3s ease, box-shadow 0.3s ease, visibility 0s linear 0.3s;
+    opacity: 0; 
+    transform: scale(0.8); 
+    visibility: hidden; 
+    display: block !important; 
+    pointer-events: none !important;
 }
 .about-me-section .my-avatar.is-visible { 
     opacity: 1 !important; 
     transform: scale(1) !important; 
     visibility: visible !important; 
+    pointer-events: auto !important;
 }
 .about-me-section .my-avatar:hover {
     transform: scale(1.05) rotate(5deg);
@@ -1075,7 +1214,7 @@ main.container.content-page-wrapper.force-visible {
 .about-me-section .contact-info {
     text-align: left; 
     max-width: 480px;
-    margin: 2em auto;
+    margin: 2em auto !important;
     padding: 1.5em; 
     background: rgba(var(--bg-secondary-color-rgb), 0.6); 
     border-radius: var(--border-radius);
@@ -1087,16 +1226,17 @@ main.container.content-page-wrapper.force-visible {
     transform: translateZ(0); 
      opacity: 0; 
      transform: translateY(10px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
-     visibility: hidden; /* Start hidden until JS reveals */
-    display: block !important; /* Force block display of contact info */
-    min-height: 5em; /* Ensure minimal content height here too */
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+     visibility: hidden; 
+    display: block !important; 
+    min-height: 5em;
+    pointer-events: none !important;
 }
 .about-me-section .contact-info.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important; 
-    display: block !important; /* Ensure block display of contact info when visible */
+    pointer-events: auto !important;
 }
 
 /* Comments Form */
@@ -1117,26 +1257,29 @@ main.container.content-page-wrapper.force-visible {
 
      opacity: 0; 
      transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
-    visibility: hidden; /* Start hidden until JS reveals */
-    display: block !important; /* ★★★ CRITICAL FIX: Ensure form block is visible from start when parent is available ★★★ */
-    height: auto !important; /* Make sure height is not collapsed */
+     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    visibility: hidden; 
+    display: block !important; 
+    height: auto !important; 
     min-height: 10em;
+    pointer-events: none !important;
 }
 .comment-form-container.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important; 
+    pointer-events: auto !important;
 }
 .comment-form-container h3 {
     text-align: center; 
     color: var(--primary-color);
     margin-bottom: 1.5rem;
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
 }
 /* Ensure form elements and labels display correctly and are visible */
-.form-group { margin-bottom: 1.5em; width: 100%; display: block !important; opacity: 1 !important; visibility: visible !important;}
-.form-group label { display: block !important; margin-bottom: 0.5em; font-weight: 500; color: var(--heading-color); font-family: var(--font-primary), sans-serif !important; opacity: 1 !important; visibility: visible !important;}
+.form-group { margin-bottom: 1.5em; width: 100%; display: block !important; opacity: 1 !important; visibility: visible !important; pointer-events: none !important; min-height: 3em;}
+.form-group.is-visible { pointer-events: auto !important;}
+.form-group label { display: block !important; margin-bottom: 0.5em; font-weight: 500; color: var(--heading-color); font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; opacity: 1 !important; visibility: visible !important; pointer-events: auto !important; min-height: 1.2em;}
 .form-group input[type="text"], .form-group textarea {
     width: 100%;
     padding: 0.8em 1em;
@@ -1146,10 +1289,12 @@ main.container.content-page-wrapper.force-visible {
     outline: none; 
     color: var(--text-color);
     font-size: 1em;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     transition: border-color 0.3s ease, box-shadow 0.3s ease;
-    display: block !important; /* Force input to display block */
+    display: block !important; 
     opacity: 1 !important; visibility: visible !important;
+    pointer-events: auto !important;
+    min-height: 2.5em; /* Ensure input field minimum height */
 }
 .form-group input[type="text"]:focus, .form-group textarea:focus {
     border-color: var(--primary-color);
@@ -1157,19 +1302,27 @@ main.container.content-page-wrapper.force-visible {
 }
 textarea { resize: vertical; min-height: 120px; }
 .form-hint { 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */ 
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-size: 0.85em; 
     color: var(--meta-text-color); 
     margin-top: 1em; 
     text-align: center; 
     width: 100%; 
-    visibility: hidden;
-    opacity: 0;
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    line-height: normal;
+    min-height: 1.2em;
+    display: block !important;
+    pointer-events: none !important;
 }
-.form-hint.is-visible { opacity: 1 !important; visibility: visible !important;} 
+.form-hint.is-visible { 
+    opacity: 1 !important; 
+    visibility: visible !important;
+    pointer-events: auto !important;
+} 
 
 
-/* Comments List (基于 posts-grid 的 flex 或 grid 效果) */
+/* Comments List section */
 .comments-list-container {
     margin-top: 3em; 
     padding-top: 2em;
@@ -1177,43 +1330,51 @@ textarea { resize: vertical; min-height: 120px; }
     width: 100%; 
     max-width: 900px; 
     text-align: center; 
-     -webkit-backface-visibility: hidden; 
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
-     opacity: 0; 
-     transition: opacity 0.5s ease-out, visibility 0.01s linear 0.5s;
-     visibility: hidden; /* Start hidden until JS reveals */
-     display: block !important; /* Force initial display */
-     min-height: 5em; /* Ensure some height always */
-     height: auto !important; /* Ensure height calc */
+    opacity: 0; 
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+    visibility: hidden; 
+    display: block !important; 
+    min-height: 5em; 
+    height: auto !important; 
+    pointer-events: none !important;
 }
 .comments-list-container.is-visible {
     opacity: 1 !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 .comments-list-container h3 {
     text-align: center; 
     margin-bottom: 1.5em;
     color: var(--secondary-color);
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important;
 }
 
 #comments-list {
     margin-top: 1em; 
     text-align: left; 
-    display: grid !important; /* ★★★ CRITICAL FIX: Ensure grid layout ★★★ */
+    display: grid !important; 
     grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); 
     gap: 20px; 
     width: 100%; 
-    height: auto !important; /* Ensure content height */
+    height: auto !important; 
     max-width: 100%; 
-    margin-left: auto; 
-    margin-right: auto;
-    visibility: hidden;
-    opacity: 0;
+    margin-left: auto !important; 
+    margin-right: auto !important;
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+    pointer-events: none !important;
+    min-height: 3em;
 }
-#comments-list.is-visible { visibility: visible !important; opacity: 1 !important;}
+#comments-list.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 /* Re-style post-card specific to comment list */
 #comments-list.comments-list .post-card { 
@@ -1223,11 +1384,14 @@ textarea { resize: vertical; min-height: 120px; }
     opacity: 0;
     transform: translateY(20px);
     visibility: hidden;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    pointer-events: none !important;
 }
 #comments-list.comments-list .post-card.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 /* Comment text and meta info classes */
@@ -1239,16 +1403,24 @@ textarea { resize: vertical; min-height: 120px; }
 .comment-text {
     margin-bottom: 0.5em; 
     font-size: 1em;
-    color: var(--text-color) !important; /* CRITICAL FIX: Changed from meta-text-color to text-color for better contrast */
+    color: var(--text-color) !important; /* Forces text to main text color for readability */
     max-width: 100%;
     text-align: left; 
     word-wrap: break-word; 
     overflow-wrap: break-word;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
-    visibility: hidden;
-    opacity: 0;
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    line-height: normal;
+    min-height: 1.2em;
+    pointer-events: none !important;
 }
-.comment-text.is-visible { visibility: visible !important; opacity: 1 !important; }
+.comment-text.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
+
 .comment-meta {
     font-size: 0.85em;
     color: var(--meta-text-color);
@@ -1256,11 +1428,18 @@ textarea { resize: vertical; min-height: 120px; }
     padding-top: 0.8em;
     margin-top: 1em;
     text-align: left; 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
-    visibility: hidden;
-    opacity: 0;
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    line-height: normal;
+    min-height: 1.2em;
+    pointer-events: none !important;
 }
-.comment-meta.is-visible { visibility: visible !important; opacity: 1 !important; }
+.comment-meta.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .comment-meta strong { color: var(--primary-color); }
 
@@ -1269,18 +1448,22 @@ textarea { resize: vertical; min-height: 120px; }
     color: var(--meta-text-color); 
     font-style: italic; 
     padding: 2em; 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */ 
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     grid-column: 1 / -1; 
     width: 100%; 
-     opacity: 0; 
-     transform: translateY(10px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    opacity: 0; 
+    transform: translateY(10px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
     visibility: hidden;
+    line-height: normal;
+    min-height: 2em;
+    pointer-events: none !important;
 }
 .no-comments-message.is-visible { 
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 
@@ -1295,44 +1478,47 @@ main .blog-post-detail {
     max-width: 900px; 
     -webkit-backdrop-filter: blur(var(--card-backdrop-blur));
     backdrop-filter: blur(var(--card-backdrop-blur));
-    display: flex !important; /* ★★★ CRITICAL FIX: Ensure flex display ★★★ */
+    display: flex !important; 
     flex-direction: column !important;
     align-items: center !important; 
-     -webkit-backface-visibility: hidden; 
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
 
-     opacity: 0; 
-     transition: opacity 0.6s ease-out, visibility 0.01s linear 0.6s; 
-     visibility: hidden; /* Start hidden until JS reveals */
-     height: auto !important; /* Ensure full height */
-     min-height: 50vh !important;
+    opacity: 0; 
+    transition: opacity 0.6s ease-out, visibility 0s linear 0.6s; 
+    visibility: hidden; 
+    height: auto !important; 
+    min-height: 50vh !important;
+    pointer-events: none !important;
 }
 main .blog-post-detail.is-visible {
     opacity: 1 !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 .post-detail-title {
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-size: 2.8em;
     text-align: center; 
     color: var(--primary-color);
-    line-height: 1.3;
+    line-height: normal; /* Ensure normal line height */
     display: block !important; 
     width: 100%; 
-    min-height: 1.5em; /* Ensure minimal height for visible title */
+    min-height: 1.5em !important; 
     opacity: 0; 
-     transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
     visibility: hidden;
+    pointer-events: none !important;
 }
 .post-detail-title.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
-
 .post-detail-title::after {
     content: '';
     position: absolute; 
@@ -1351,18 +1537,22 @@ main .blog-post-detail.is-visible {
     margin-top: 1em;
     margin-bottom: 2em;
     padding-bottom: 1.5em;
-    border-bottom: 1px dashed var(--border-color); 
+    border-bottom: 1px dashed var(--border-color); /* Use border-color */
     width: 100%; 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
-     opacity: 0; 
-     transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    opacity: 0; 
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
     visibility: hidden;
+    line-height: normal;
+    min-height: 1.2em;
+    pointer-events: none !important;
 }
 .post-meta.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 
 
@@ -1378,18 +1568,21 @@ main .blog-post-detail.is-visible {
     background: var(--bg-fallback-color) no-repeat center center / cover;
     filter: none; 
     opacity: 0; 
-    transition: opacity 0.5s ease-out, filter 0.3s ease, transform 0.3s ease, visibility 0.01s linear 0.5s;
+    transition: opacity 0.5s ease-out, filter 0.3s ease, transform 0.3s ease, visibility 0s linear 0.5s;
     visibility: hidden;
-    display: block !important; /* Ensure block display */
+    display: block !important; 
+    pointer-events: none !important;
 }
 .post-detail-banner.is-visible {
     opacity: 1 !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 .post-detail-banner.is-loading-fallback {
     filter: saturate(0) brightness(0.6) blur(1px); 
     object-fit: contain !important; 
-    visibility: visible !important; /* Ensure visible even when loading fallback */
+    visibility: visible !important; 
+    opacity: 1 !important;
 }
 /* Post detail banner fallback text style, matching img height */
 .post-detail-banner + .fallback-text-overlay { 
@@ -1403,18 +1596,20 @@ main .blog-post-detail.is-visible {
     width: 100%; 
     max-width: 760px; 
     text-align: justify; 
-    height: auto !important; /* NEW: Ensure content height is automatically set */
-     opacity: 0; 
-     transform: translateY(20px);
-     transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    height: auto !important; 
+    opacity: 0; 
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
     visibility: hidden;
-    display: block !important; /* Force block display for the content container itself */
-    min-height: 10em; /* Ensure some height for content to appear */
+    display: block !important; 
+    min-height: 10em; 
+    pointer-events: none !important;
 }
 .post-content.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 .post-content h3 {
     margin-top: 2.5em;
@@ -1422,28 +1617,37 @@ main .blog-post-detail.is-visible {
     border-left: 5px solid var(--secondary-color);
     padding-left: 1em;
     color: var(--heading-color);
-    font-family: var(--font-display), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-display), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-size: 1.8em;
     text-align: left; 
     width: 100%; 
-    visibility: hidden;
-    opacity: 0;
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    min-height: 1.2em;
+    line-height: normal;
+    pointer-events: none !important;
 }
-.post-content h3.is-visible { visibility: visible !important; opacity: 1 !important;}
+.post-content h3.is-visible { 
+    visibility: visible !important; opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .post-content p, .post-content ul, .post-content ol, .post-content ul li, .post-content ol li { 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     font-size: 1.05em;
     margin-bottom: 1.5em; 
     line-height: 1.8;
     text-align: justify; 
     padding: 0 0.5rem; 
-    visibility: hidden;
-    opacity: 0;
+    visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
+    min-height: 1.2em;
+    pointer-events: none !important;
 }
 .post-content p.is-visible, .post-content ul.is-visible, .post-content ol.is-visible,
 .post-content ul li.is-visible, .post-content ol li.is-visible {
     visibility: visible !important; opacity: 1 !important;
+    pointer-events: auto !important;
 }
 .post-content ul, .post-content ol { list-style-position: inside; padding-left: 2em; text-align: left;} 
 .post-content ul li, .post-content ol li {margin-bottom: 0.5em;}
@@ -1457,42 +1661,56 @@ main .blog-post-detail.is-visible {
     border-top: 1px dashed var(--border-color); 
     width: 100%; 
     max-width: 700px; 
-    display: flex !important; /* Force flex display for buttons */
+    display: flex !important; 
     justify-content: center !important;
-     opacity: 0; 
-     transform: translateY(20px);
-    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0.01s linear 0.5s;
+    opacity: 0; 
+    transform: translateY(20px);
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
     visibility: hidden;
-    height: auto !important; /* Ensure height calc */
+    height: auto !important; 
     min-height: 3em;
+    pointer-events: none !important;
 }
 .post-share-buttons.is-visible {
     opacity: 1 !important; 
     transform: translateY(0) !important; 
     visibility: visible !important;
+    pointer-events: auto !important;
 }
 .post-share-buttons span {
     color: var(--meta-text-color);
     margin-right: 1em;
     font-size: 0.95em;
     vertical-align: middle;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+    min-height: 1.2em; line-height: normal;
+    pointer-events: none !important;
 }
-.post-share-buttons span.is-visible { visibility: visible !important; opacity: 1 !important;}
+.post-share-buttons span.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .share-button {
-    display: inline-block !important; /* Force inline-block display */
+    display: inline-block !important; 
     padding: 0.6em 1.2em;
     border-radius: 5px;
     margin: 0 0.5em;
     color: #fff;
     font-weight: 500;
     transition: transform 0.2s ease;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     visibility: hidden; opacity: 0;
+    pointer-events: none !important;
 }
-.share-button.is-visible { visibility: visible !important; opacity: 1 !important;}
+.share-button.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 .share-button.wechat { background-color: #27CA74; }
 .share-button.weibo { background-color: #E2413E; }
@@ -1502,58 +1720,71 @@ main .blog-post-detail.is-visible {
 .read-more {
     text-align: center;
     margin-top: 2em; 
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     visibility: hidden; opacity: 0;
+    transition: opacity 0.5s ease-out, transform 0.5s ease-out, visibility 0s linear 0.5s;
     height: auto !important; width: auto !important; min-height: 2em; display: block !important;
+    pointer-events: none !important;
 }
-.read-more.is-visible { visibility: visible !important; opacity: 1 !important;}
+.read-more.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 
 /* --- Main Footer --- */
 .main-footer {
-    padding: 0.8rem 0 !important; /* Reduced padding too */
+    padding: 0.8rem 0 !important; 
     background: var(--footer-bg-color);
     border-top: 1px solid var(--border-color); 
     box-shadow: inset 0 2px 10px rgba(0,0,0,0.1);
     color: var(--meta-text-color);
     font-size: 0.9em;
     text-align: center;
-    margin-top: auto !important; /* Force footer to bottom */
-    width: 100% !important; /* CRITICAL FIX: Ensure footer stretches */
-    min-height: 4em; /* Ensure minimum height */
-     -webkit-backface-visibility: hidden; 
+    margin-top: auto !important; 
+    width: 100% !important; 
+    min-height: 4em; 
+    flex-shrink: 0 !important; /* Prevent footer from shrinking */
+    -webkit-backface-visibility: hidden; 
     backface-visibility: hidden;
     transform: translateZ(0); 
-
-     opacity: 0; 
-     transition: opacity 0.5s ease-out, visibility 0.01s linear 0.5s;
-     visibility: hidden; /* Start hidden until JS reveals */
-     display: flex !important; /* Use flex to layout footer children evenly, important! */
-     justify-content: center !important;
-     align-items: center !important;
-     flex-direction: column !important;
-     gap: 0.5em !important;
+    opacity: 0; 
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+    visibility: hidden; 
+    display: flex !important; 
+    justify-content: center !important;
+    align-items: center !important;
+    flex-direction: column !important;
+    gap: 0.5em !important;
+    pointer-events: none !important;
 }
 .main-footer.is-visible { 
     opacity: 1 !important; 
     visibility: visible !important;
-    display: flex !important; /* Maintain flex display when visible */
+    pointer-events: auto !important;
 }
 
 .main-footer .container {
     padding: 0 1.5rem; 
-    display: flex !important; /* Force flex on footer container */
+    display: flex !important; 
     flex-direction: column;
     gap: 0.3em;
     visibility: inherit !important;
     opacity: 1 !important;
 }
 .main-footer p {
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
     visibility: hidden; opacity: 0;
-    min-height: 1.2em; /* Ensure some height always */
+    transition: opacity 0.5s ease-out, visibility 0s linear 0.5s;
+    min-height: 1.2em; line-height: normal;
+    pointer-events: none !important;
 }
-.main-footer p.is-visible { visibility: visible !important; opacity: 1 !important; }
+.main-footer p.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 /* --- Back to Top Button --- */
 #back-to-top {
@@ -1568,20 +1799,22 @@ main .blog-post-detail.is-visible {
     border-radius: 50%;
     font-size: 1.6rem;
     cursor: pointer;
-    z-index: 1000;
+    z-index: 1000 !important; 
     opacity: 0;
     visibility: hidden;
     transform: translateY(20px);
-    transition: all 0.3s ease, visibility 0.01s linear 0.3s;
+    transition: all 0.3s ease, visibility 0s linear 0.3s;
     display: flex !important;
     justify-content: center;
     align-items: center;
-    font-family: var(--font-primary), sans-serif !important; /* CRITICAL FIX: Ensure font family */
+    font-family: var(--font-primary), "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif !important; 
+    pointer-events: none !important;
 }
 #back-to-top.show {
     opacity: 1 !important; 
     visibility: visible !important; 
     transform: translateY(0) !important; 
+    pointer-events: auto !important;
 }
 #back-to-top:hover {
     background-color: var(--primary-hover-color);
@@ -1599,15 +1832,20 @@ main .blog-post-detail.is-visible {
     height: 4px; 
     background: linear-gradient(90deg, var(--secondary-color), var(--primary-color));
     box-shadow: 0 0 10px var(--primary-color);
-    transition: width 0.1s linear; 
-    z-index: 1001; 
+    transition: width 0.1s linear, opacity 0.1s linear, visibility 0s linear 0.1s; 
+    z-index: 1001 !important; 
     visibility: hidden; opacity: 0;
+    pointer-events: none !important;
 }
-#read-progress-bar.is-visible { visibility: visible !important; opacity: 1 !important; }
+#read-progress-bar.is-visible { 
+    visibility: visible !important; 
+    opacity: 1 !important;
+    pointer-events: auto !important;
+}
 
 /* --- Responsive Adjustments - Mobile Specific (max-width: 767px) --- */
 @media (max-width: 767px) {
-    /* 通用移动端样式覆盖 */
+    /* General mobile overrides */
     body {
         cursor: auto !important; 
         opacity: 1 !important; 
@@ -1617,12 +1855,14 @@ main .blog-post-detail.is-visible {
         backdrop-filter: blur(var(--body-global-blur-value)); 
         -webkit-backdrop-filter: blur(var(--body-global-blur-value));
     }
+    /* Hide custom cursor on mobile */
     body.is-mobile #cursor-trail { 
         display: none !important; 
+        visibility: hidden !important;
     }
-    .container {padding: 0.8rem;} /* Slightly less padding to gain space */
+    .container {padding: 0.8rem;} 
 
-    /* ------------- 头部导航栏适配 ------------- */
+    /* ------------- Header / Navigation Mobile Adjustments ------------- */
     .main-header { padding: 0.3rem 0.5rem; min-height: var(--header-min-height-mobile, 45px); height: 45px !important;} 
     .main-header .container { padding: 0 0.5rem; } 
     .main-header .blog-title--animated.is-header-title > a { 
@@ -1630,16 +1870,15 @@ main .blog-post-detail.is-visible {
     }
     .menu-toggle .icon-bar { width: 22px; margin: 3px 0;} 
     
-    /* 缩小菜单小框在手机端更紧凑 */
+    /* Condensed menu panel on mobile */
     .main-nav {
         top: calc(var(--header-min-height-mobile, 45px) + 10px); 
         right: 0.8rem; 
         width: 170px; 
         max-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 10px + 10px)); 
         padding: 0.6rem; 
+        transition: transform 0.3s ease-out, opacity 0.3s ease-out, visibility 0s linear 0.3s;
     }
-    
-    /* NEW: Handle the mobile open/close menu directly for better consistency */
     .main-nav.is-open { 
         transform: translateX(0) !important; 
     }
@@ -1647,18 +1886,19 @@ main .blog-post-detail.is-visible {
     .main-nav ul { gap: 0.6rem; padding: 0.2rem 0;} 
     .main-nav a { font-size: 0.9em; padding: 0.4em 0.7em; width: 95%; max-width: 160px;}
     
-    /* ------------- 英雄区域适配 (首页) ------------- */
+    /* ------------- Homepage Hero Area Mobile Adjustments ------------- */
     .hero-content { padding: 0.5rem; margin-top: -15px;} 
     .hero-subtitle { font-size: 0.8rem; margin: 0.3rem 0 0.8rem; padding: 0;} 
     .hero-nav .nav-link { margin: 0; padding: 0.5rem 0.8em; font-size: 0.9em; width: unset; flex-grow: 1;} 
     .hero-nav { gap: 0.5rem;}
 
 
-    /* ------------- 内容区域适配 （包括博客列表和留言板！）------------- */
+    /* ------------- Content Area Mobile Adjustments (also affects blog list and comment board!) ------------- */
     main.container.content-page-wrapper { 
-        margin: 0.4rem auto; 
+        margin: 0.4rem auto !important; 
         padding: 0.8rem 0.6rem; 
         display: flex !important; 
+        min-height: calc(100vh - (var(--header-min-height-mobile, 45px) + 1rem));
     }
 
     .page-title, .section-title { font-size: 1.5rem; margin-bottom: 0.8rem; } 
@@ -1674,18 +1914,18 @@ main .blog-post-detail.is-visible {
     .category-filters {
         gap: 0.5rem; 
         padding: 0 0.5rem; 
-         margin-bottom: 1rem; 
+        margin-bottom: 1rem; 
     }
     .filter-tag-button {
         font-size: 0.8em; 
         padding: 0.4em 0.8em; 
         border-radius: 12px; 
-         white-space: nowrap; 
+        white-space: nowrap; 
     }
     .category-grid {
         grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); 
         gap: 10px; 
-         max-width: 100%; 
+        max-width: 100%; 
     }
     .category-grid .filter-tag-button {
         padding: 0.5em 0.8em; 
@@ -1695,19 +1935,19 @@ main .blog-post-detail.is-visible {
     }
 
 
-    /* **FIX: 博客文章列表网格强制单列且内容自适应** */
+    /* Blog post list grid forced to single column with adaptive content */
     .posts-grid, #comments-list { 
-        grid-template-columns: 1fr !important; /* Force single column on mobile */
+        grid-template-columns: 1fr !important; 
         gap: 12px; 
-        margin-left: 0; 
-        margin-right: 0;
+        margin-left: 0 !important; 
+        margin-right: 0 !important;
         max-width: 100%;
     }
     .post-card {
         transform: translateY(10px); 
     }
 
-    /* **FIX: 文章卡片内容自适应** */
+    /* Article card content adaptation */
     .post-card .post-info {
         padding: 0.6rem; 
         width: 100%; 
@@ -1720,7 +1960,7 @@ main .blog-post-detail.is-visible {
     .post-info h3 { font-size: 1.2rem; -webkit-line-clamp: 2; text-align: left;} 
     .post-excerpt { font-size: 0.8em; -webkit-line-clamp: 3; text-align: justify; }
 
-    /* **FIX: 详情页和留言板段落/表单内容适配** */
+    /* Detail page and comment board paragraph/form content adaptation */
     .about-me-section p, 
     .comment-section p, 
     .content-page-wrapper .form-group input, 
@@ -1732,15 +1972,15 @@ main .blog-post-detail.is-visible {
         text-align: justify; 
     }
      .post-content h3 { font-size: 1.2em; padding-left: 0.5em; text-align: left; border-left: 3px solid var(--secondary-color);} 
-    .post-share-buttons {margin-top: 1em; padding-top: 0.8em; gap: 0;} 
+    .post-share-buttons {margin-top: 1em; padding-top: 0.8em; gap: 0;} /* Align share buttons better on mobile */
     .post-share-buttons span {margin-right: 0.5em;}
     .share-button { margin: 0.1em; padding: 0.3em 0.6em; font-size: 0.75em; border-radius: 4px; } 
 
     .comment-form-container, .about-me-section .contact-info { 
         padding: 1rem 0.8em; 
-        margin: 0.8rem auto; 
+        margin: 0.8rem auto !important; 
     }
-    /* FIX: 确保留言板的表单组完全自适应 */
+    /* Ensure comment form groups are fully adaptive */
     .comment-form-container .form-group { padding: 0;}
     .comment-form-container label, .comment-form-container .form-hint { text-align: left; padding: 0.2rem;}
 
@@ -1767,21 +2007,26 @@ main .blog-post-detail.is-visible {
 .force-visible {
     visibility: visible !important;
     opacity: 1 !important;
-    /* Use display: block (or flex) to ensure elements render with space, preventing collapse */
+    /* Generic display block, but for flex containers, ensure flex is also forced up. */
     display: block !important; 
-    /* For elements that *could* be flex containers but are currently not picking it up. */
     display: flex !important; 
-    flex-direction: column !important; /* Default to column for children, override as necessary */
+    flex-direction: column !important; /* Default to column for many components; override as necessary */
     
     height: auto !important; /* Prevent height from collapsing to 0 */
     min-height: 10px !important; /* Ensure some visible height */
-    width: auto !important; /* Ensure element has auto width */
-     min-width: 10px !important; /* Ensure some visible width */
+    max-height: unset !important; /* Ensure content can grow as much as needed */
 
-     pointer-events: auto !important; /* Ensure content is interactive */
+    width: 100% !important; /* Allow element to take full available width */
+    min-width: 10px !important; /* Ensure some visible width */
+
+    pointer-events: auto !important; /* Ensure content is interactive */
+    flex-shrink: 0 !important; /* Prevent critical elements from shrinking due to external flex contexts */
+    position: relative !important; /* For internal absolute positioning elements */
+    z-index: auto !important; /* Or ensure specific z-index */
 }
 
 /* Ensure images always display, even if their `object-fit` / `filter` values are different for fallbacks */
+/* Applies to all `<img>` tags by default. Specific styles within components can override. */
 img {
     visibility: visible !important;
     opacity: 1 !important;
@@ -1795,7 +2040,31 @@ h1, h2, h3, h4, h5, h6, p, ul, ol, li, span, a, strong, em {
     visibility: inherit !important; /* Inherit visibility from parent force-visible if set */
     opacity: 1 !important; /* Inherit opacity from parent 1, or set to 1 if hidden */
     /* Most text elements default to inline or block. We ensure they take space. */
-     display: initial !important; /* Use initial default display type */
-     min-height: 1.2em !important; /* Give all text contents minimal height to render */
+     display: initial !important; /* Use initial default display type, will re-render later if specific class need it */
+     min-height: 0.8em !important; /* Give all text contents minimal height to render */
      width: auto !important; /* Allow auto width calculation */
+     line-height: normal !important; /* Important for font rendering */
+}
+a span.icon-bar {
+    visibility: inherit !important;
+    opacity: 1 !important;
+}
+
+/* Specific overrides for flex/grid children that rely on parent's forced display. */
+/* Helps items within parent `force-visible` sections to still arrange correctly. */
+.main-header .blog-title.blog-title--animated.is-header-title {
+    display: flex !important; /* Title holder flexibility in header */
+    flex-direction: row !important; /* Layout children horizontally (e.g. text + possible icon) */
+    align-items: center !important;
+    pointer-events: auto !important;
+    min-height: 1.2em;
+}
+.hero-content .blog-title.blog-title--animated.is-homepage-title {
+    display: flex !important; /* Homepage title flexibility */
+    position: relative !important; /* Re-affirm positioning */
+    min-height: 2em;
+}
+.hero-content .blog-title.blog-title--animated.is-homepage-title > a {
+    display: inline-block !important; /* Actual link uses inline-block */
+    /* Other specific text and animation properties apply below */
 }

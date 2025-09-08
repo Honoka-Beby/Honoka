@@ -3,7 +3,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log("💬 [Comments Module] comments.js STARTING execution...");
 
     const commentForm = document.getElementById('comment-form');
-    // Ensure commentsList is retrieved reliably across function calls (may change if innerHTML updated)
     let commentsList = document.getElementById('comments-list'); 
 
     // ★★★ IMPORTANT: Replace with YOUR ACTUAL NETLIFY DEPLOYED FRONTEND DOMAIN !!! ★★★
@@ -20,25 +19,23 @@ document.addEventListener('DOMContentLoaded', () => {
     async function handleFetchError(response, context) {
         let errorDetail = '';
         try {
-            errorDetail = await response.text(); // Attempt to get raw error text
+            errorDetail = await response.text(); 
         } catch (e) {
             console.warn(`[CommentsAPI] ${context} Could not read error response text:`, e);
+            errorDetail = `Could not read error response for ${context}.`;
         }
         
         console.error(`[CommentsAPI] ${context} Error (HTTP ${response.status}): ${response.statusText}`, errorDetail);
         
-        // Try parsing JSON error if content-type indicates it
         if (response.headers.get('content-type')?.includes('application/json')) {
             try {
                 const errorJson = JSON.parse(errorDetail); 
                 return `服务器错误 (${response.status}): ${errorJson.message || errorJson.error || '后端返回未知JSON错误。'}`;
             } catch (jsonErr) {
-                // Fallback for malformed JSON or other parsing issues
                 return `服务器错误 (${response.status}): 无法解析后端响应，原始文本: "${errorDetail.substring(0, 100)}..."`;
             }
         } else {
-            // Generic error for network or non-JSON responses
-            return `请求失败 (${response.status}): ${errorDetail || '网络或服务器错误，请检查连接。'}`;
+            return `请求失败 (${response.status}): ${errorDetail || '网络或服务器错误，请检查您的连接或FireBase配置。'}`;
         }
     }
 
@@ -49,20 +46,25 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function getAllComments() {
         console.log("[CommentsAPI] Attempting to fetch comments from", backendBaseUrl + 'getComments');
-        commentsList = document.getElementById('comments-list'); // Re-get inside the function before manipulation
+        commentsList = document.getElementById('comments-list'); // Re-get it here, in case previous steps updated the DOM
         const parentContainer = commentsList?.closest('.comments-list-container');
 
-        // Immediately show a loading state if possible
         if(commentsList) {
             commentsList.innerHTML = `<p class="no-comments-message is-visible">正在加载留言...</p>`;
             parentContainer?.classList.add('is-visible');
         }
 
         try {
+            // Give a more generous timeout for API calls. If the backend function is cold-starting, it might take longer.
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout for API calls
+            
             const response = await fetch(`${backendBaseUrl}getComments`, {
                 method: "GET",
-                 headers: { "Accept": "application/json" } // Explicitly accept JSON
+                 headers: { "Accept": "application/json" },
+                 signal: controller.signal
             });
+            clearTimeout(timeoutId); // Clear timeout if response is received within time
 
             if(!response.ok) { 
                 const errorMessage = await handleFetchError(response, 'getComments');
@@ -74,12 +76,14 @@ document.addEventListener('DOMContentLoaded', () => {
             return comments;
         } catch (error) {
             console.error('[CommentsAPI] Failed to fetch comments: Firebase backend config or Netlify Function deployment issue. Details:', error);
-            if(commentsList) {
-                // Ensure the error message itself triggers the 'is-visible' class for animations
-                commentsList.innerHTML = `<p class="no-comments-message is-visible">呀，加载留言列表失败了... (${error.message})</p>`;
-                parentContainer?.classList.add('is-visible'); // Ensure container itself is visible
+            if(error.name === 'AbortError') { // Handle timeout specifically
+                error.message = "请求加载留言超时，可能是后端服务冷启动或网络较差。";
             }
-            return []; // Always return empty array on error to prevent further issues downstream
+            if(commentsList) {
+                commentsList.innerHTML = `<p class="no-comments-message is-visible">呀，加载留言列表失败了... (${error.message})</p>`;
+                parentContainer?.classList.add('is-visible'); 
+            }
+            return []; 
         }
     }
 
@@ -94,7 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log("[CommentsAPI] Attempting to post new comment to", backendBaseUrl + 'createComment');
         const submitButton = commentForm?.querySelector('button[type="submit"]');
 
-        // Provide immediate user feedback and prevent double submission
         if (submitButton) {
             submitButton.disabled = true;
             submitButton.textContent = '提交中...'; 
@@ -102,11 +105,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000); // 8 seconds timeout
+            
             const response = await fetch(`${backendBaseUrl}createComment`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ author, text }), 
+                signal: controller.signal
             });
+            clearTimeout(timeoutId);
 
             if (!response.ok) { 
                 const errorMessage = await handleFetchError(response, 'createComment');
@@ -119,10 +127,12 @@ document.addEventListener('DOMContentLoaded', () => {
             return true; 
         } catch (error) {
             console.error('[CommentsAPI] Failed to post comment from frontend:', error);
+            if(error.name === 'AbortError') {
+                error.message = "提交留言请求超时，可能是后端服务冷启动或网络较差。";
+            }
             alert(`提交留言失败: ${error.message}. 请检查您的输入或稍后再试！`); 
             return false;
         } finally {
-            // Re-enable button and restore original text / cursor regardless of outcome
             if (submitButton) {
                 submitButton.disabled = false;
                 submitButton.textContent = '提交留言'; 
@@ -144,23 +154,21 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
-        commentsList.innerHTML = ''; // Clear existing comments
+        commentsList.innerHTML = ''; 
 
         if (!comments || comments.length === 0) {
             const noCommentsMessage = document.createElement('p');
-            // 'is-visible' ensures CSS animation trigger. CSS 'visibility:hidden' as default.
-            noCommentsMessage.classList.add('no-comments-message'); // Now relies on is-visible from script.js
+            // 'is-visible' will already be force-applied by script.js, just make sure it's the correct class.
+            noCommentsMessage.classList.add('no-comments-message'); 
             noCommentsMessage.textContent = "还没有留言呢，成为第一个留下足迹的人吧！";
             commentsList.appendChild(noCommentsMessage);
             console.log("[CommentsDisplay] No comments to display. Showing placeholder text.");
-            commentsList.closest('.comments-list-container')?.classList.add('is-visible'); // Ensure container itself is visible
-            
-            // Explicitly force visibility of the message via JS if `is-visible` doesn't catch it quickly enough
-            setTimeout(() => noCommentsMessage.classList.add('is-visible'), 10); // Small immediate delay.
+            // Ensure message itself finally gets the visibility treatment if not caught by script.js
+            setTimeout(() => noCommentsMessage.classList.add('is-visible'), loadDelay + 10); 
+            commentsList.closest('.comments-list-container')?.classList.add('is-visible'); 
             return;
         } 
 
-        // Sort comments by timestamp (newest first) for consistent display order
         const sortedComments = [...comments].sort((a,b) => {
             const dateA = a.timestamp ? new Date(a.timestamp) : new Date(0); 
             const dateB = b.timestamp ? new Date(b.timestamp) : new Date(0);
@@ -169,20 +177,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         sortedComments.forEach((comment, index) => {
             const commentCard = document.createElement('div');
-            // 'post-card' for general styling, 'comment-card' for specific overrides.
             commentCard.classList.add('post-card', 'comment-card', 'animate__slide-up'); 
-            // Apply data-delay for staggered animation potential visually, this is mostly for the JS animator.
             commentCard.dataset.delay = String(index * 80); 
 
-            // Robust date formatting
             const date = new Date(comment.timestamp);
             const formattedDate = date.toLocaleString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-            // CRITICAL FIX: HTML escape author and text to prevent XSS vulnerabilities from user input
             const escapedAuthor = comment.author ? comment.author.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '匿名访客';
             const escapedText = comment.text ? comment.text.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
 
-            // Construct innerHTML with escaped values
             commentCard.innerHTML = `
                 <div class="comment-info">
                    <p class="comment-text">${escapedText}</p>
@@ -190,11 +193,10 @@ document.addEventListener('DOMContentLoaded', () => {
                </div>
             `;
             commentsList.appendChild(commentCard);
-            // This small delayed application of 'is-visible' ensures individual card fade in,
-            // relying on its own CSS rules for `opacity:0` coupled with its `is-visible` for `opacity:1`.
+            // Stagger actual 'is-visible' class based on index and load delay for a cascading animation
             setTimeout(() => { commentCard.classList.add('is-visible'); }, loadDelay + (index * 80)); 
             
-            // Also explicitly ensure children are visible if they have their own opaque defaults
+            // Explicitly ensure internal elements also get 'is-visible'
             setTimeout(() => {
                 commentCard.querySelector('.comment-text')?.classList.add('is-visible');
                 commentCard.querySelector('.comment-meta')?.classList.add('is-visible');
@@ -202,9 +204,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         console.log(`[CommentsDisplay] Displayed ${sortedComments.length} comments.`);
 
+        // Ensure the entire comments list container is visible.
         const parentContainer = commentsList.closest('.comments-list-container');
-        if(parentContainer && !parentContainer.classList.contains('is-visible')) {
-            // Give a final nudge to ensure the whole container is visible if it still hasn't caught the `is-visible` from external scripts
+        if(parentContainer) { // No need to check if !contains('is-visible') as script.js should manage this.
             setTimeout(() => parentContainer.classList.add('is-visible'), loadDelay + 250); 
             console.log("[CommentsDisplay] Main comments list container set to visible for animation.");
         }
@@ -216,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
      * @param {Event} event - The form submission event.
      */
     async function commentFormSubmitHandler(event) {
-        event.preventDefault(); // Prevent default form submission
+        event.preventDefault(); 
 
         const authorInput = document.getElementById('comment-author');
         const commentTextInput = document.getElementById('comment-text');
@@ -224,7 +226,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const author = authorInput?.value.trim() || ''; 
         const text = commentTextInput?.value.trim() || '';
 
-        // Client-side validation: basic checks before sending to server
         if (!author) { alert('名字不能为空哦！'); authorInput?.focus(); return; }
         if (author.length > 50) { alert('名字太长了，请控制在50个字符以内！'); authorInput?.focus(); return; }
         if (!text) { alert('留言内容不能为空哦！'); commentTextInput?.focus(); return; }
@@ -233,13 +234,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const success = await postNewComment(author, text);
 
         if (success) {
-            // Clear form fields only on successful submission
             if(authorInput) authorInput.value = ''; 
             if(commentTextInput) commentTextInput.value = ''; 
-            // After successful post, reload and re-display comments list visually immediately
             await loadAndDisplayComments(); 
-            // Also explicitly show form hint related elements (if any)
-            document.querySelector('.comment-form-container .form-hint')?.classList.add('is-visible');
+            document.querySelector('.comment-form-container .form-hint')?.classList.add('is-visible'); // Explicitly show hint.
         } 
     }
 
@@ -248,39 +246,39 @@ document.addEventListener('DOMContentLoaded', () => {
      * 使用 function 声明，确保完全提升。
      */
     function setupCommentsPage() { 
-        commentsList = document.getElementById('comments-list'); // Re-get for this function's scope
+        commentsList = document.getElementById('comments-list'); 
         
         if (commentForm) {
             commentForm.addEventListener('submit', commentFormSubmitHandler);
             console.log("[CommentsForm] Comment form submission listener attached.");
-            // Ensure the form itselft is visible upon setup too
-            commentForm.classList.add('is-visible');
+            commentForm.classList.add('is-visible'); // Ensure the form itself is visible on comments.html
         } else {
             console.warn("[CommentsForm] Comment Form element (ID 'comment-form') not found. Skipping submission setup. (Expected on non-comments.html)");
         }
 
         if (commentsList) {
-            // Load and display comments immediately when the page is ready for rendering comments
             loadAndDisplayComments(); 
-            commentsList.classList.add('is-visible'); // Make the list visible
+            // The commentsList.classList.add('is-visible') is now handled directly by displayComments for more fine-grained control
         } else {
             console.warn("[Comments] Comments list element (ID 'comments-list') not found. Skipping comment display. (Expected on non-comments.html)");
         }
         
-        // Ensure its parent `comment-section` is also explicitly visible.
-        document.querySelector('.comment-section')?.classList.add('is-visible');
-        setTimeout(() => document.querySelector('.comment-section .page-title')?.classList.add('is-visible'));
+        // Ensure its parent `comment-section` and its title are also explicitly visible during individual setup
+        const commentSection = document.querySelector('.comment-section');
+        if (commentSection) {
+            commentSection.classList.add('is-visible');
+            setTimeout(() => commentSection.querySelector('.page-title')?.classList.add('is-visible'), 50); // Small stagger for title
+        }
         
         console.log("✅ [Comments Module] Comments page setup completed.");
     }
     
     // Defer the execution of comments page setup until the very end of DOMContentLoaded processing,
-    // to ensure script.js (core fixes) and critical DOM elements are fully ready.
-    // Ensure it only runs if we are actually on a comments-related page (has form or list container).
-    // Using a greater timeout to ensure `script.js` visibility fixes run first on all general elements.
+    // and after script.js has run its visibility fixes on general elements.
+    // Ensure it only runs if we are actually on a comments-related page.
     if (window.location.pathname.includes('comments.html') || document.getElementById('comment-form') || document.getElementById('comments-list')) {
-        console.log("[Comments Module] Attempting to set up Comments page with a slight delay...");
-        setTimeout(setupCommentsPage, 300); // Increased delay
+        console.log("[Comments Module] Attempting to set up Comments page with a slightly increased delay to ensure core CSS/JS visibility.");
+        setTimeout(setupCommentsPage, 350); // Increased delay
     }
 
     console.log("✅ [Comments Module] comments.js FINISHED execution.");
