@@ -1,11 +1,8 @@
 /*
  * animations.css - Honoka's Blog
- * This file is now cleared to prevent potential CSS conflicts and redundant imports.
+ * This file has been intentionally cleared to prevent potential CSS conflicts and redundant loading.
+ * All essential @keyframes animation rules are now defined directly within 'css/style.css'.
  *
- * If you have custom CSS @keyframes rules (e.g., for entrance animations, special effects),
- * you should add them DIRECTLY to the 'css/style.css' file at its end,
- * or manage them carefully if you absolutely require a separate file.
- *
- * All core animations (fade-out cursor trail, spin, pulse, pulse-glow, homepage-title-flow-gradient, header-text-pulse-glow
- * and hamburger menu animations) are now defined within `style.css` for consolidation and clarity.
+ * If you had custom animations here, please ensure you've manually transferred their @keyframes {...}
+ * definitions ONLY to the end of 'css/style.css' if you wish to retain them.
  */

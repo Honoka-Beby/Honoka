@@ -174,7 +174,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Dynamic Image Loading & Fallback ---
     // Function declaration for full hoisting safety
     function getRandomGradient() {
-        const h1 = Math.floor(Math.random() * 360); 
+        const h1 = Math.floor(Math.random()
+* 360); 
         const h2 = (h1 + 60 + Math.floor(Math.random() * 60)) % 360; 
         const s = Math.floor(Math.random() * 30) + 70; 
         const l = Math.floor(Math.random() * 20) + 50; 
@@ -299,7 +300,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isAvatar) { 
             fallbackFilename = 'avatar.png'; // Specific avatar fallback
         } else {
-            fallbackFilename = isThumbnail ? 'post-thumbnail-fallback.png' : 'post-detail-banner-fallback.png';
+            fallbackFilename = 'post-detail-banner-fallback.png'; // Unified fallback for all other post-related images
         }
         
         // ★★★ CRITICAL FIX: Always use a root-relative path for local assets (`/img/`) on the webserver ★★★
@@ -307,8 +308,9 @@ document.addEventListener('DOMContentLoaded', () => {
         
         if (type === 'background' && document.documentElement) {
             // ★★★ User Request: Use a consistent local image fallback for body background instead of random gradient ★★★
+            // Important: This asset `/img/post-detail-banner-fallback.png` MUST exist in your git repo `/img` folder and be deployed.
             document.documentElement.style.setProperty('--bg-image', `url("/img/post-detail-banner-fallback.png")`); // Use a fixed local image
-            console.log(`[ImageLoader] 🖼️ Applied consistent local BACKGROUND IMAGE fallback for <body>.`);
+            console.log(`[ImageLoader] 🖼️ Applied consistent local BACKGROUND IMAGE fallback for <body> using: "/img/post-detail-banner-fallback.png". (Ensure this file exists in your '/img/' folder!)`);
         } else if (type === 'image' && targetElement) {
             targetElement.src = localFallbackSrc; 
             targetElement.style.objectFit = isAvatar ? 'cover' : 'contain'; 
@@ -337,7 +339,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 console.log(`[ImageLoader] Created fallback text overlay for ${targetElement.alt || '(Unnamed Image)'}.`);
             }
             // Update text content for user feedback
-            fallbackTextOverlay.textContent = isAvatar ? "头像加载失败 :(" : (isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(") + " [点击重试]";
+            fallbackTextOverlay.textContent = 
+                isAvatar ? "头像加载失败 :(" : 
+                            (isThumbnail ? "封面加载失败 :(" : "图片加载失败 :(") + " [点击重试]";
             fallbackTextOverlay.classList.add('is-visible'); 
 
             // Add click-to-retry functionality to the overlay OR the image itself
@@ -354,10 +358,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 setTimeout(() => fetchRandomAnimeImage(targetElement, type, srcOverride), 100); 
             };
-            if (!fallbackTextOverlay._retryListener && targetElement) { 
+            if (targetElement && !targetElement._retryListener) { // Ensure listener is only added once
                 fallbackTextOverlay.addEventListener('click', retryHandler);
-                targetElement.addEventListener('click', retryHandler); // Attach to target image too
-                fallbackTextOverlay._retryListener = retryHandler; 
+                targetElement.addEventListener('click', retryHandler); 
+                targetElement._retryListener = retryHandler; // Store reference
             }
 
             // Secondary check: if the local fallback image itself is broken 
@@ -370,7 +374,7 @@ document.addEventListener('DOMContentLoaded', () => {
             testLocalImage.onerror = () => { 
                 targetElement.style.visibility = 'hidden'; 
                 if (fallbackTextOverlay) setTimeout(() => fallbackTextOverlay.classList.add('is-visible'), 50); 
-                console.warn(`[ImageLoader] 🚫 Local fallback image (path: "${localFallbackSrc}") itself failed to load. Displaying only text overlay over generated gradient.`);
+                console.warn(`[ImageLoader] 🚫 Local fallback image (path: "${localFallbackSrc}") itself failed to load. Displaying only text overlay over generated gradient. **This means your asset: ${localFallbackSrc} is missing or named incorrectly!**`);
             };
 
             console.log(`[ImageLoader] 🎨 Applied robust local fallback system with overlay for: ${targetElement?.alt || type}.`);
@@ -385,7 +389,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Dynamically load images for avatar, post thumbnails, etc.
         document.querySelectorAll('.my-avatar, .post-thumbnail[data-src-type="wallpaper"], .post-detail-banner[data-src-type="wallpaper"]').forEach(img => {
-            // Apply fallback logic first to ensure immediate display state, then attempt to fetch dynamic image
             applyFallbackImage(img, 'image'); 
             fetchRandomAnimeImage(img, 'image'); 
         });
@@ -402,47 +405,45 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     function applyImmediateVisibilityFix() {
         // Step 1: Force critical structural layout elements to be visible via `force-visible` utility class.
+        // These are highest-level containers; ensuring they are visible prevents the entire page from being blank.
         const structuralElements = document.querySelectorAll(
-            'html, body, .main-header, .hero-section, .content-page-wrapper, .main-footer, #global-page-transition-overlay'
+            'html, body, main, .container, .main-header, .hero-section, .content-page-wrapper, .main-footer, #global-page-transition-overlay, #cursor-trail, #read-progress-bar'
         );
         structuralElements.forEach(el => {
             el.classList.add('force-visible'); 
         });
-        console.log("[VisibilityFix] Top-level structural UI (html, body, main containers) immediately 'force-visible' in CSS.");
+        console.log("[VisibilityFix] Top-level structural UI (html, body, main containers, cursor, progress bar) immediately 'force-visible' in CSS.");
 
 
         // Step 2: Comprehensive selection for *all* content elements that are designed to animate into view,
         // or which might default to `opacity: 0` and require the `is-visible` class to properly display.
+        // This selector is very broad and targets most common content-bearing elements.
         const elementsToAnimateOrReveal = document.querySelectorAll(
             // Elements with `animate__` class (primary targets for animation cues)
             '[class*="animate__"], ' + 
-            // All common content-bearing HTML tags within main sections and their wrappers:
+            // All common content-bearing HTML tags within main sections and their wraps:
             'main.main-content h1, main.main-content p, main.main-content ul, main.main-content ol, ' +
             'main.container.content-page-wrapper h1, main.container.content-page-wrapper h2, ' +
             'main.container.content-page-wrapper h3, main.container.content-page-wrapper h4, ' +
             'main.container.content-page-wrapper p:not(.post-excerpt):not(.form-hint):not(.no-comments-message), ' +
-            'main.container.content-page-wrapper ul:not(.main-nav ul), ' + 
+            'main.container.content-page-wrapper ul:not(.main-nav ul), ' + // Exclude main nav `ul` list
             'main.container.content-page-wrapper ol, ' +
             'main.container.content-page-wrapper ul li, main.container.content-page-wrapper ol li, ' +
-            // Specific key elements found on different pages that must always reveal:
             '.hero-subtitle, .hero-nav a, .hero-content, ' + 
-            '.blog-title.is-header-title > a, .menu-toggle, .icon-bar, .main-nav ul li a, ' + // Include icon-bar for hamburger visibility
+            '.blog-title.is-header-title > a, .menu-toggle, .icon-bar, .main-nav ul li a, .main-nav, .main-nav .menu-close, ' + // Explicitly include menu toggle elements
             '.my-avatar, .about-me-section p, .contact-info, .contact-info h3, .contact-info ul li, ' + 
-            '#blog-category-filters .filter-tag-button, #all-posts-grid .post-card, ' + 
-            // Internal elements of post cards and article details for reveal:
-            '.post-card .post-info h3, .post-card .post-excerpt, .post-card time, .post-card .post-tags, .post-card .tag, ' + 
-            '.blog-post-detail .post-detail-title, .blog-post-detail .post-meta, .blog-post-detail .post-detail-banner, ' + 
-            '.blog-post-detail .post-content, .blog-post-detail .post-content h3, ' + 
-            '.post-share-buttons, .post-share-buttons span, .share-button, .read-more .button, ' +
-            // Comments page elements:
-            '.comment-section .page-title, .comment-form-container, .comment-form-container h3, ' + 
+            '#blog-category-filters, #blog-category-filters .filter-tag-button, #all-posts-grid, #all-posts-grid .post-card, ' + 
+            '.post-card .post-info, .post-card .post-info h3, .post-card .post-excerpt, .post-card time, .post-card .post-tags, .post-card .tag, ' + 
+            '.blog-post-detail, .blog-post-detail .post-detail-title, .blog-post-detail .post-meta, .blog-post-detail .post-detail-banner, ' +         
+            '.blog-post-detail .post-content, .blog-post-detail .post-content h3, .blog-post-detail .post-content p, ' + 
+            '.blog-post-detail .post-content ul, .blog-post-detail .post-content ol, .blog-post-detail .post-content li, ' +
+            '.post-share-buttons, .post-share-buttons span, .share-button, .read-more, .read-more .button, ' +
+            '.comment-section, .comment-section .page-title, .comment-form-container, .comment-form-container h3, ' + 
             '.form-group, .form-group label, .form-group input, .form-group textarea, .form-hint, ' + 
             '.comments-list-container, .comments-list-container h3, ' + 
-            '#comments-list .post-card, #comments-list .comment-info, #comments-list .comment-text, ' +
+            '#comments-list, #comments-list .post-card, #comments-list .comment-info, #comments-list .comment-text, ' +
             '#comments-list .comment-meta, .no-comments-message, ' + 
-            // Categories page elements:
-            '.categories-section .page-title, .categories-section p, #dynamic-category-list .filter-tag-button, .categories-section .button-container .button, ' + 
-            // Global utility UI elements:
+            '.categories-section, .categories-section .page-title, .categories-section p, #dynamic-category-list, #dynamic-category-list .filter-tag-button, .categories-section .button-container, .categories-section .button-container .button, ' + 
             '#back-to-top, .main-footer p, #current-year, #visitor-count ' 
         );
 
@@ -457,6 +458,7 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log(`[VisibilityFix] Applied 'is-visible' to ${elementsToAnimateOrReveal.length} content elements using direct class injection.`);
         
         // Step 3: Fallback IntersectionObserver for any elements that might still be missed or added dynamically.
+        // This will now mostly be useful for truly dynamic/async content or very complex nested structures.
         const observer = new IntersectionObserver((entries, observerInstance) => {
             entries.forEach(entry => {
                 const isElementAlreadyVisible = entry.target.classList.contains('is-visible') || entry.target.classList.contains('force-visible');
@@ -479,8 +481,11 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         document.querySelectorAll(
+            // Target all custom animate classes elements, and core content wrappers
             '[class*="animate__"], ' + 
+            '.hero-content, .hero-subtitle, .hero-nav, ' +
             '.comments-list-container, .comment-form-container, .about-me-section, .categories-section, .blog-post-detail, ' + 
+            '.post-card, .post-info, .post-content, #comments-list, #read-progress-bar, #back-to-top, ' + // Include sub-elements explicitly
             '.contact-info, .posts-grid, #dynamic-category-list, #all-posts-grid ' 
             )
             .forEach(el => {
@@ -533,10 +538,13 @@ document.addEventListener('DOMContentLoaded', () => {
             readProgress = Math.min(100, Math.max(0, readProgress)); 
 
             progressBar.style.width = readProgress + '%'; 
+             // Also force visibility here directly, in case is-visible is not applied.
+            progressBar.classList.add('is-visible'); 
         }
 
         window.addEventListener('scroll', calculateProgress);
         window.addEventListener('resize', calculateProgress); 
+        // Small delay to ensure initial setup.
         setTimeout(calculateProgress, 100); 
         console.log("[ReadProgressBar] Enabled for article detail pages.");
     }
@@ -552,12 +560,21 @@ document.addEventListener('DOMContentLoaded', () => {
             document.body.classList.remove('no-scroll'); 
             return;
         }
+        
+        // Force hamburger and header title to be visible immediately as they are critical.
+        menuToggle.classList.add('is-visible');
+        document.querySelector('.main-header .blog-title--animated.is-header-title > a')?.classList.add('is-visible');
+
 
         const openMenu = () => {
             mainNav.classList.add('is-open'); 
             menuToggle.setAttribute('aria-expanded', 'true');
             document.body.classList.add('no-scroll'); 
             console.log("[MainMenu] Panel menu is now open.");
+            // Explicitly ensure nav links are visible when opened.
+            mainNav.querySelectorAll('a').forEach(link => {
+                link.classList.add('is-visible'); 
+            });
         };
 
         const closeMenu = () => {
@@ -566,6 +583,7 @@ document.addEventListener('DOMContentLoaded', () => {
             menuToggle.setAttribute('aria-expanded', 'false');
             document.body.classList.remove('no-scroll'); 
             console.log("[MainMenu] Panel menu is now closed.");
+            // Optionally, remove is-visible from nav links for fade-out, but keep `is-visible` generally for default state.
         };
 
         menuToggle.addEventListener('click', (event) => {
@@ -602,6 +620,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  if (hrefURL.origin === window.location.origin && hrefURL.pathname !== window.location.pathname) {
                     e.preventDefault(); 
                     activatePageTransition(link.href); 
+                   
                     setTimeout(() => { closeMenu(); }, 400); 
                  } else { 
                     closeMenu(); 
@@ -639,6 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
         
         const sortedTags = Array.from(allTags).sort((a,b) => a.localeCompare(b, 'zh-CN')); 
 
+        // Part 1: Interactive filtering on the 'blog.html' page
         if (categoryFiltersContainer && blogPostsGrid) {
             categoryFiltersContainer.innerHTML = ''; 
             const allButton = document.createElement('button');
@@ -646,6 +666,10 @@ document.addEventListener('DOMContentLoaded', () => {
             allButton.textContent = `全部文章`;
             allButton.dataset.filter = 'all'; 
             categoryFiltersContainer.prepend(allButton); 
+
+            // Give a small delay to make sure the container appears before buttons for smoother look
+            categoryFiltersContainer.classList.add('is-visible'); 
+            allButton.classList.add('is-visible'); 
 
             const filterPosts = (filterTag, clickedButton = null) => {
                 categoryFiltersContainer.querySelectorAll('.filter-tag-button').forEach(btn => { 
@@ -661,7 +685,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     const tagsAttr = post.dataset.tags;
                     if (!tagsAttr) { 
                         post.style.display = (filterTag === 'all') ? 'flex' : 'none'; // Use flex not block
-                        post.classList.toggle('is-visible', filterTag === 'all'); 
+                        setTimeout(() => post.classList.toggle('is-visible', filterTag === 'all'), 50); // Small delay before animating
                         return; 
                     }
                     const postTagsLower = tagsAttr.split(',').map(tag => tag.trim().toLowerCase()); 
@@ -680,6 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             allButton.addEventListener('click', () => filterPosts('all', allButton));
 
+            // Create buttons for each unique tag
             sortedTags.forEach(tag => {
                 const button = document.createElement('button');
                 button.classList.add('filter-tag-button', 'button'); 
@@ -687,6 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 button.dataset.filter = tag; 
                 categoryFiltersContainer.appendChild(button);
                 button.addEventListener('click', () => filterPosts(tag, button));
+                setTimeout(() => button.classList.add('is-visible'), 50); // Force visible now.
             });
 
             const urlParams = new URL(window.location.href);
@@ -704,6 +730,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("[CategoryFilter] Interactive filters initialized on blog page.");
         }
         
+        // Part 2: Generating category navigation links on 'categories.html'
         if (isCategoriesPage && dynamicCategoryList) {
             dynamicCategoryList.innerHTML = ''; 
 
@@ -780,6 +807,10 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("[VisitorCount] Visitor count element not found (ID: 'visitor-count'). Feature skipped.");
             return;
         }
+        
+        // Force footer itself to be visible for the count to eventually appear.
+        const mainFooter = document.querySelector('.main-footer');
+        if(mainFooter) mainFooter.classList.add('is-visible');
 
         fetch(`${backendBaseUrl}handleVisitCount`, {
             method: 'GET',

@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let commentsList = document.getElementById('comments-list'); 
 
     // ★★★ IMPORTANT: Replace with YOUR ACTUAL NETLIFY DEPLOYED FRONTEND DOMAIN !!! ★★★
+    // This value is used by backend functions for CORS. Ensure it matches your live site.
     const backendBaseUrl = 'https://honoka1.netlify.app/.netlify/functions/'; 
 
     /**
@@ -48,6 +49,15 @@ document.addEventListener('DOMContentLoaded', () => {
      */
     async function getAllComments() {
         console.log("[CommentsAPI] Attempting to fetch comments from", backendBaseUrl + 'getComments');
+        commentsList = document.getElementById('comments-list'); // Re-get inside the function before manipulation
+        const parentContainer = commentsList?.closest('.comments-list-container');
+
+        // Immediately show a loading state if possible
+        if(commentsList) {
+            commentsList.innerHTML = `<p class="no-comments-message is-visible">正在加载留言...</p>`;
+            parentContainer?.classList.add('is-visible');
+        }
+
         try {
             const response = await fetch(`${backendBaseUrl}getComments`, {
                 method: "GET",
@@ -64,13 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return comments;
         } catch (error) {
             console.error('[CommentsAPI] Failed to fetch comments: Firebase backend config or Netlify Function deployment issue. Details:', error);
-            // Display an error message directly on the page if list container exists
-            commentsList = document.getElementById('comments-list'); // Re-get it, just in case
             if(commentsList) {
-                // The class 'is-visible' ensures CSS animation trigger
+                // Ensure the error message itself triggers the 'is-visible' class for animations
                 commentsList.innerHTML = `<p class="no-comments-message is-visible">呀，加载留言列表失败了... (${error.message})</p>`;
-                // Also ensure its parent container is forcefully visible if comments.html is loaded
-                commentsList.closest('.comments-list-container')?.classList.add('is-visible');
+                parentContainer?.classList.add('is-visible'); // Ensure container itself is visible
             }
             return []; // Always return empty array on error to prevent further issues downstream
         }
@@ -128,11 +135,12 @@ document.addEventListener('DOMContentLoaded', () => {
      * Dynamically renders and displays a list of comments in the DOM.
      * 使用 function 声明，确保完全提升。
      * @param {Array<Object>} comments - An array of comment objects.
+     * @param {number} [loadDelay=100] - Base delay for staggered loading of comments.
      */
     function displayComments(comments, loadDelay = 100) { 
         commentsList = document.getElementById('comments-list'); 
         if (!commentsList) {
-            console.error("[CommentsDisplay] Comments list container element not found (ID 'comments-list'). Cannot display comments.");
+            console.error("[CommentsDisplay] Comments list container element (ID 'comments-list') not found. Cannot display comments.");
             return;
         }
 
@@ -140,11 +148,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (!comments || comments.length === 0) {
             const noCommentsMessage = document.createElement('p');
-            noCommentsMessage.classList.add('no-comments-message', 'is-visible'); 
+            // 'is-visible' ensures CSS animation trigger. CSS 'visibility:hidden' as default.
+            noCommentsMessage.classList.add('no-comments-message'); // Now relies on is-visible from script.js
             noCommentsMessage.textContent = "还没有留言呢，成为第一个留下足迹的人吧！";
             commentsList.appendChild(noCommentsMessage);
             console.log("[CommentsDisplay] No comments to display. Showing placeholder text.");
-            commentsList.closest('.comments-list-container')?.classList.add('is-visible'); 
+            commentsList.closest('.comments-list-container')?.classList.add('is-visible'); // Ensure container itself is visible
+            
+            // Explicitly force visibility of the message via JS if `is-visible` doesn't catch it quickly enough
+            setTimeout(() => noCommentsMessage.classList.add('is-visible'), 10); // Small immediate delay.
             return;
         } 
 
@@ -159,17 +171,18 @@ document.addEventListener('DOMContentLoaded', () => {
             const commentCard = document.createElement('div');
             // 'post-card' for general styling, 'comment-card' for specific overrides.
             commentCard.classList.add('post-card', 'comment-card', 'animate__slide-up'); 
-            // Apply data-delay for staggered animation potential (even visually).
+            // Apply data-delay for staggered animation potential visually, this is mostly for the JS animator.
             commentCard.dataset.delay = String(index * 80); 
 
             // Robust date formatting
             const date = new Date(comment.timestamp);
             const formattedDate = date.toLocaleString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' });
 
-            // CRITICAL FIX: HTML escape author and text to prevent XSS vulnerabilities
+            // CRITICAL FIX: HTML escape author and text to prevent XSS vulnerabilities from user input
             const escapedAuthor = comment.author ? comment.author.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '匿名访客';
             const escapedText = comment.text ? comment.text.replace(/</g, "&lt;").replace(/>/g, "&gt;") : '';
 
+            // Construct innerHTML with escaped values
             commentCard.innerHTML = `
                 <div class="comment-info">
                    <p class="comment-text">${escapedText}</p>
@@ -178,14 +191,21 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             commentsList.appendChild(commentCard);
             // This small delayed application of 'is-visible' ensures individual card fade in,
-            // while the parent container's 'is-visible' already revealed the section.
-            setTimeout(() => { commentCard.classList.add('is-visible'); }, parseInt(commentCard.dataset.delay) + loadDelay); 
+            // relying on its own CSS rules for `opacity:0` coupled with its `is-visible` for `opacity:1`.
+            setTimeout(() => { commentCard.classList.add('is-visible'); }, loadDelay + (index * 80)); 
+            
+            // Also explicitly ensure children are visible if they have their own opaque defaults
+            setTimeout(() => {
+                commentCard.querySelector('.comment-text')?.classList.add('is-visible');
+                commentCard.querySelector('.comment-meta')?.classList.add('is-visible');
+            }, loadDelay + (index * 80) + 50); // Slightly more delay for internal text
         });
         console.log(`[CommentsDisplay] Displayed ${sortedComments.length} comments.`);
 
         const parentContainer = commentsList.closest('.comments-list-container');
         if(parentContainer && !parentContainer.classList.contains('is-visible')) {
-            setTimeout(() => parentContainer.classList.add('is-visible'), loadDelay + 50); // Ensure parent also fades in
+            // Give a final nudge to ensure the whole container is visible if it still hasn't caught the `is-visible` from external scripts
+            setTimeout(() => parentContainer.classList.add('is-visible'), loadDelay + 250); 
             console.log("[CommentsDisplay] Main comments list container set to visible for animation.");
         }
     } 
@@ -216,8 +236,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear form fields only on successful submission
             if(authorInput) authorInput.value = ''; 
             if(commentTextInput) commentTextInput.value = ''; 
-            // After successful post, reload and re-display (newest comments will appear first)
+            // After successful post, reload and re-display comments list visually immediately
             await loadAndDisplayComments(); 
+            // Also explicitly show form hint related elements (if any)
+            document.querySelector('.comment-form-container .form-hint')?.classList.add('is-visible');
         } 
     }
 
@@ -226,29 +248,39 @@ document.addEventListener('DOMContentLoaded', () => {
      * 使用 function 声明，确保完全提升。
      */
     function setupCommentsPage() { 
-        commentsList = document.getElementById('comments-list'); // Re-get for this function
+        commentsList = document.getElementById('comments-list'); // Re-get for this function's scope
         
         if (commentForm) {
             commentForm.addEventListener('submit', commentFormSubmitHandler);
             console.log("[CommentsForm] Comment form submission listener attached.");
+            // Ensure the form itselft is visible upon setup too
+            commentForm.classList.add('is-visible');
         } else {
-            console.warn("[CommentsForm] Comment Form element (ID 'comment-form') not found. Skipping submission setup on this page. (Expected on non-comments.html)");
+            console.warn("[CommentsForm] Comment Form element (ID 'comment-form') not found. Skipping submission setup. (Expected on non-comments.html)");
         }
 
         if (commentsList) {
             // Load and display comments immediately when the page is ready for rendering comments
             loadAndDisplayComments(); 
+            commentsList.classList.add('is-visible'); // Make the list visible
         } else {
-            console.warn("[Comments] Comments list element (ID 'comments-list') not found. Skipping comment display on this page. (Expected on non-comments.html)");
+            console.warn("[Comments] Comments list element (ID 'comments-list') not found. Skipping comment display. (Expected on non-comments.html)");
         }
+        
+        // Ensure its parent `comment-section` is also explicitly visible.
+        document.querySelector('.comment-section')?.classList.add('is-visible');
+        setTimeout(() => document.querySelector('.comment-section .page-title')?.classList.add('is-visible'));
+        
         console.log("✅ [Comments Module] Comments page setup completed.");
     }
     
     // Defer the execution of comments page setup until the very end of DOMContentLoaded processing,
     // to ensure script.js (core fixes) and critical DOM elements are fully ready.
     // Ensure it only runs if we are actually on a comments-related page (has form or list container).
+    // Using a greater timeout to ensure `script.js` visibility fixes run first on all general elements.
     if (window.location.pathname.includes('comments.html') || document.getElementById('comment-form') || document.getElementById('comments-list')) {
-        setTimeout(setupCommentsPage, 150); // Small delay after other core script.js initializations finish up.
+        console.log("[Comments Module] Attempting to set up Comments page with a slight delay...");
+        setTimeout(setupCommentsPage, 300); // Increased delay
     }
 
     console.log("✅ [Comments Module] comments.js FINISHED execution.");

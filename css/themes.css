@@ -6,7 +6,8 @@
     /* Base Colors - 深邃的星空紫 */
     --bg-fallback-color: #1a1625; /* 纯色背景，用作加载时的后备 */
     --bg-image: none; /* Dynamic, set by JS to image URL */
-    --body-overlay-bg: rgba(26, 22, 37, 0.4); /* 全局身体背景叠加层: 更加透明，让壁纸透出大部分 */
+    /* ★★★ CRITICAL FIX: Make body overlay significantly more transparent for background image to show through! ★★★ */
+    --body-overlay-bg: rgba(26, 22, 37, 0.2); /* 全局身体背景叠加层: 更加透明，让壁纸透出大部分 */
     --hero-overlay-bg: rgba(26, 22, 37, 0.8); /* 主页Hero区域的背景叠加层: 较不透明，保持前景文字对比度 */
 
     --body-backdrop-blur: 3px;     /* 桌面端 body 模糊度 */
@@ -26,9 +27,8 @@
     --bg-secondary-color-rgb: 42, 36, 56; /* 用于RGBA计算 */
 
     --card-bg-color: rgba(26, 22, 37, 0.78); /* 卡片背景（如文章卡片，评论卡片），提供良好背景可读性 */
-    /* ★★★ CRITICAL FIX: Make content background more transparent to blend more with body background ★★★ */
-    /* Adjust this to be slightly more transparent than hero-overlay-bg if aiming for "same color as homepage background" effect. */
-    --content-bg-color: rgba(26, 22, 37, 0.5); /* 调整为更透明的背景色，让底部背景图更多透出 */
+    /* ★★★ CRITICAL FIX: Make content background more transparent to blend more with body background for other pages ★★★ */
+    --content-bg-color: rgba(26, 22, 37, 0.2); /* 调整为更透明的背景色，让底部背景图更多透出 */
     
     --border-color: rgba(255, 121, 198, 0.25); /* 霓虹粉色淡边框 */
     --secondary-color-rgb: 189, 147, 249; 
@@ -58,5 +58,5 @@
     
     /* Font family */
     --font-primary: 'Noto Sans SC', sans-serif; /* 主要正文字体 */
-    --font-display: 'LXGW WenKai Screen', serif; /* 为了更兼容，标题字体如果遇到问题，可以尝试用通用的 serif 或 sans-serif 后备，但我们保留了你希望的 Screen 字体 */
+    --font-display: 'LXGW WenKai Screen', "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif; /* CRITICAL FIX: Add more safe fallbacks for Chinese fonts if original fails */
 }
