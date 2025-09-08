@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>分类归档 - Honoka的小屋</title>
-    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-     <!-- 字体通过style.css @import 安全加载，此处不设置preload以避免Chrome重复加载或404 -->
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -50,9 +52,10 @@
             <div id="dynamic-category-list" class="posts-grid category-grid animate__fade-in" data-delay="200">
                 <!-- 分类标签将由 JavaScript (script.js) 在页面加载时动态生成 -->
             </div>
-            <!-- ★★★ CRITICAL HTML FIX: Removed illegal nested <p> tag ★★★ -->
             <p class="animate__slide-up button-container" data-delay="300">
-                <a href="blog.html" class="button">← 返回所有文章</a>
+                <p>
+                  <a href="blog.html" class="button">← 返回所有文章</a>
+                </p>
             </p>
         </section>
     </main>

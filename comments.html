@@ -4,11 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>留言板 - Honoka的小屋</title>
-    <link rel="icon" href="/img/favicon.ico" type="image/x-icon">
+    <link rel="icon" href="img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/themes.css">
     <link rel="stylesheet" href="css/animations.css">
-    <!-- 字体通过style.css @import 安全加载，此处不设置preload以避免Chrome重复加载或404 -->
+    <!-- 优化字体加载速度：预加载主要中文字体 - CRITICAL FIX FOR 404 PATH -->
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-regular.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="preload" href="https://cdn.jsdelivr.net/npm/lxgw-wenkai-screen-webfont@1.1.0/lxgwwenkaiscreentext-bold.woff2" as="font" type="font/woff2" crossorigin>
 </head>
 <body class="theme-cosmic-dream">
     <!-- 全局页面过渡遮罩 -->
@@ -64,7 +66,7 @@
             <div class="comments-list-container animate__fade-in" data-delay="300">
                 <h3>来自二次元盟友的留言们 ( •̀ ω •́ )y</h3>
                 <div id="comments-list" class="posts-grid comments-list">
-                    <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
+                     <p class="no-comments-message">还没有留言呢，成为第一个留下足迹的人吧！</p>
                 </div>
             </div>
         </section>
